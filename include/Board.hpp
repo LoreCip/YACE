@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "Pieces.hpp"
 #include "BitOperations.hpp"
+#include "LookupTables.hpp"
 
 class Board {
 private:
@@ -12,11 +13,16 @@ private:
     uint64_t totalOccupation{(uint64_t)0};
     uint64_t freeCells{(uint64_t)0};
 
+    uint64_t ComputePawnMoves(int color, uint64_t bitboard);
+    uint64_t ComputeKnightMoves(int color, uint64_t bitboard);
 public:
     void InitializeBoard();
     uint64_t GetColorOccupation(int color);
     uint64_t GetTotalOccupation();
     uint64_t GetFreeCells();
+    uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum piece);
+
+
 };
 
 #endif

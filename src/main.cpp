@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstdint>
+#include <sys/types.h>
 
 #include "BitOperations.hpp"
 #include "LookupTables.hpp"
@@ -9,7 +10,26 @@
 /**
  * La casella 0 (A1) è in basso a sinistra, la casella 63 (H8) è in alto a destra.
  */
-void printBitboard(uint64_t bitboard, int idx = -1);
+void printBitboard(uint64_t bitboard, int idx = -1) {
+    std::cout << "\n";
+    for (int rank = 7; rank >= 0; rank--) {
+        std::cout << rank + 1 << "  "; // Stampa il numero della traversa (1-8)
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            if (getBit(bitboard, square)) {
+                std::cout << "1 ";
+            } else if (square == idx) {
+                std::cout << "x ";
+            } else {
+                std::cout << ". ";
+            }
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n   a b c d e f g h\n\n";
+}
+
+
 int main() {
 
     int testSquare = 28; // e4
@@ -151,6 +171,21 @@ int main() {
     singlePawnBoard = setBit(singlePawnBoard, 16);
     pawnCapture = myBoard.GetGeneratedMoves(Color::BLACK, singlePawnBoard, PiecesEnum::PAWNS);
     printBitboard(pawnCapture, 16);
+
+
+    // ------------------------------------------
+    // Test D: Mosse del Re
+    // ------------------------------------------
+    std::cout << "--- Test D: Movimento del Re ---\n";
+    // Mettiamo un singolo Re bianco in d3 (indice 20)
+    uint64_t singleKingBoard = 0ULL;
+    singleKingBoard = setBit(singleKingBoard, testSquare - 9);
+    
+    uint64_t kingMoves = myBoard.GetGeneratedMoves(Color::WHITE, singleKingBoard, PiecesEnum::KING);
+    std::cout << "Il movimento del Re è bloccato dietro dai pedoni alleati:";
+    printBitboard(kingMoves, testSquare - 9);
+
+
 
     return 0;
 }

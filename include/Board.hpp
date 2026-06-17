@@ -15,6 +15,13 @@ private:
 
     uint64_t ComputePawnMoves(int color, uint64_t bitboard);
     uint64_t ComputeKnightMoves(int color, uint64_t bitboard);
+    uint64_t ComputeKingMoves(int color, uint64_t bitboard);
+    uint64_t ComputeBishopMoves(int color, uint64_t bitboard);
+    uint64_t ComputeRookMoves(int color, uint64_t bitboard);
+    uint64_t ComputeQueenMoves(int color, uint64_t bitboard);
+
+    uint64_t ComputeRay(int direction, uint64_t edge, int square);
+
 public:
     void InitializeBoard();
     uint64_t GetColorOccupation(int color);

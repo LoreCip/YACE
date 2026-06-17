@@ -185,7 +185,49 @@ int main() {
     std::cout << "Il movimento del Re è bloccato dietro dai pedoni alleati:";
     printBitboard(kingMoves, testSquare - 9);
 
+    // ------------------------------------------
+    // Test E: Mosse dei Pezzi Scorrevoli (Sliders)
+    // ------------------------------------------
+    std::cout << "=== 5. TEST GENERAZIONE MOSSE PEZZI SCORREVOLI ===\n";
 
+    // --- TEST ALFIERE ---
+    std::cout << "--- Test E1: Alfiere Bianco in e4 (indice 28) ---\n";
+    uint64_t customBishopBoard = 0ULL;
+    customBishopBoard = setBit(customBishopBoard, testSquare); // e4
+
+    // Nella configurazione iniziale, l'Alfiere in e4 incontrerà:
+    // - Verso Sud-Ovest: l'ostacolo in c2 (Pedone alleato bianco), quindi si ferma a d3 e NON cattura c2.
+    // - Verso Sud-Est: l'ostacolo in g2 (Pedone alleato bianco), quindi si ferma a f3 e NON cattura g2.
+    // - Verso Nord-Ovest: l'ostacolo in b7 (Pedone nemico nero), quindi si ferma a b7 INCLUDENDOLO come cattura.
+    // - Verso Nord-Est: l'ostacolo in h7 (Pedone nemico nero), quindi si ferma a h7 INCLUDENDOLO come cattura.
+    uint64_t bishopMoves = myBoard.GetGeneratedMoves(Color::WHITE, customBishopBoard, PiecesEnum::BISHOPS);
+    std::cout << "Mosse Alfiere da e4 (Cattura su b7 e h7, bloccato da alleati prima di c2 e g2):";
+    printBitboard(bishopMoves, testSquare);
+
+
+    // --- TEST TORRE ---
+    std::cout << "--- Test E2: Torre Bianca in e4 (indice 28) ---\n";
+    uint64_t customRookBoard = 0ULL;
+    customRookBoard = setBit(customRookBoard, testSquare); // e4
+
+    // Nella configurazione iniziale, la Torre in e4 incontrerà:
+    // - Verso Nord: l'ostacolo in e7 (Pedone nemico), si ferma su e7 includendolo (cattura).
+    // - Verso Sud: l'ostacolo in e2 (Pedone alleato), si ferma a e3 e NON include e2.
+    // - Verso Ovest/Est: campo libero fino ai bordi della scacchiera (traversa 4 vuota).
+    uint64_t rookMoves = myBoard.GetGeneratedMoves(Color::WHITE, customRookBoard, PiecesEnum::ROOKS);
+    std::cout << "Mosse Torre da e4 (Cattura su e7, bloccata a e3 da alleato, traversa 4 libera):";
+    printBitboard(rookMoves, testSquare);
+
+
+    // --- TEST DONNA ---
+    std::cout << "--- Test E3: Donna Bianca in e4 (indice 28) ---\n";
+    uint64_t customQueenBoard = 0ULL;
+    customQueenBoard = setBit(customQueenBoard, testSquare); // e4
+
+    // La Donna deve combinare esattamente le mosse dell'Alfiere e della Torre calcolate sopra.
+    uint64_t queenMoves = myBoard.GetGeneratedMoves(Color::WHITE, customQueenBoard, PiecesEnum::QUEEN);
+    std::cout << "Mosse Donna da e4 (Unione completa di diagonali e ortogonali):";
+    printBitboard(queenMoves, testSquare);
 
     return 0;
 }

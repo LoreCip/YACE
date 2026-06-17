@@ -1,10 +1,10 @@
 #include <cstdint>
-#include <iostream>
 #include <sys/types.h>
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
 #include "LookupTables.hpp"
+#include "Move.hpp"
 #include "Pieces.hpp"
 
 /* PRIVATE */
@@ -88,10 +88,10 @@ uint64_t Board::ComputeRookMoves(int color, uint64_t bitboard){
 
     while (bitboard != (uint64_t) 0 ) {
         int square = __builtin_ctzll(bitboard);         // Funzione intrinseca che trova l'LSB
-        allMoves |= ComputeRay(8, ~(uint64_t) 0,  square);
-        allMoves |= ComputeRay(1, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-8, ~(uint64_t) 0,  square);
-        allMoves |= ComputeRay(-1, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(-1, LookupTables::notColumnH,  square);
+        allMoves |= ComputeRay(1, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(8, LookupTables::nullEdge,  square);
+        allMoves |= ComputeRay(-8, LookupTables::nullEdge,  square);
 
         bitboard = clearBit(bitboard, square); // To avoid an infinite loop, remove the rook
     }
@@ -105,14 +105,14 @@ uint64_t Board::ComputeQueenMoves(int color, uint64_t bitboard){
 
     while (bitboard != (uint64_t) 0 ) { // generally only one loop, but there might be more than one
         int square = __builtin_ctzll(bitboard);         // Funzione intrinseca che trova l'LSB
-        allMoves |= ComputeRay(8, ~(uint64_t) 0,  square);
-        allMoves |= ComputeRay(1, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-8, ~(uint64_t) 0,  square);
-        allMoves |= ComputeRay(-1, LookupTables::notColumnA,  square);
-        allMoves |= ComputeRay(9, LookupTables::notColumnA,  square);
-        allMoves |= ComputeRay(7, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-9, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-7, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(8, LookupTables::nullEdge,  square);
+        allMoves |= ComputeRay(1, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(-8, LookupTables::nullEdge,  square);
+        allMoves |= ComputeRay(-1, LookupTables::notColumnH,  square);
+        allMoves |= ComputeRay(9, LookupTables::notColumnH,  square);
+        allMoves |= ComputeRay(7, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(-9, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(-7, LookupTables::notColumnH,  square);
 
         bitboard = clearBit(bitboard, square); // To avoid an infinite loop, remove the queen
     }
@@ -124,9 +124,15 @@ uint64_t Board::ComputeRay(int direction, uint64_t edge, int square){
     uint64_t allMoves = (uint64_t) 0;
     uint64_t ray = (uint64_t)1 << square;
     while(true) {
-        ray = direction > 0 ? ray << direction : ray >> (-direction);
-        ray &= edge;
+        // 1. Applichi la maschera di bordo PRIMA dello shift per bloccare il bit se è sul confine
+        ray &= edge; 
         if (ray == (uint64_t) 0) break;
+
+        // 2. Esegui lo shift in sicurezza
+        ray = direction > 0 ? ray << direction : ray >> (-direction);
+        if (ray == (uint64_t) 0) break;
+
+        // 3. Salvi la mossa e verifichi gli ostacoli occupazionali
         allMoves |= ray;
         if (ray & totalOccupation) break;
     }
@@ -137,6 +143,11 @@ uint64_t Board::ComputeRay(int direction, uint64_t edge, int square){
 /* PUBLIC  */
 
 void Board::InitializeBoard(){
+    
+    // White always starts
+    sideToMove = Color::WHITE; 
+
+    // Fill board
     for (int color = 0; color < 2; color++){
        
         // Pawns
@@ -186,7 +197,58 @@ uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum piece
     else if (piece == PiecesEnum::KNIGHTS) return ComputeKnightMoves(color, bitboard);
     else if (piece == PiecesEnum::KING) return ComputeKingMoves(color, bitboard);
     else if (piece == PiecesEnum::BISHOPS) return ComputeBishopMoves(color, bitboard);
-    else if (piece == PiecesEnum::ROOKS) return ComputeBishopMoves(color, bitboard);
-    else if (piece == PiecesEnum::QUEEN) return ComputeBishopMoves(color, bitboard);
+    else if (piece == PiecesEnum::ROOKS) return ComputeRookMoves(color, bitboard);
+    else if (piece == PiecesEnum::QUEEN) return ComputeQueenMoves(color, bitboard);
     else return 0;
+}
+
+bool Board::MakeMove(Move move){
+    int from = getMoveFrom(move);
+    int to = getMoveTo(move);
+    int flags = getMoveFlags(move);
+
+    int us = sideToMove;
+    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
+
+    // Find correct bitboard to modify
+    int pieceType;
+    for (pieceType = 0; pieceType < NUM_PIECES; pieceType++){
+        if (getBit(sides[us][pieceType], from)) break;
+    }
+
+    // Captures
+    int capturedPieceType = -1;
+    if (flags == FlagMap::CAPTURE || flags == FlagMap::ENPASS || flags == FlagMap::PRCAPBISHOP ||
+        flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) { 
+        for (capturedPieceType = 0; capturedPieceType < NUM_PIECES; capturedPieceType++){
+            if (getBit(sides[them][capturedPieceType], to)) break;
+        }
+    }
+
+    // Move our piece
+    sides[us][pieceType] = clearBit(sides[us][pieceType], from);
+    sides[us][pieceType] = setBit(sides[us][pieceType], to);
+    // Eventually delete the enemies piece
+    sides[them][capturedPieceType] = flags & 1 ? clearBit(sides[them][capturedPieceType], to) :
+                                                     sides[them][capturedPieceType];
+    
+    // Update global board
+    for (int color = 0; color < 2; color++){
+        for (int i = 0; i < NUM_PIECES; i++) {
+            colorOccupation[color] |= sides[color][i];
+        }
+    }
+    totalOccupation = colorOccupation[0] | colorOccupation[1];
+    freeCells = ~totalOccupation;  
+
+    // Change turn
+    sideToMove = them;
+
+    
+    return true;
+}
+
+
+void Board::UnmakeMove(Move move){
+    return;
 }

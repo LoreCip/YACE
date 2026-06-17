@@ -13,9 +13,10 @@ namespace LookupTables{
     inline constexpr uint64_t notColumnH = 0xFEFEFEFEFEFEFEFE; // 11111110 ....
     inline constexpr uint64_t notColumnADouble = 0x3F3F3F3F3F3F3F3F; // 00111111 ....
     inline constexpr uint64_t notColumnHDouble = 0xFCFCFCFCFCFCFCFC; // 11111100 ....
+    inline constexpr uint64_t nullEdge = 0xFFFFFFFFFFFFFFFF;
 
-    inline constexpr uint64_t thirdRow = 0x0000000000FF0000ULL;
-    inline constexpr uint64_t sixthRow = 0x0000FF0000000000ULL;
+    inline constexpr uint64_t thirdRow = 0x0000000000FF0000;
+    inline constexpr uint64_t sixthRow = 0x0000FF0000000000;
 
     void init();
 }

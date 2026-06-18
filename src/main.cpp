@@ -229,5 +229,43 @@ int main() {
     std::cout << "Mosse Donna da e4 (Unione completa di diagonali e ortogonali):";
     printBitboard(queenMoves, testSquare);
 
+    // ==========================================
+    // 6. TEST CICLO DI STATO (MAKE/UNMAKE & RADAR)
+    // ==========================================
+    std::cout << "=== 6. TEST STATE MACHINE & RADAR ===\n";
+
+    // Test B1: Spostamento Semplice (e2 -> e4)
+    std::cout << "--- Test B1: Esecuzione Mossa (e2 -> e4) ---\n";
+    int e2 = 12;
+    int e4 = 28;
+    // Creiamo la mossa: from=12, to=28, flag=0 (Normale)
+    Move pawnPushMove = createMove(e2, e4, 0); 
+    
+    bool isLegal = myBoard.MakeMove(pawnPushMove);
+    std::cout << "Mossa eseguita. E' legale? " << (isLegal ? "SI" : "NO") << "\n";
+    std::cout << "Occupazione Totale DOPO la mossa (nota il bit spostato da e2 a e4):";
+    printBitboard(myBoard.GetTotalOccupation());
+
+    // Dopo e2-e4, il pedone bianco in e4 attacca d5 (35) e f5 (37).
+    // Verifichiamo se d5 è considerata attaccata dal Bianco!
+    int d5 = 35;
+    bool isD5Attacked = myBoard.IsSquareAttacked(d5, Color::WHITE);
+    std::cout << "La casa d5 e' attaccata dal Bianco? " << (isD5Attacked ? "SI" : "NO") << " (Dovrebbe essere SI per via del pedone in e4)\n";
+
+    // Verifichiamo una casa sicura (es. h5)
+    int h5 = 39;
+    bool isH5Attacked = myBoard.IsSquareAttacked(h5, Color::WHITE);
+    std::cout << "La casa h5 e' attaccata dal Bianco? " << (isH5Attacked ? "SI" : "NO") << " (Dovrebbe essere SI, per la regina in d1)\n";
+
+    int h6 = 47;
+    bool isH6Attacked = myBoard.IsSquareAttacked(h6, Color::WHITE);
+    std::cout << "La casa h6 e' attaccata dal Bianco? " << (isH6Attacked ? "SI" : "NO") << " (Dovrebbe essere NO)\n";
+
+    // Test B2: Annullamento della Mossa
+    std::cout << "--- Test B2: Rollback (UnmakeMove) ---\n";
+    myBoard.UnmakeMove(pawnPushMove);
+    std::cout << "Occupazione Totale DOPO UnmakeMove (deve essere identica all'inizio partita, pedone tornato in e2):";
+    printBitboard(myBoard.GetTotalOccupation());
+
     return 0;
 }

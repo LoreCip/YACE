@@ -14,7 +14,8 @@ namespace PiecesEnum {
         KNIGHTS,
         BISHOPS,
         QUEEN,
-        KING
+        KING,
+        NONE
     };
 
     static const Type All[] = { PAWNS, ROOKS, KNIGHTS, BISHOPS, QUEEN, KING };

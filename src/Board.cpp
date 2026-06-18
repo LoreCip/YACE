@@ -170,14 +170,9 @@ void Board::InitializeBoard(){
         sides[color][PiecesEnum::QUEEN] = setBit(sides[color][PiecesEnum::QUEEN], startPos+3);
         // Queen
         sides[color][PiecesEnum::KING] = setBit(sides[color][PiecesEnum::KING], startPos+4);
-
-        for (int i = 0; i < NUM_PIECES; i++) {
-            colorOccupation[color] |= sides[color][i];    
-        }
     }
     
-    totalOccupation = colorOccupation[0] | colorOccupation[1];
-    freeCells = ~totalOccupation;  
+    UpdateGlobalBoardState();
 }
 
 uint64_t Board::GetColorOccupation(int color){
@@ -205,6 +200,7 @@ uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type
 }
 
 bool Board::MakeMove(Move move){
+
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
@@ -223,7 +219,7 @@ bool Board::MakeMove(Move move){
 
     // Captures
     bool captured = false;
-    PiecesEnum::Type capturedPieceType;
+    PiecesEnum::Type capturedPieceType = PiecesEnum::NONE;
     if (flags == FlagMap::CAPTURE || flags == FlagMap::ENPASS || flags == FlagMap::PRCAPBISHOP ||
         flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) {
         captured = true;
@@ -235,6 +231,9 @@ bool Board::MakeMove(Move move){
         }
     }
 
+    history[historyPly].capturedPiece = capturedPieceType;
+    historyPly++;
+
     // Move our piece
     sides[us][pieceType] = clearBit(sides[us][pieceType], from);
     sides[us][pieceType] = setBit(sides[us][pieceType], to);
@@ -242,19 +241,12 @@ bool Board::MakeMove(Move move){
     if (captured){
         sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], to);
     }
-    
-    // Update global board
-    for (int color = 0; color < 2; color++){
-        for (const auto piece : PiecesEnum::All) {
-            colorOccupation[color] |= sides[color][piece];
-        }
-    }
-    totalOccupation = colorOccupation[0] | colorOccupation[1];
-    freeCells = ~totalOccupation;  
+
+    UpdateGlobalBoardState();
 
     uint64_t kingPosition = __builtin_ctzll(sides[us][PiecesEnum::KING]);
     if (IsSquareAttacked(kingPosition, them)){
-        UnmakeMove(move, pieceType, captured, capturedPieceType);
+        UnmakeMove(move);
         return false;
     }
 
@@ -308,19 +300,42 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
     return false;
 }
 
-void Board::UnmakeMove(Move move, PiecesEnum::Type pieceType, bool captured, PiecesEnum::Type capturedPieceType){
+void Board::UnmakeMove(Move move){
+    sideToMove = sideToMove == Color::WHITE ? Color::BLACK : Color::WHITE;
+    int us = sideToMove;
+    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
+
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
 
-    int us = sideToMove;
-    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
+    historyPly--;
+    PiecesEnum::Type capturedPiece = history[historyPly].capturedPiece;
+    PiecesEnum::Type pieceType;
+    for ( const auto piece : PiecesEnum::All ){
+        if (getBit(sides[us][piece], to)) {
+            pieceType = piece;
+            break;
+        }
+    }
 
     sides[us][pieceType] = setBit(sides[us][pieceType], from);
     sides[us][pieceType] = clearBit(sides[us][pieceType], to);
     // Eventually delete the enemies piece
-    if (captured){
-        sides[them][capturedPieceType] = setBit(sides[them][capturedPieceType], to);
+    if (capturedPiece != PiecesEnum::NONE){
+        sides[them][capturedPiece] = setBit(sides[them][capturedPiece], to);
     }
 
+    UpdateGlobalBoardState();
     return;
+}
+
+void Board::UpdateGlobalBoardState() {
+    for (int color = 0; color < 2; color++){
+        colorOccupation[color] = 0;
+        for (const auto piece : PiecesEnum::All) {
+            colorOccupation[color] |= sides[color][piece];
+        }
+    }
+    totalOccupation = colorOccupation[0] | colorOccupation[1];
+    freeCells = ~totalOccupation;  
 }

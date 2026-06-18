@@ -28,10 +28,10 @@ public:
     uint64_t GetColorOccupation(int color);
     uint64_t GetTotalOccupation();
     uint64_t GetFreeCells();
-    uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum piece);
+    uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece);
 
     bool MakeMove(Move move);
-    void UnmakeMove(Move move);
+    void UnmakeMove(Move move, PiecesEnum::Type pieceType, bool captured, PiecesEnum::Type capturedPieceType);
 };
 
 #endif

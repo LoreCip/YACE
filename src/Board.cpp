@@ -192,14 +192,16 @@ uint64_t Board::GetFreeCells(){
     return freeCells;
 }
 
-uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum piece){
-    if (piece == PiecesEnum::PAWNS) return ComputePawnMoves(color, bitboard);
-    else if (piece == PiecesEnum::KNIGHTS) return ComputeKnightMoves(color, bitboard);
-    else if (piece == PiecesEnum::KING) return ComputeKingMoves(color, bitboard);
-    else if (piece == PiecesEnum::BISHOPS) return ComputeBishopMoves(color, bitboard);
-    else if (piece == PiecesEnum::ROOKS) return ComputeRookMoves(color, bitboard);
-    else if (piece == PiecesEnum::QUEEN) return ComputeQueenMoves(color, bitboard);
-    else return 0;
+uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece){
+    switch (piece) {
+        case PiecesEnum::PAWNS:   return ComputePawnMoves(color, bitboard);
+        case PiecesEnum::KNIGHTS: return ComputeKnightMoves(color, bitboard);
+        case PiecesEnum::KING:    return ComputeKingMoves(color, bitboard);
+        case PiecesEnum::BISHOPS: return ComputeBishopMoves(color, bitboard);
+        case PiecesEnum::ROOKS:   return ComputeRookMoves(color, bitboard);
+        case PiecesEnum::QUEEN:   return ComputeQueenMoves(color, bitboard);
+    }
+    return 0;
 }
 
 bool Board::MakeMove(Move move){
@@ -211,17 +213,25 @@ bool Board::MakeMove(Move move){
     int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
 
     // Find correct bitboard to modify
-    int pieceType;
-    for (pieceType = 0; pieceType < NUM_PIECES; pieceType++){
-        if (getBit(sides[us][pieceType], from)) break;
+    PiecesEnum::Type pieceType;
+    for ( const auto piece : PiecesEnum::All ){
+        if (getBit(sides[us][piece], from)) {
+            pieceType = piece;
+            break;
+        }
     }
 
     // Captures
-    int capturedPieceType = -1;
+    bool captured = false;
+    PiecesEnum::Type capturedPieceType;
     if (flags == FlagMap::CAPTURE || flags == FlagMap::ENPASS || flags == FlagMap::PRCAPBISHOP ||
-        flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) { 
-        for (capturedPieceType = 0; capturedPieceType < NUM_PIECES; capturedPieceType++){
-            if (getBit(sides[them][capturedPieceType], to)) break;
+        flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) {
+        captured = true;
+        for ( const auto piece : PiecesEnum::All ){
+            if (getBit(sides[them][piece], to)){
+                capturedPieceType = piece;
+                break;
+            }
         }
     }
 
@@ -229,26 +239,88 @@ bool Board::MakeMove(Move move){
     sides[us][pieceType] = clearBit(sides[us][pieceType], from);
     sides[us][pieceType] = setBit(sides[us][pieceType], to);
     // Eventually delete the enemies piece
-    sides[them][capturedPieceType] = flags & 1 ? clearBit(sides[them][capturedPieceType], to) :
-                                                     sides[them][capturedPieceType];
+    if (captured){
+        sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], to);
+    }
     
     // Update global board
     for (int color = 0; color < 2; color++){
-        for (int i = 0; i < NUM_PIECES; i++) {
-            colorOccupation[color] |= sides[color][i];
+        for (const auto piece : PiecesEnum::All) {
+            colorOccupation[color] |= sides[color][piece];
         }
     }
     totalOccupation = colorOccupation[0] | colorOccupation[1];
     freeCells = ~totalOccupation;  
 
+    uint64_t kingPosition = __builtin_ctzll(sides[us][PiecesEnum::KING]);
+    if (IsSquareAttacked(kingPosition, them)){
+        UnmakeMove(move, pieceType, captured, capturedPieceType);
+        return false;
+    }
+
     // Change turn
     sideToMove = them;
-
-    
     return true;
 }
 
+bool Board::IsSquareAttacked(int square, int attackingColor) {
+    int us = sideToMove; // Il colore che si sta difendendo (es. il Re sotto controllo)
 
-void Board::UnmakeMove(Move move){
+    // 1. ATTACCHI DEI PEDONI
+    // Usiamo la lookup table degli attacchi del DIFENSORE: se un pedone del difensore 
+    // da qui attaccherebbe quelle case, significa che un pedone attaccante da quelle case attacca noi.
+    uint64_t pawnTriggers = LookupTables::pawnAttacks[us][square];
+    if (pawnTriggers & sides[attackingColor][PiecesEnum::PAWNS]) return true;
+
+    // 2. ATTACCHI DEI CAVALLI
+    // I salti del cavallo sono simmetrici. Se un cavallo fittizio da qui salta su un cavallo reale nemico, siamo attaccati.
+    uint64_t knightTriggers = LookupTables::knightAttacks[square];
+    if (knightTriggers & sides[attackingColor][PiecesEnum::KNIGHTS]) return true;
+
+    // 3. ATTACCHI DEL RE
+    // Anche i movimenti del Re sono simmetrici (passo singolo).
+    uint64_t kingTriggers = LookupTables::kingAttacks[square];
+    if (kingTriggers & sides[attackingColor][PiecesEnum::KING]) return true;
+
+    // 4. ATTACCHI SCORREVOLI DIAGONALI (ALFIERI e DONNE)
+    // Lanciamo i raggi dell'Alfiere dalla casa target. Se intersecano un Alfiere o una Donna nemica, siamo attaccati.
+    uint64_t bishopTriggers = (uint64_t)0;
+    bishopTriggers |= ComputeRay(9, LookupTables::notColumnA,  square);
+    bishopTriggers |= ComputeRay(7, LookupTables::notColumnH,  square);
+    bishopTriggers |= ComputeRay(-9, LookupTables::notColumnH,  square);
+    bishopTriggers |= ComputeRay(-7, LookupTables::notColumnA,  square);
+    
+    uint64_t diagonalThreaths = sides[attackingColor][PiecesEnum::BISHOPS] | sides[attackingColor][PiecesEnum::QUEEN];
+    if (bishopTriggers & diagonalThreaths) return true;
+
+    // 5. ATTACCHI SCORREVOLI ORTOGONALI (TORRI e DONNE)
+    // Lanciamo i raggi della Torre dalla casa target. Se intersecano una Torre o una Donna nemica, siamo attaccati.
+    uint64_t rookTriggers = (uint64_t)0;
+    rookTriggers |= ComputeRay(8, ~0ULL,  square);
+    rookTriggers |= ComputeRay(1, LookupTables::notColumnH,  square);
+    rookTriggers |= ComputeRay(-8, ~0ULL,  square);
+    rookTriggers |= ComputeRay(-1, LookupTables::notColumnA,  square);
+
+    uint64_t orthogonalThreaths = sides[attackingColor][PiecesEnum::ROOKS] | sides[attackingColor][PiecesEnum::QUEEN];
+    if (rookTriggers & orthogonalThreaths) return true;
+
+    // Se nessun raggio o salto ha intersecato un pezzo attaccante reale, la casa è sicura.
+    return false;
+}
+
+void Board::UnmakeMove(Move move, PiecesEnum::Type pieceType, bool captured, PiecesEnum::Type capturedPieceType){
+    int from = getMoveFrom(move);
+    int to = getMoveTo(move);
+
+    int us = sideToMove;
+    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
+
+    sides[us][pieceType] = setBit(sides[us][pieceType], from);
+    sides[us][pieceType] = clearBit(sides[us][pieceType], to);
+    // Eventually delete the enemies piece
+    if (captured){
+        sides[them][capturedPieceType] = setBit(sides[them][capturedPieceType], to);
+    }
+
     return;
 }

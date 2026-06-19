@@ -7,9 +7,9 @@
 #include <cstdint>
 
 /* PRIVATE */
-
 int Engine::Minimax(Board& board, int depth) {
     if (depth == 0) return board.Evaluate();
+    if (board.IsRepetition()) return 21999;
 
     int bestScore = -999999;
     int legalMovesCount = 0; 
@@ -153,7 +153,7 @@ void Engine::GeneratePawnMoves(Board& board, std::vector<Move>& moveList) {
 
 Move Engine::GetBestMove(Board& board, int depth) {
     std::vector<Move> moveList = GenerateAllMoves(board);
-    Move bestMove;
+    Move bestMove = 0;
     int bestScore = -999999;
 
     for (Move move : moveList) {

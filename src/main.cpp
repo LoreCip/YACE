@@ -2,6 +2,9 @@
 #include "Board.hpp"
 #include "Engine.hpp"
 #include "Move.hpp"
+#include "LookupTables.hpp"
+
+
 
 std::string moveToString(Move move) {
     if (move == 0) return "NESSUNA MOSSA"; // Gestione mossa nulla o di errore
@@ -94,6 +97,7 @@ Move stringToMove(Board& board, std::string moveStr) {
 
 
 int main() {
+    LookupTables::init();
     Board board;
     board.InitializeBoard();
     Engine engine;
@@ -107,7 +111,7 @@ int main() {
     }
 
     // Calcola e stampa la mossa migliore
-    Move bestMove = engine.GetBestMove(board, 4); // Profondità 4
+    Move bestMove = engine.GetBestMove(board, 5); // Profondità 4
     std::cout << moveToString(bestMove) << std::endl;
 
     return 0;

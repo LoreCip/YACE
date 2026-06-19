@@ -2,23 +2,20 @@ import subprocess
 import chess
 import chess.pgn
 import time
+import concurrent.futures
+import os
 
 BASEPATH = "./versions/"
-# Percorsi agli eseguibili C++ compilati
 ENGINE_A = BASEPATH + "engine_v1"
-ENGINE_B = BASEPATH + "engine_v1"
+ENGINE_B = BASEPATH + "engine_v2"
 
-NUM_GAMES = 10
+NUM_GAMES = 1
+MAX_WORKERS = min(min(8, (os.cpu_count() or 1)), NUM_GAMES)
 
 def get_engine_move(engine_path, move_history):
-    """
-    Invia lo storico delle mosse all'eseguibile C++ e recupera la risposta.
-    """
-    # Prepara l'input: es. "e2e4 e7e5 g1f3 go\n"
     input_data = " ".join(move_history) + (" " if move_history else "") + "go\n"
     
     try:
-        # Avvia il processo C++
         process = subprocess.Popen(
             [engine_path],
             stdin=subprocess.PIPE,
@@ -27,10 +24,8 @@ def get_engine_move(engine_path, move_history):
             text=True
         )
         
-        # Invia le mosse e aspetta l'output
-        stdout, stderr = process.communicate(input=input_data, timeout=10) # Timeout 10 sec
+        stdout, stderr = process.communicate(input=input_data, timeout=10) 
         
-        # L'ultima riga non vuota stampata dovrebbe essere la mossa (es. "e2e4")
         lines = stdout.strip().split('\n')
         best_move_str = lines[-1].strip()
         
@@ -48,31 +43,28 @@ def play_game(white_engine, black_engine):
     board = chess.Board()
     move_history = []
     
-    # --- NUOVO: Inizializza il PGN ---
     game = chess.pgn.Game()
     game.headers["Event"] = "YACE Gauntlet Match"
-    game.headers["White"] = white_engine.split("/")[-1] # Prende solo il nome del file
+    game.headers["White"] = white_engine.split("/")[-1] 
     game.headers["Black"] = black_engine.split("/")[-1]
     node = game
-    # ---------------------------------
     
     while not board.is_game_over():
         current_engine = white_engine if board.turn == chess.WHITE else black_engine
         move_str = get_engine_move(current_engine, move_history)
         
         if not move_str:
-            return "Errore Motore", game # Ritorna anche il game
+            return "Errore Motore", game
 
         try:
             move = chess.Move.from_uci(move_str) 
             if move in board.legal_moves:
                 board.push(move)
                 move_history.append(move_str)
-                
-                # --- NUOVO: Aggiunge la mossa al PGN ---
                 node = node.add_variation(move)
-                # ---------------------------------------
             else:
+                print(f"\n[DEBUG] Mossa ILLEGALE ricevuta dal C++: '{move_str}'")
+                print(f"[DEBUG] Mosse legali secondo Python: {[m.uci() for m in board.legal_moves]}")
                 result = "1-0" if board.turn == chess.BLACK else "0-1"
                 game.headers["Result"] = result
                 return result, game
@@ -83,51 +75,65 @@ def play_game(white_engine, black_engine):
     game.headers["Result"] = board.result()
     return board.result(), game
 
+def run_match_task(match_id):
+    """
+    Funzione wrapper (il "lavoro" del singolo thread).
+    Gioca una singola partita e impacchetta tutti i risultati in un dizionario.
+    """
+    if match_id % 2 == 0:
+        white, black = ENGINE_A, ENGINE_B
+        white_name, black_name = "Engine A", "Engine B"
+    else:
+        white, black = ENGINE_B, ENGINE_A
+        white_name, black_name = "Engine B", "Engine A"
+        
+    start_time = time.time()
+    match_result, game = play_game(white, black)
+    duration = time.time() - start_time
+    
+    return {
+        "id": match_id + 1,
+        "white": white,
+        "black": black,
+        "white_name": white_name,
+        "black_name": black_name,
+        "result": match_result,
+        "game": game,
+        "duration": duration
+    }
+
 def main():
     print(f"--- INIZIO ARENA: {ENGINE_A} vs {ENGINE_B} ---")
-    print(f"Partite programmate: {NUM_GAMES}\n")
+    print(f"Partite programmate: {NUM_GAMES}")
+    print(f"Motori avviati in parallelo: {MAX_WORKERS}\n")
     
     score = {ENGINE_A: 0, ENGINE_B: 0, "Draws": 0}
 
-    # Apriamo il file una sola volta per tutto il torneo
-    with open("gauntlet_results.pgn", "w", encoding="utf-8") as pgn_file:
+    with open(BASEPATH+"gauntlet_results.pgn", "w", encoding="utf-8") as pgn_file:
         
-        # UN UNICO CICLO FOR
-        for i in range(NUM_GAMES):
-            # Alterniamo i colori a ogni partita
-            if i % 2 == 0:
-                white, black = ENGINE_A, ENGINE_B
-                white_name, black_name = "Engine A", "Engine B"
-            else:
-                white, black = ENGINE_B, ENGINE_A
-                white_name, black_name = "Engine B", "Engine A"
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = [executor.submit(run_match_task, i) for i in range(NUM_GAMES)]
+            for future in concurrent.futures.as_completed(futures):
+                res = future.result() 
                 
-            print(f"Partita {i+1}/{NUM_GAMES}: {white_name} (Bianco) vs {black_name} (Nero)... ", end="", flush=True)
-            
-            start_time = time.time()
-            
-            # Giochiamo la partita
-            match_result, game = play_game(white, black) 
-            
-            duration = time.time() - start_time
-            
-            # Salviamo nel PGN
-            print(game, file=pgn_file, end="\n\n")
-            
-            # Aggiorniamo i punteggi e stampiamo il risultato in console
-            if match_result == "1-0":
-                score[white] += 1
-                print(f"Vittoria BIANCO in {duration:.1f}s")
-            elif match_result == "0-1":
-                score[black] += 1
-                print(f"Vittoria NERO in {duration:.1f}s")
-            elif match_result == "1/2-1/2":
-                score["Draws"] += 1
-                print(f"PATTA in {duration:.1f}s")
-            else:
-                print(f"PARTITA ANNULLATA ({match_result})")
+                print(f"Partita {res['id']}/{NUM_GAMES}: {res['white_name']} (B) vs {res['black_name']} (N)... ", end="", flush=True)
+                print(res['game'], file=pgn_file, end="\n\n")
+                pgn_file.flush() # Forza il salvataggio su disco immediato
+                
+                match_result = res['result']
+                if match_result == "1-0":
+                    score[res['white']] += 1
+                    print(f"Vittoria BIANCO in {res['duration']:.1f}s")
+                elif match_result == "0-1":
+                    score[res['black']] += 1
+                    print(f"Vittoria NERO in {res['duration']:.1f}s")
+                elif match_result == "1/2-1/2":
+                    score["Draws"] += 1
+                    print(f"PATTA in {res['duration']:.1f}s")
+                else:
+                    print(f"PARTITA ANNULLATA ({match_result})")
 
-    # Report Finale (fuori dal 'with', il file ora è chiuso in modo sicuro)
+    # Report Finale
     print("\n" + "="*30)
     print("RISULTATI FINALI")
     print("="*30)
@@ -135,7 +141,6 @@ def main():
     print(f"{ENGINE_B} : {score[ENGINE_B]} vittorie")
     print(f"Patte      : {score['Draws']}")
     print("="*30)
-    print("Analizza in https://lichess.org/paste")
 
 if __name__ == "__main__":
     main()

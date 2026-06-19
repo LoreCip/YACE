@@ -1,0 +1,10 @@
+[Event "YACE Gauntlet Match"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "engine_v1"]
+[Black "engine_v2"]
+[Result "*"]
+
+1. Nc3 Nc6 2. Rb1 Nf6 3. Ra1 e6 4. Rb1 Bb4 5. Ra1 Ne5 6. Nb1 Kf8 7. Nc3 Qe7 8. Nb1 Kg8 9. Nc3 Qc5 10. Nb1 Ne4 11. e3 *
+

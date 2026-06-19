@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <sys/types.h>
+#include <algorithm>
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
@@ -26,9 +27,9 @@ uint64_t Board::ComputePawnMoves(int color, uint64_t bitboard) {
 
     // --- 3. Check for capture in parallel ---
     uint64_t enemyCells = GetColorOccupation(color == Color::WHITE ? Color::BLACK : Color::WHITE);
-    uint64_t westCapture = color == Color::WHITE ? (bitboard << 7) & LookupTables::notColumnH & enemyCells :
+    uint64_t westCapture = color == Color::WHITE ? (bitboard << 7) & LookupTables::notColumnA & enemyCells :
                                             (bitboard >> 9) & LookupTables::notColumnA & enemyCells;
-    uint64_t estCapture  = color == Color::WHITE ? (bitboard << 9) & LookupTables::notColumnA & enemyCells :
+    uint64_t estCapture  = color == Color::WHITE ? (bitboard << 9) & LookupTables::notColumnH & enemyCells :
                                             (bitboard >> 7) & LookupTables::notColumnH & enemyCells;
 
     // TODO: En passant
@@ -70,15 +71,13 @@ uint64_t Board::ComputeBishopMoves(int color, uint64_t bitboard){
     uint64_t allies = GetColorOccupation(color);
 
     while (bitboard != (uint64_t) 0 ) {
-        int square = __builtin_ctzll(bitboard);         // Funzione intrinseca che trova l'LSB
-        allMoves |= ComputeRay(9, LookupTables::notColumnA,  square);
-        allMoves |= ComputeRay(7, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-9, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(-7, LookupTables::notColumnA,  square);
-
-        bitboard = clearBit(bitboard, square); // To avoid an infinite loop, remove the bishop
+        int square = __builtin_ctzll(bitboard);         
+        allMoves |= ComputeRay(9, LookupTables::notColumnH,  square); // NE (+9) -> Stop H
+        allMoves |= ComputeRay(7, LookupTables::notColumnA,  square); // NW (+7) -> Stop A
+        allMoves |= ComputeRay(-9, LookupTables::notColumnA,  square); // SW (-9) -> Stop A
+        allMoves |= ComputeRay(-7, LookupTables::notColumnH,  square); // SE (-7) -> Stop H
+        bitboard = clearBit(bitboard, square); 
     }
-
     return allMoves & (~allies);
 }
 
@@ -87,15 +86,13 @@ uint64_t Board::ComputeRookMoves(int color, uint64_t bitboard){
     uint64_t allies = GetColorOccupation(color);
 
     while (bitboard != (uint64_t) 0 ) {
-        int square = __builtin_ctzll(bitboard);         // Funzione intrinseca che trova l'LSB
-        allMoves |= ComputeRay(-1, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(1, LookupTables::notColumnA,  square);
+        int square = __builtin_ctzll(bitboard);         
+        allMoves |= ComputeRay(-1, LookupTables::notColumnA,  square); // Ovest (-1) -> Stop A
+        allMoves |= ComputeRay(1, LookupTables::notColumnH,  square);  // Est (+1) -> Stop H
         allMoves |= ComputeRay(8, LookupTables::nullEdge,  square);
         allMoves |= ComputeRay(-8, LookupTables::nullEdge,  square);
-
-        bitboard = clearBit(bitboard, square); // To avoid an infinite loop, remove the rook
+        bitboard = clearBit(bitboard, square); 
     }
-
     return allMoves & (~allies);
 }
 
@@ -103,20 +100,18 @@ uint64_t Board::ComputeQueenMoves(int color, uint64_t bitboard){
     uint64_t allMoves = (uint64_t) 0;
     uint64_t allies = GetColorOccupation(color);
 
-    while (bitboard != (uint64_t) 0 ) { // generally only one loop, but there might be more than one
-        int square = __builtin_ctzll(bitboard);         // Funzione intrinseca che trova l'LSB
+    while (bitboard != (uint64_t) 0 ) { 
+        int square = __builtin_ctzll(bitboard);         
         allMoves |= ComputeRay(8, LookupTables::nullEdge,  square);
-        allMoves |= ComputeRay(1, LookupTables::notColumnA,  square);
+        allMoves |= ComputeRay(1, LookupTables::notColumnH,  square);  // Est -> Stop H
         allMoves |= ComputeRay(-8, LookupTables::nullEdge,  square);
-        allMoves |= ComputeRay(-1, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(9, LookupTables::notColumnH,  square);
-        allMoves |= ComputeRay(7, LookupTables::notColumnA,  square);
-        allMoves |= ComputeRay(-9, LookupTables::notColumnA,  square);
-        allMoves |= ComputeRay(-7, LookupTables::notColumnH,  square);
-
-        bitboard = clearBit(bitboard, square); // To avoid an infinite loop, remove the queen
+        allMoves |= ComputeRay(-1, LookupTables::notColumnA,  square); // Ovest -> Stop A
+        allMoves |= ComputeRay(9, LookupTables::notColumnH,  square);  // NE -> Stop H
+        allMoves |= ComputeRay(7, LookupTables::notColumnA,  square);  // NW -> Stop A
+        allMoves |= ComputeRay(-9, LookupTables::notColumnA,  square); // SW -> Stop A
+        allMoves |= ComputeRay(-7, LookupTables::notColumnH,  square); // SE -> Stop H
+        bitboard = clearBit(bitboard, square); 
     }
-
     return allMoves & (~allies);
 }
 
@@ -220,6 +215,7 @@ bool Board::MakeMove(Move move){
         }
     }
 
+    positionHistory[historyPly] = GetHash();
     history[historyPly].movedPiece = pieceType;
     history[historyPly].capturedPiece = capturedPieceType;
     historyPly++;
@@ -258,19 +254,19 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
     if (kingTriggers & sides[attackingColor][PiecesEnum::KING]) return true;
 
     uint64_t bishopTriggers = (uint64_t)0;
-    bishopTriggers |= ComputeRay(9, LookupTables::notColumnA,  square);
-    bishopTriggers |= ComputeRay(7, LookupTables::notColumnH,  square);
-    bishopTriggers |= ComputeRay(-9, LookupTables::notColumnH,  square);
-    bishopTriggers |= ComputeRay(-7, LookupTables::notColumnA,  square);
+    bishopTriggers |= ComputeRay(9, LookupTables::notColumnH,  square);
+    bishopTriggers |= ComputeRay(7, LookupTables::notColumnA,  square);
+    bishopTriggers |= ComputeRay(-9, LookupTables::notColumnA,  square);
+    bishopTriggers |= ComputeRay(-7, LookupTables::notColumnH,  square);
     
     uint64_t diagonalThreaths = sides[attackingColor][PiecesEnum::BISHOPS] | sides[attackingColor][PiecesEnum::QUEEN];
     if (bishopTriggers & diagonalThreaths) return true;
 
     uint64_t rookTriggers = (uint64_t)0;
     rookTriggers |= ComputeRay(8, ~0ULL,  square);
-    rookTriggers |= ComputeRay(1, LookupTables::notColumnA,  square);
+    rookTriggers |= ComputeRay(1, LookupTables::notColumnH,  square);
     rookTriggers |= ComputeRay(-8, ~0ULL,  square);
-    rookTriggers |= ComputeRay(-1, LookupTables::notColumnH,  square);
+    rookTriggers |= ComputeRay(-1, LookupTables::notColumnA,  square);
 
     uint64_t orthogonalThreaths = sides[attackingColor][PiecesEnum::ROOKS] | sides[attackingColor][PiecesEnum::QUEEN];
     if (rookTriggers & orthogonalThreaths) return true;
@@ -314,26 +310,158 @@ void Board::UpdateGlobalBoardState() {
     freeCells = ~totalOccupation;  
 }
 
+// Esempio di Piece-Square Table per i Cavalli (incentiva il centro)
+const int knightPST[64] = {
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50
+};
+
+// Esempio di PST per i pedoni (incentiva l'avanzamento, lato Bianco)
+const int pawnPST[64] = {
+      0,  0,  0,  0,  0,  0,  0,  0,
+     50, 50, 50, 50, 50, 50, 50, 50,
+     10, 10, 20, 30, 30, 20, 10, 10,
+      5,  5, 10, 25, 25, 10,  5,  5,
+      0,  0,  0, 20, 20,  0,  0,  0,
+      5, -5,-10,  0,  0,-10, -5,  5,
+      5, 10, 10,-20,-20, 10, 10,  5,
+      0,  0,  0,  0,  0,  0,  0,  0
+};
+
+// PST per gli Alfieri: incentiva le diagonali attive, il controllo del centro e penalizza i bordi/angoli
+const int bishopPST[64] = {
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20
+};
+
+// PST per le Torri: incentiva la permanenza sulle colonne centrali (d, e) e premia moltissimo l'invasione della 7ª traversa
+const int rookPST[64] = {
+      0,  0,  0,  5,  5,  0,  0,  0,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+     -5,  0,  0,  0,  0,  0,  0, -5,
+      5, 10, 10, 10, 10, 10, 10,  5,
+      0,  0,  0,  0,  0,  0,  0,  0
+};
+
+// PST per la Donna: incentiva la centralizzazione prudente, scoraggia l'uscita prematura sui bordi in apertura
+const int queenPST[64] = {
+    -20,-10,-10, -5, -5,-10,-10,-20,
+    -10,  0,  5,  0,  0,  0,  0,-10,
+    -10,  5,  5,  5,  5,  5,  0,-10,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+      0,  0,  5,  5,  5,  5,  0, -5,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+// PST per il Re (Medio Gioco): punisce severamente il Re al centro o esposto, premia l'arrocco (case g1/c1)
+const int kingMiddlePST[64] = {
+     20, 30, 10,  0,  0, 10, 30, 20,
+     20, 20,  0,  0,  0,  0, 20, 20,
+    -10,-20,-20,-20,-20,-20,-20,-10,
+    -20,-30,-30,-40,-40,-30,-30,-20,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30,
+    -30,-40,-40,-50,-50,-40,-40,-30
+};
+
 int Board::Evaluate() {
-    int whiteMaterial = 0;
-    int blackMaterial = 0;
+    int whiteScore = 0;
+    int blackScore = 0;
 
-    // Standard poits (centipawns): P=100, C=300, A=300, T=500, D=900
-    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::PAWNS]) * 100;
-    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::KNIGHTS]) * 300;
-    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) * 300;
-    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::ROOKS]) * 500;
-    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::QUEEN]) * 900;
+    whiteScore += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::PAWNS]) * 100;
+    whiteScore += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::KNIGHTS]) * 300;
+    whiteScore += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) * 300;
+    whiteScore += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::ROOKS]) * 500;
+    whiteScore += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::QUEEN]) * 900;
 
-    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::PAWNS]) * 100;
-    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::KNIGHTS]) * 300;
-    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) * 300;
-    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::ROOKS]) * 500;
-    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::QUEEN]) * 900;
+    blackScore += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::PAWNS]) * 100;
+    blackScore += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::KNIGHTS]) * 300;
+    blackScore += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) * 300;
+    blackScore += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::ROOKS]) * 500;
+    blackScore += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::QUEEN]) * 900;
 
-    // If white is winning, evaluation > 0 else negative
-    int evaluation = whiteMaterial - blackMaterial;
+    auto evaluatePST = [](uint64_t bitboard, const int* pst, bool isBlack) {
+        int score = 0;
+        while (bitboard) {
+            int sq = __builtin_ctzll(bitboard); // Trova l'indice del primo bit a 1 (0-63)            
+            int pstSquare = isBlack ? (sq ^ 56) : sq; 
+            score += pst[pstSquare];
+            bitboard &= bitboard - 1;
+        }
+        return score;
+    };
+ 
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KNIGHTS], knightPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::PAWNS], pawnPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::BISHOPS], bishopPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::ROOKS], rookPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::QUEEN], queenPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KING], kingMiddlePST, false);
 
-    // "NEGAMAX"
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KNIGHTS], knightPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::PAWNS], pawnPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::BISHOPS], bishopPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::ROOKS], rookPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::QUEEN], queenPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KING], kingMiddlePST, true);
+
+    if (__builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) >= 2) whiteScore += 50;
+    if (__builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) >= 2) blackScore += 50;
+
+    int evaluation = whiteScore - blackScore;
+
     return (sideToMove == Color::WHITE) ? evaluation : -evaluation;
+}
+
+
+uint64_t Board::GetHash() {
+    uint64_t hash = 0;
+    
+    // Se tocca al Nero, cambiamo l'hash
+    if (sideToMove == Color::BLACK) {
+        hash ^= LookupTables::sideKey;
+    }
+
+    // Facciamo lo XOR di tutti i pezzi presenti sulla scacchiera
+    for (int c = 0; c < 2; c++) {
+        for (int p = 0; p < 6; p++) {
+            uint64_t bitboard = sides[c][p];
+            while (bitboard != 0ULL) {
+                int square = __builtin_ctzll(bitboard); // Trova l'indice del pezzo
+                hash ^= LookupTables::pieceKeys[c][p][square];
+                bitboard &= bitboard - 1; // Rimuove il pezzo contato
+            }
+        }
+    }
+    return hash;
+}
+
+bool Board::IsRepetition() {
+    uint64_t currentHash = GetHash();
+    
+    int limit = std::max(0, historyPly - 6);
+    for (int i = historyPly - 4; i >= limit; i -= 2) {
+        if (positionHistory[i] == currentHash) {
+            return true; // Trovata!
+        }
+    }
+    return false;
 }

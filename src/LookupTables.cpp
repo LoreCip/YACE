@@ -8,9 +8,30 @@ namespace LookupTables {
     uint64_t kingAttacks[64]   = {(uint64_t)0};
     uint64_t pawnAttacks[2][64] = {(uint64_t)0};
 
+    uint64_t pieceKeys[2][6][64];
+    uint64_t sideKey;
+
     void init(){
-        for (int i = 0; i < 64; i++){
-            
+        // --- ZOBRIST ---
+        uint64_t pseudoRandom = 1070372ULL;
+        auto rand64 = [&]() -> uint64_t {
+            pseudoRandom ^= pseudoRandom >> 12;
+            pseudoRandom ^= pseudoRandom << 25;
+            pseudoRandom ^= pseudoRandom >> 27;
+            return pseudoRandom * 2685821657736338717ULL;
+        };
+
+        for(int c = 0; c < 2; c++) {
+            for(int p = 0; p < 6; p++) {
+                for(int s = 0; s < 64; s++) {
+                    pieceKeys[c][p][s] = rand64();
+                }
+            }
+        }
+        sideKey = rand64();
+        // --------------------------------
+
+        for (int i = 0; i < 64; i++){    
             /****************************************/
             /*       Compute the knight moves       */
             /****************************************/

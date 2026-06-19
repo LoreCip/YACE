@@ -18,6 +18,7 @@ private:
     uint64_t colorOccupation[2] = {(uint64_t)0};
     uint64_t totalOccupation{(uint64_t)0};
     uint64_t freeCells{(uint64_t)0};
+    uint64_t positionHistory[1024] = {(uint64_t) 0};
     UndoState history[1024] = {{PiecesEnum::NONE, PiecesEnum::NONE}};;
     int historyPly = 0;
     int sideToMove;
@@ -40,6 +41,9 @@ public:
     void UnmakeMove(Move move);
     int Evaluate();
     bool IsSquareAttacked(int square, int attackingColor);
+
+    uint64_t GetHash();
+    bool IsRepetition();
 
     uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece);
 

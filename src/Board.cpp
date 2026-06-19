@@ -175,18 +175,6 @@ void Board::InitializeBoard(){
     UpdateGlobalBoardState();
 }
 
-uint64_t Board::GetColorOccupation(int color){
-    return colorOccupation[color];
-}
-
-uint64_t Board::GetTotalOccupation(){
-    return totalOccupation;
-}
-
-uint64_t Board::GetFreeCells(){
-    return freeCells;
-}
-
 uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece){
     switch (piece) {
         case PiecesEnum::PAWNS:   return ComputePawnMoves(color, bitboard);
@@ -195,6 +183,7 @@ uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type
         case PiecesEnum::BISHOPS: return ComputeBishopMoves(color, bitboard);
         case PiecesEnum::ROOKS:   return ComputeRookMoves(color, bitboard);
         case PiecesEnum::QUEEN:   return ComputeQueenMoves(color, bitboard);
+        case PiecesEnum::NONE:    return -1;
     }
     return 0;
 }
@@ -231,13 +220,14 @@ bool Board::MakeMove(Move move){
         }
     }
 
+    history[historyPly].movedPiece = pieceType;
     history[historyPly].capturedPiece = capturedPieceType;
     historyPly++;
 
     // Move our piece
     sides[us][pieceType] = clearBit(sides[us][pieceType], from);
     sides[us][pieceType] = setBit(sides[us][pieceType], to);
-    // Eventually delete the enemies piece
+    // Delete the enemy piece
     if (captured){
         sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], to);
     }
@@ -258,24 +248,15 @@ bool Board::MakeMove(Move move){
 bool Board::IsSquareAttacked(int square, int attackingColor) {
     int us = sideToMove; // Il colore che si sta difendendo (es. il Re sotto controllo)
 
-    // 1. ATTACCHI DEI PEDONI
-    // Usiamo la lookup table degli attacchi del DIFENSORE: se un pedone del difensore 
-    // da qui attaccherebbe quelle case, significa che un pedone attaccante da quelle case attacca noi.
     uint64_t pawnTriggers = LookupTables::pawnAttacks[us][square];
     if (pawnTriggers & sides[attackingColor][PiecesEnum::PAWNS]) return true;
 
-    // 2. ATTACCHI DEI CAVALLI
-    // I salti del cavallo sono simmetrici. Se un cavallo fittizio da qui salta su un cavallo reale nemico, siamo attaccati.
     uint64_t knightTriggers = LookupTables::knightAttacks[square];
     if (knightTriggers & sides[attackingColor][PiecesEnum::KNIGHTS]) return true;
 
-    // 3. ATTACCHI DEL RE
-    // Anche i movimenti del Re sono simmetrici (passo singolo).
     uint64_t kingTriggers = LookupTables::kingAttacks[square];
     if (kingTriggers & sides[attackingColor][PiecesEnum::KING]) return true;
 
-    // 4. ATTACCHI SCORREVOLI DIAGONALI (ALFIERI e DONNE)
-    // Lanciamo i raggi dell'Alfiere dalla casa target. Se intersecano un Alfiere o una Donna nemica, siamo attaccati.
     uint64_t bishopTriggers = (uint64_t)0;
     bishopTriggers |= ComputeRay(9, LookupTables::notColumnA,  square);
     bishopTriggers |= ComputeRay(7, LookupTables::notColumnH,  square);
@@ -285,48 +266,41 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
     uint64_t diagonalThreaths = sides[attackingColor][PiecesEnum::BISHOPS] | sides[attackingColor][PiecesEnum::QUEEN];
     if (bishopTriggers & diagonalThreaths) return true;
 
-    // 5. ATTACCHI SCORREVOLI ORTOGONALI (TORRI e DONNE)
-    // Lanciamo i raggi della Torre dalla casa target. Se intersecano una Torre o una Donna nemica, siamo attaccati.
     uint64_t rookTriggers = (uint64_t)0;
     rookTriggers |= ComputeRay(8, ~0ULL,  square);
-    rookTriggers |= ComputeRay(1, LookupTables::notColumnH,  square);
+    rookTriggers |= ComputeRay(1, LookupTables::notColumnA,  square);
     rookTriggers |= ComputeRay(-8, ~0ULL,  square);
-    rookTriggers |= ComputeRay(-1, LookupTables::notColumnA,  square);
+    rookTriggers |= ComputeRay(-1, LookupTables::notColumnH,  square);
 
     uint64_t orthogonalThreaths = sides[attackingColor][PiecesEnum::ROOKS] | sides[attackingColor][PiecesEnum::QUEEN];
     if (rookTriggers & orthogonalThreaths) return true;
 
-    // Se nessun raggio o salto ha intersecato un pezzo attaccante reale, la casa è sicura.
     return false;
 }
 
-void Board::UnmakeMove(Move move){
-    sideToMove = sideToMove == Color::WHITE ? Color::BLACK : Color::WHITE;
-    int us = sideToMove;
-    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
-
-    int from = getMoveFrom(move);
+void Board::UnmakeMove(Move move) {
     int to = getMoveTo(move);
+    int from = getMoveFrom(move);
+
+    int us = Color::WHITE;
+    if (getBit(colorOccupation[Color::BLACK], to)) {
+        us = Color::BLACK;
+    }
+    int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
 
     historyPly--;
+    PiecesEnum::Type pieceType = history[historyPly].movedPiece;
     PiecesEnum::Type capturedPiece = history[historyPly].capturedPiece;
-    PiecesEnum::Type pieceType;
-    for ( const auto piece : PiecesEnum::All ){
-        if (getBit(sides[us][piece], to)) {
-            pieceType = piece;
-            break;
-        }
-    }
 
     sides[us][pieceType] = setBit(sides[us][pieceType], from);
     sides[us][pieceType] = clearBit(sides[us][pieceType], to);
-    // Eventually delete the enemies piece
-    if (capturedPiece != PiecesEnum::NONE){
+    
+    if (capturedPiece != PiecesEnum::NONE) {
         sides[them][capturedPiece] = setBit(sides[them][capturedPiece], to);
     }
 
+    sideToMove = us;
     UpdateGlobalBoardState();
-    return;
 }
 
 void Board::UpdateGlobalBoardState() {
@@ -338,4 +312,28 @@ void Board::UpdateGlobalBoardState() {
     }
     totalOccupation = colorOccupation[0] | colorOccupation[1];
     freeCells = ~totalOccupation;  
+}
+
+int Board::Evaluate() {
+    int whiteMaterial = 0;
+    int blackMaterial = 0;
+
+    // Standard poits (centipawns): P=100, C=300, A=300, T=500, D=900
+    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::PAWNS]) * 100;
+    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::KNIGHTS]) * 300;
+    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) * 300;
+    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::ROOKS]) * 500;
+    whiteMaterial += __builtin_popcountll(sides[Color::WHITE][PiecesEnum::QUEEN]) * 900;
+
+    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::PAWNS]) * 100;
+    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::KNIGHTS]) * 300;
+    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) * 300;
+    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::ROOKS]) * 500;
+    blackMaterial += __builtin_popcountll(sides[Color::BLACK][PiecesEnum::QUEEN]) * 900;
+
+    // If white is winning, evaluation > 0 else negative
+    int evaluation = whiteMaterial - blackMaterial;
+
+    // "NEGAMAX"
+    return (sideToMove == Color::WHITE) ? evaluation : -evaluation;
 }

@@ -27,6 +27,7 @@ inline int getMoveFlags(Move move){
     return move >> 12;
 }
 
+
 enum FlagMap { 
     MOVE,        // Simple move
     DMOVE,       // Pawn double move

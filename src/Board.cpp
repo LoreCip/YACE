@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <sys/types.h>
 #include <algorithm>
+#include <ctime>
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
@@ -27,14 +28,28 @@ uint64_t Board::ComputePawnMoves(int color, uint64_t bitboard) {
 
     // --- 3. Check for capture in parallel ---
     uint64_t enemyCells = GetColorOccupation(color == Color::WHITE ? Color::BLACK : Color::WHITE);
-    uint64_t westCapture = color == Color::WHITE ? (bitboard << 7) & LookupTables::notColumnA & enemyCells :
-                                            (bitboard >> 9) & LookupTables::notColumnA & enemyCells;
-    uint64_t estCapture  = color == Color::WHITE ? (bitboard << 9) & LookupTables::notColumnH & enemyCells :
-                                            (bitboard >> 7) & LookupTables::notColumnH & enemyCells;
+    uint64_t westCapture = color == Color::WHITE ? ((bitboard & LookupTables::notColumnA) << 7) & enemyCells :
+                                            ((bitboard & LookupTables::notColumnH) >> 9) & enemyCells;
+    uint64_t estCapture  = color == Color::WHITE ? ((bitboard & LookupTables::notColumnH) << 9) & enemyCells :
+                                            ((bitboard & LookupTables::notColumnA) >> 7) & enemyCells;
 
-    // TODO: En passant
+    // --- 4. En passant ---
+    uint64_t epMoves = (uint64_t) 0;
+    if (enPassantSquare != 64 /* == -1 */) {
+        uint64_t epBB = (uint64_t)1 << enPassantSquare;
+        
+        uint64_t epWestCapture = color == Color::WHITE ? 
+            ((bitboard & LookupTables::notColumnA) << 7) & epBB :
+            ((bitboard & LookupTables::notColumnH) >> 9) & epBB;
+            
+        uint64_t epEstCapture = color == Color::WHITE ? 
+            ((bitboard & LookupTables::notColumnH) << 9) & epBB :
+            ((bitboard & LookupTables::notColumnA) >> 7) & epBB;
+            
+        epMoves = epWestCapture | epEstCapture;
+    }
 
-    return (allMoves | estCapture) | westCapture;
+    return allMoves | estCapture | westCapture | epMoves;
 }
 
 uint64_t Board::ComputeKnightMoves(int color, uint64_t bitboard){
@@ -53,18 +68,59 @@ uint64_t Board::ComputeKnightMoves(int color, uint64_t bitboard){
 uint64_t Board::ComputeKingMoves(int color, uint64_t bitboard){
     uint64_t allMoves = (uint64_t) 0;
     uint64_t allies = GetColorOccupation(color);
+    
+    // Aggiunta la dichiarazione mancante di enemyColor
+    int enemyColor = (color == Color::WHITE) ? Color::BLACK : Color::WHITE; 
 
     while (bitboard != (uint64_t) 0 ) {
-        int square = __builtin_ctzll(bitboard);        // Funzione intrinseca che trova l'LSB
+        int square = __builtin_ctzll(bitboard);        
         uint64_t attacks = LookupTables::kingAttacks[square] & (~allies);
         allMoves |= attacks;
-        bitboard = clearBit(bitboard, square);         // To avoid an infinite loop, remove the knight
+        bitboard = clearBit(bitboard, square);         
     }
 
-    // TODO: Arrocco
+    // --- Arrocco ---
+    uint64_t castlingMoves = (uint64_t) 0;
 
-    return allMoves;
+    if (color == Color::WHITE) {
+        // Arrocco Corto Bianco (e1 -> g1)
+        if (castlingRights & WK_CASTLE) {
+            if (!(totalOccupation & 0x60ULL)) { // f1 e g1 sono libere? (0x60 = bit 5 e 6)
+                if (!IsSquareAttacked(4, enemyColor) && !IsSquareAttacked(5, enemyColor) && !IsSquareAttacked(6, enemyColor)) {
+                    castlingMoves |= (1ULL << 6); // Aggiungi g1 alle mosse
+                }
+            }
+        }
+        // Arrocco Lungo Bianco (e1 -> c1)
+        if (castlingRights & WQ_CASTLE) { 
+            if (!(totalOccupation & 0xEULL)) { // b1, c1, d1 sono libere? (0xE = bit 1, 2, 3)
+                if (!IsSquareAttacked(4, enemyColor) && !IsSquareAttacked(3, enemyColor) && !IsSquareAttacked(2, enemyColor)) {
+                    castlingMoves |= (1ULL << 2); // Aggiungi c1 alle mosse
+                }
+            }
+        }
+    } else {
+        // Arrocco Corto Nero (e8 -> g8)
+        if (castlingRights & BK_CASTLE) { 
+            if (!(totalOccupation & (0x60ULL << 56))) { // f8 e g8 libere?
+                if (!IsSquareAttacked(60, enemyColor) && !IsSquareAttacked(61, enemyColor) && !IsSquareAttacked(62, enemyColor)) {
+                    castlingMoves |= (1ULL << 62);
+                }
+            }
+        }
+        // Arrocco Lungo Nero (e8 -> c8)
+        if (castlingRights & BQ_CASTLE) { 
+            if (!(totalOccupation & (0xEULL << 56))) { // b8, c8, d8 libere?
+                if (!IsSquareAttacked(60, enemyColor) && !IsSquareAttacked(59, enemyColor) && !IsSquareAttacked(58, enemyColor)) {
+                    castlingMoves |= (1ULL << 58);
+                }
+            }
+        }
+    }
+
+    return allMoves | castlingMoves;
 }
+
 
 uint64_t Board::ComputeBishopMoves(int color, uint64_t bitboard){
     uint64_t allMoves = (uint64_t) 0;
@@ -183,66 +239,102 @@ uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type
     return 0;
 }
 
-bool Board::MakeMove(Move move){
-
+bool Board::MakeMove(Move move) {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
 
     int us = sideToMove;
-    int them = us == Color::WHITE ? Color::BLACK : Color::WHITE;
+    int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
 
-    // Find correct bitboard to modify
-    PiecesEnum::Type pieceType;
-    for ( const auto piece : PiecesEnum::All ){
+    PiecesEnum::Type pieceType = PiecesEnum::NONE;
+    for (const auto piece : PiecesEnum::All) {
         if (getBit(sides[us][piece], from)) {
             pieceType = piece;
             break;
         }
     }
 
-    // Captures
     bool captured = false;
     PiecesEnum::Type capturedPieceType = PiecesEnum::NONE;
-    if (flags == FlagMap::CAPTURE || flags == FlagMap::ENPASS || flags == FlagMap::PRCAPBISHOP ||
-        flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) {
+    int captureSquare = to; 
+
+    if (flags == FlagMap::ENPASS) {
         captured = true;
-        for ( const auto piece : PiecesEnum::All ){
-            if (getBit(sides[them][piece], to)){
+        capturedPieceType = PiecesEnum::PAWNS;
+        captureSquare = (us == Color::WHITE) ? to - 8 : to + 8;
+        sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], captureSquare);
+    } 
+    else if (flags == FlagMap::CAPTURE || flags == FlagMap::PRCAPBISHOP ||
+             flags == FlagMap::PRCAPKNIGHT || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::PRCAPROOK) {
+        captured = true;
+        for (const auto piece : PiecesEnum::All) {
+            if (getBit(sides[them][piece], to)) {
                 capturedPieceType = piece;
                 break;
             }
         }
+        sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], to);
     }
 
     positionHistory[historyPly] = GetHash();
     history[historyPly].movedPiece = pieceType;
     history[historyPly].capturedPiece = capturedPieceType;
+    history[historyPly].enPassantSquare = enPassantSquare;
+    history[historyPly].castlingRights = castlingRights;
+    history[historyPly].halfMoveClock = halfMoveClock;
     historyPly++;
 
-    // Move our piece
-    sides[us][pieceType] = clearBit(sides[us][pieceType], from);
-    sides[us][pieceType] = setBit(sides[us][pieceType], to);
-    // Delete the enemy piece
-    if (captured){
-        sides[them][capturedPieceType] = clearBit(sides[them][capturedPieceType], to);
+    if (pieceType == PiecesEnum::PAWNS || captured) {
+        halfMoveClock = 0; // Reset
+    } else {
+        halfMoveClock++;
     }
 
+    enPassantSquare = 64; // Reset di default
+    if (pieceType == PiecesEnum::PAWNS && std::abs(from - to) == 16) {
+        enPassantSquare = (from + to) / 2;
+    }
+
+    if (pieceType == PiecesEnum::KING) {
+        castlingRights &= (us == Color::WHITE) ? ~(WK_CASTLE | WQ_CASTLE) : ~(BK_CASTLE | BQ_CASTLE);
+    }
+    if (from == 7 || to == 7) castlingRights &= ~WK_CASTLE;   // Torre H1
+    if (from == 0 || to == 0) castlingRights &= ~WQ_CASTLE;   // Torre A1
+    if (from == 63 || to == 63) castlingRights &= ~BK_CASTLE; // Torre H8
+    if (from == 56 || to == 56) castlingRights &= ~BQ_CASTLE; // Torre A8
+
+    sides[us][pieceType] = clearBit(sides[us][pieceType], from);
+    sides[us][pieceType] = setBit(sides[us][pieceType], to);
+
+    if (pieceType == PiecesEnum::KING && std::abs(from - to) == 2) {
+        int rookFrom = 0, rookTo = 0;
+        if (to == 6)  { rookFrom = 7;  rookTo = 5;  } // Bianco Corto
+        else if (to == 2)  { rookFrom = 0;  rookTo = 3;  } // Bianco Lungo
+        else if (to == 62) { rookFrom = 63; rookTo = 61; } // Nero Corto
+        else if (to == 58) { rookFrom = 56; rookTo = 59; } // Nero Lungo
+        
+        sides[us][PiecesEnum::ROOKS] = clearBit(sides[us][PiecesEnum::ROOKS], rookFrom);
+        sides[us][PiecesEnum::ROOKS] = setBit(sides[us][PiecesEnum::ROOKS], rookTo);
+    }
+
+    // Promozioni
+    // Esempio: se flags == FlagMap::PRQUEEN, rimuovi pedone in 'to' e aggiungi Donna in 'to'.
+
     UpdateGlobalBoardState();
+    sideToMove = them;
 
     uint64_t kingPosition = __builtin_ctzll(sides[us][PiecesEnum::KING]);
-    if (IsSquareAttacked(kingPosition, them)){
-        UnmakeMove(move);
+    if (IsSquareAttacked(kingPosition, them)) {
+        UnmakeMove(move); // La mossa è illegale, annulliamo tutto
         return false;
     }
 
-    // Change turn
-    sideToMove = them;
     return true;
 }
 
 bool Board::IsSquareAttacked(int square, int attackingColor) {
-    int us = sideToMove; // Il colore che si sta difendendo (es. il Re sotto controllo)
+    int us = (attackingColor == Color::WHITE) ? Color::BLACK : Color::WHITE;
 
     uint64_t pawnTriggers = LookupTables::pawnAttacks[us][square];
     if (pawnTriggers & sides[attackingColor][PiecesEnum::PAWNS]) return true;
@@ -275,24 +367,46 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
 }
 
 void Board::UnmakeMove(Move move) {
-    int to = getMoveTo(move);
     int from = getMoveFrom(move);
+    int to = getMoveTo(move);
+    int flags = getMoveFlags(move);
 
-    int us = Color::WHITE;
-    if (getBit(colorOccupation[Color::BLACK], to)) {
-        us = Color::BLACK;
-    }
+    int us = (sideToMove == Color::WHITE) ? Color::BLACK : Color::WHITE;
     int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
 
     historyPly--;
+    enPassantSquare = history[historyPly].enPassantSquare;
+    castlingRights  = history[historyPly].castlingRights;
+    halfMoveClock   = history[historyPly].halfMoveClock;
+    
     PiecesEnum::Type pieceType = history[historyPly].movedPiece;
     PiecesEnum::Type capturedPiece = history[historyPly].capturedPiece;
 
     sides[us][pieceType] = setBit(sides[us][pieceType], from);
     sides[us][pieceType] = clearBit(sides[us][pieceType], to);
-    
+
+    // Gestione Promozioni: se era una promozione, devi rimuovere il pezzo promosso in 'to' 
+    // e rimettere un pedone in 'from'.
+
     if (capturedPiece != PiecesEnum::NONE) {
-        sides[them][capturedPiece] = setBit(sides[them][capturedPiece], to);
+        int captureSquare = to;
+        
+        if (flags == FlagMap::ENPASS) {
+            captureSquare = (us == Color::WHITE) ? to - 8 : to + 8;
+        }
+        
+        sides[them][capturedPiece] = setBit(sides[them][capturedPiece], captureSquare);
+    }
+
+    if (pieceType == PiecesEnum::KING && std::abs(from - to) == 2) {
+        int rookFrom = 0, rookTo = 0;
+        if (to == 6)  { rookFrom = 7;  rookTo = 5;  } // Bianco Corto
+        else if (to == 2)  { rookFrom = 0;  rookTo = 3;  } // Bianco Lungo
+        else if (to == 62) { rookFrom = 63; rookTo = 61; } // Nero Corto
+        else if (to == 58) { rookFrom = 56; rookTo = 59; } // Nero Lungo
+        
+        sides[us][PiecesEnum::ROOKS] = clearBit(sides[us][PiecesEnum::ROOKS], rookTo);
+        sides[us][PiecesEnum::ROOKS] = setBit(sides[us][PiecesEnum::ROOKS], rookFrom);
     }
 
     sideToMove = us;
@@ -309,78 +423,6 @@ void Board::UpdateGlobalBoardState() {
     totalOccupation = colorOccupation[0] | colorOccupation[1];
     freeCells = ~totalOccupation;  
 }
-
-// Esempio di Piece-Square Table per i Cavalli (incentiva il centro)
-const int knightPST[64] = {
-    -50,-40,-30,-30,-30,-30,-40,-50,
-    -40,-20,  0,  0,  0,  0,-20,-40,
-    -30,  0, 10, 15, 15, 10,  0,-30,
-    -30,  5, 15, 20, 20, 15,  5,-30,
-    -30,  0, 15, 20, 20, 15,  0,-30,
-    -30,  5, 10, 15, 15, 10,  5,-30,
-    -40,-20,  0,  5,  5,  0,-20,-40,
-    -50,-40,-30,-30,-30,-30,-40,-50
-};
-
-// Esempio di PST per i pedoni (incentiva l'avanzamento, lato Bianco)
-const int pawnPST[64] = {
-      0,  0,  0,  0,  0,  0,  0,  0,
-     50, 50, 50, 50, 50, 50, 50, 50,
-     10, 10, 20, 30, 30, 20, 10, 10,
-      5,  5, 10, 25, 25, 10,  5,  5,
-      0,  0,  0, 20, 20,  0,  0,  0,
-      5, -5,-10,  0,  0,-10, -5,  5,
-      5, 10, 10,-20,-20, 10, 10,  5,
-      0,  0,  0,  0,  0,  0,  0,  0
-};
-
-// PST per gli Alfieri: incentiva le diagonali attive, il controllo del centro e penalizza i bordi/angoli
-const int bishopPST[64] = {
-    -20,-10,-10,-10,-10,-10,-10,-20,
-    -10,  0,  0,  0,  0,  0,  0,-10,
-    -10,  0,  5, 10, 10,  5,  0,-10,
-    -10,  5,  5, 10, 10,  5,  5,-10,
-    -10,  0, 10, 10, 10, 10,  0,-10,
-    -10, 10, 10, 10, 10, 10, 10,-10,
-    -10,  5,  0,  0,  0,  0,  5,-10,
-    -20,-10,-10,-10,-10,-10,-10,-20
-};
-
-// PST per le Torri: incentiva la permanenza sulle colonne centrali (d, e) e premia moltissimo l'invasione della 7ª traversa
-const int rookPST[64] = {
-      0,  0,  0,  5,  5,  0,  0,  0,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-     -5,  0,  0,  0,  0,  0,  0, -5,
-      5, 10, 10, 10, 10, 10, 10,  5,
-      0,  0,  0,  0,  0,  0,  0,  0
-};
-
-// PST per la Donna: incentiva la centralizzazione prudente, scoraggia l'uscita prematura sui bordi in apertura
-const int queenPST[64] = {
-    -20,-10,-10, -5, -5,-10,-10,-20,
-    -10,  0,  5,  0,  0,  0,  0,-10,
-    -10,  5,  5,  5,  5,  5,  0,-10,
-     -5,  0,  5,  5,  5,  5,  0, -5,
-      0,  0,  5,  5,  5,  5,  0, -5,
-    -10,  0,  5,  5,  5,  5,  0,-10,
-    -10,  0,  0,  0,  0,  0,  0,-10,
-    -20,-10,-10, -5, -5,-10,-10,-20
-};
-
-// PST per il Re (Medio Gioco): punisce severamente il Re al centro o esposto, premia l'arrocco (case g1/c1)
-const int kingMiddlePST[64] = {
-     20, 30, 10,  0,  0, 10, 30, 20,
-     20, 20,  0,  0,  0,  0, 20, 20,
-    -10,-20,-20,-20,-20,-20,-20,-10,
-    -20,-30,-30,-40,-40,-30,-30,-20,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30
-};
 
 int Board::Evaluate() {
     int whiteScore = 0;
@@ -408,27 +450,28 @@ int Board::Evaluate() {
         }
         return score;
     };
- 
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KNIGHTS], knightPST, false);
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::PAWNS], pawnPST, false);
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::BISHOPS], bishopPST, false);
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::ROOKS], rookPST, false);
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::QUEEN], queenPST, false);
-    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KING], kingMiddlePST, false);
+    
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KNIGHTS], LookupTables::knightPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::PAWNS], LookupTables::pawnPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::BISHOPS], LookupTables::bishopPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::ROOKS], LookupTables::rookPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::QUEEN], LookupTables::queenPST, false);
+    whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KING], LookupTables::kingMiddlePST, false);
 
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KNIGHTS], knightPST, true);
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::PAWNS], pawnPST, true);
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::BISHOPS], bishopPST, true);
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::ROOKS], rookPST, true);
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::QUEEN], queenPST, true);
-    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KING], kingMiddlePST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KNIGHTS], LookupTables::knightPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::PAWNS], LookupTables::pawnPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::BISHOPS], LookupTables::bishopPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::ROOKS], LookupTables::rookPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::QUEEN], LookupTables::queenPST, true);
+    blackScore += evaluatePST(sides[Color::BLACK][PiecesEnum::KING], LookupTables::kingMiddlePST, true);
 
     if (__builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) >= 2) whiteScore += 50;
     if (__builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) >= 2) blackScore += 50;
+    
 
     int evaluation = whiteScore - blackScore;
 
-    return (sideToMove == Color::WHITE) ? evaluation : -evaluation;
+    return (sideToMove == Color::WHITE) ? evaluation + (rand() % 5) :  - (evaluation + (rand() % 5));
 }
 
 

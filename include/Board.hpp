@@ -6,10 +6,19 @@
 #include "Move.hpp"
 #include "BitOperations.hpp"
 
+enum CastlingRights {
+    WK_CASTLE = 1, // 0001 (Re Bianco)
+    WQ_CASTLE = 2, // 0010 (Donna Bianca)
+    BK_CASTLE = 4, // 0100 (Re Nero)
+    BQ_CASTLE = 8  // 1000 (Donna Nera)
+};
+
 struct UndoState {
     PiecesEnum::Type movedPiece;
     PiecesEnum::Type capturedPiece;
-    // int enPassantSquare; uint8_t castlingRights;
+    uint8_t enPassantSquare; // 0-63 per la casella, 64 o 255 per "nessun en passant"
+    uint8_t castlingRights;  // Maschera di bit per i 4 arrocchi
+    uint8_t halfMoveClock;   // Contatore per la regola delle 50 mosse
 };
 
 class Board {
@@ -18,10 +27,16 @@ private:
     uint64_t colorOccupation[2] = {(uint64_t)0};
     uint64_t totalOccupation{(uint64_t)0};
     uint64_t freeCells{(uint64_t)0};
-    uint64_t positionHistory[1024] = {(uint64_t) 0};
-    UndoState history[1024] = {{PiecesEnum::NONE, PiecesEnum::NONE}};;
-    int historyPly = 0;
+    
+    // Stato del gioco e History
+    uint8_t enPassantSquare{64};       // Inizializzato a 64 (nessuna casella)
+    uint8_t castlingRights{15};        // Inizializzato a 15 (1111 in binario: tutti permessi)
+    uint8_t halfMoveClock{0};          // Si resetta a 0 dopo catture o mosse di pedone
     int sideToMove;
+
+    uint64_t positionHistory[1024] = {(uint64_t) 0};
+    UndoState history[1024]; 
+    int historyPly = 0;
 
     uint64_t ComputePawnMoves(int color, uint64_t bitboard);
     uint64_t ComputeKnightMoves(int color, uint64_t bitboard);
@@ -70,6 +85,15 @@ public:
     }
     uint64_t GetFreeCells(){
         return freeCells;
+    }
+    uint8_t GetEnPassantSquare() {
+        return enPassantSquare;
+    }
+    uint8_t GetCastlingRights() {
+        return castlingRights;
+    }
+    uint8_t GetHalfMoveClock() {
+        return halfMoveClock;
     }
 
 };

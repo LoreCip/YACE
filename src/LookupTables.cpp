@@ -43,15 +43,15 @@ namespace LookupTables {
             uint64_t attacks = (uint64_t)0;
 
             // (Traslation) AND (Mask)
-            attacks |= (bitboard << 17) & notColumnH;        // Nord-Nord-Est (+2 righe, +1 colonna)
-            attacks |= (bitboard << 10) & notColumnHDouble;  // Nord-Est-Est (+1 riga,  +2 colonne)
-            attacks |= (bitboard >> 6)  & notColumnHDouble;  // Sud-Est-Est  (-1 riga,  +2 colonne)
-            attacks |= (bitboard >> 15) & notColumnH;        // Sud-Sud-Est  (-2 righe, +1 colonna)
-            
-            attacks |= (bitboard >> 17) & notColumnA;        // Sud-Sud-Ovest (-2 righe, -1 colonna)
-            attacks |= (bitboard >> 10) & notColumnADouble;  // Sud-Ovest-Ovest (-1 riga, -2 colonne)
-            attacks |= (bitboard << 6)  & notColumnADouble;  // Nord-Ovest-Ovest (+1 riga, -2 colonne)
-            attacks |= (bitboard << 15) & notColumnA;        // Nord-Nord-Ovest (+2 righe, -1 colonna)
+            attacks |= ((bitboard & notColumnH) << 17);        // Nord-Nord-Est
+            attacks |= ((bitboard & notColumnHDouble) << 10);  // Nord-Est-Est
+            attacks |= ((bitboard & notColumnHDouble) >> 6);   // Sud-Est-Est
+            attacks |= ((bitboard & notColumnH) >> 15);        // Sud-Sud-Est
+
+            attacks |= ((bitboard & notColumnA) >> 17);        // Sud-Sud-Ovest
+            attacks |= ((bitboard & notColumnADouble) >> 10);  // Sud-Ovest-Ovest
+            attacks |= ((bitboard & notColumnADouble) << 6);   // Nord-Ovest-Ovest
+            attacks |= ((bitboard & notColumnA) << 15);        // Nord-Nord-Ovest
 
             knightAttacks[i] = attacks;
             
@@ -64,15 +64,15 @@ namespace LookupTables {
 
             attacks = (uint64_t)0;
 
-            attacks |= (bitboard >> 1) & notColumnA;  // Ovest (-1)
-            attacks |= (bitboard << 1) & notColumnH;  // Est (+1)
-            attacks |= (bitboard << 8);                // Nord (+8, No mask)
-            attacks |= (bitboard >> 8);                // Sud (-8,  No mask)
-            
-            attacks |= (bitboard << 9) & notColumnH;  // Nord-Est (+8 +1)
-            attacks |= (bitboard << 7) & notColumnA;  // Nord-Ovest (+8 -1)
-            attacks |= (bitboard >> 7) & notColumnH;  // Sud-Est (-8 +1)
-            attacks |= (bitboard >> 9) & notColumnA;  // Sud-Ovest (-8 -1)
+            attacks |= ((bitboard & notColumnA) >> 1);  // Ovest (-1)
+            attacks |= ((bitboard & notColumnH) << 1);  // Est (+1)
+            attacks |= (bitboard << 8);                 // Nord (+8, No mask)
+            attacks |= (bitboard >> 8);                 // Sud (-8,  No mask)
+
+            attacks |= ((bitboard & notColumnH) << 9);  // Nord-Est (+8 +1)
+            attacks |= ((bitboard & notColumnA) << 7);  // Nord-Ovest (+8 -1)
+            attacks |= ((bitboard & notColumnH) >> 7);  // Sud-Est (-8 +1)
+            attacks |= ((bitboard & notColumnA) >> 9);  // Sud-Ovest (-8 -1)
 
             kingAttacks[i] = attacks;
 
@@ -82,21 +82,17 @@ namespace LookupTables {
             // White
             bitboard = (uint64_t)0;
             bitboard = setBit(bitboard, i); 
-
             attacks = (uint64_t)0;
-            attacks |= (bitboard << 7) & notColumnA;  // Nord-Ovest
-            attacks |= (bitboard << 9) & notColumnH;  // Nord-Est
-
+            attacks |= ((bitboard & notColumnA) << 7);  // Nord-Ovest
+            attacks |= ((bitboard & notColumnH) << 9);  // Nord-Est
             pawnAttacks[Color::WHITE][i] = attacks;
-            
+
             // Black
             bitboard = (uint64_t)0;
             bitboard = setBit(bitboard, i); 
-
             attacks = (uint64_t)0;
-            attacks |= (bitboard >> 7) & notColumnH;  // Sud-Est
-            attacks |= (bitboard >> 9) & notColumnA;  // Sud-Ovest
-
+            attacks |= ((bitboard & notColumnH) >> 7);  // Sud-Est
+            attacks |= ((bitboard & notColumnA) >> 9);  // Sud-Ovest
             pawnAttacks[Color::BLACK][i] = attacks;
             
         }

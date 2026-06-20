@@ -7,24 +7,29 @@
 #include <cstdint>
 
 /* PRIVATE */
-int Engine::Minimax(Board& board, int depth) {
-    if (depth == 0) return board.Evaluate();
-    if (board.IsRepetition()) return 21999;
+int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
+    // if (board.IsRepetition()) return 21999;
+    if (depth == 0) return QuiescenceSearch(board, alpha, beta);
 
-    int bestScore = -999999;
     int legalMovesCount = 0; 
-
     std::vector<Move> moveList = GenerateAllMoves(board); 
 
     for (Move move : moveList) {
         if (board.MakeMove(move)) {
             legalMovesCount++; 
 
-            int currentScore = -Minimax(board, depth - 1); 
+            // RICORSIONE NEGAMAX: Invertiamo il segno, e passiamo -beta e -alpha
+            int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha); 
             board.UnmakeMove(move);
             
-            if (currentScore > bestScore) {
-                bestScore = currentScore;
+            // TAGLIO BETA (Fail-Hard)
+            if (currentScore >= beta) {
+                return beta; 
+            }
+
+            // AGGIORNAMENTO ALPHA
+            if (currentScore > alpha) {
+                alpha = currentScore; 
             }
         }
     }
@@ -36,13 +41,42 @@ int Engine::Minimax(Board& board, int depth) {
         uint64_t myKing = __builtin_ctzll(board.GetPieceBitBoard(us, PiecesEnum::KING));
 
         if (board.IsSquareAttacked(myKing, them)) {
-            return -999999 + depth; 
+            return -(999999 - depth);; 
         } else {
             return 0; 
         }
     }
     
-    return bestScore;
+    return alpha;
+}
+
+int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
+    // Valutazione "stand pat": quanto vale la posizione se NON catturiamo nulla?
+    int stand_pat = board.Evaluate();
+    
+    // Fail-hard beta cutoff
+    if (stand_pat >= beta) return beta;
+    if (alpha < stand_pat) alpha = stand_pat;
+
+    std::vector<Move> moveList = GenerateAllMoves(board);
+
+    for (Move move : moveList) {
+        int flag = getMoveFlags(move);
+        
+        // ESPLORIAMO SOLO LE CATTURE! (Ignoriamo le mosse silenziose)
+        if (flag == FlagMap::CAPTURE || flag == FlagMap::PRCAPQUEEN || 
+            flag == FlagMap::PRCAPROOK || flag == FlagMap::PRCAPBISHOP || flag == FlagMap::PRCAPKNIGHT) {
+            
+            if (board.MakeMove(move)) {
+                int score = -QuiescenceSearch(board, -beta, -alpha);
+                board.UnmakeMove(move);
+
+                if (score >= beta) return beta;
+                if (score > alpha) alpha = score;
+            }
+        }
+    }
+    return alpha;
 }
 
 std::vector<Move> Engine::GenerateAllMoves(Board& board) {
@@ -142,7 +176,15 @@ void Engine::GeneratePawnMoves(Board& board, std::vector<Move>& moveList) {
             targets = clearBit(targets, toCapture);
         }
 
-        // TODO En Passant
+        int epSquare = board.GetEnPassantSquare();
+        if (epSquare != 64) { // Se 64, non c'è En Passant attivo
+            uint64_t epBB = 1ULL << epSquare;
+            if (LookupTables::pawnAttacks[us][from] & epBB) {
+                moveList.push_back(createMove(from, epSquare, FlagMap::ENPASS));
+            }
+        }
+
+        myPawns = clearBit(myPawns, from);
 
         myPawns = clearBit(myPawns, from);
     }
@@ -154,15 +196,17 @@ void Engine::GeneratePawnMoves(Board& board, std::vector<Move>& moveList) {
 Move Engine::GetBestMove(Board& board, int depth) {
     std::vector<Move> moveList = GenerateAllMoves(board);
     Move bestMove = 0;
-    int bestScore = -999999;
+
+    int alpha = -999999;
+    int beta  =  999999;
 
     for (Move move : moveList) {
         if (board.MakeMove(move)) {
-            int score = -Minimax(board, depth - 1);
+            int score = -AlphaBeta(board, depth - 1, -beta, -alpha);
             board.UnmakeMove(move);
 
-            if (score > bestScore) {
-                bestScore = score;
+            if (score > alpha) {
+                alpha = score;
                 bestMove = move;
             }
         }

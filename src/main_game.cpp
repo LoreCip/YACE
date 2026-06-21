@@ -131,18 +131,47 @@ int main() {
             board.InitializeFromFEN(fenLine);
         } 
         else if (token == "go") {
-            Move best = engine.GetBestMove(board, 4);
+            std::string line;
+            std::getline(std::cin, line);
+            std::stringstream ss(line);
+            std::string arg;
+
+            double allocatedTimeMs = 1000.0;
+            int wtime = -1, btime = -1, depth = -1;
+
+            while (ss >> arg) {
+                if (arg == "movetime") {
+                    ss >> allocatedTimeMs;
+                } else if (arg == "wtime") {
+                    ss >> wtime;
+                } else if (arg == "btime") {
+                    ss >> btime;
+                } else if (arg == "depth") {
+                    ss >> depth;
+                }
+            }
+
+            if (wtime != -1 && btime != -1) {
+                int us = board.GetSideToMove();
+                int myTime = (us == Color::WHITE) ? wtime : btime;
+                
+                allocatedTimeMs = myTime / 30.0; 
+                
+                if (allocatedTimeMs < 50) allocatedTimeMs = 50; 
+            }
+
+            int targetDepth = (depth != -1) ? depth : 100;
+
+            Move best = engine.GetBestMove(board, targetDepth, allocatedTimeMs);
             
-            // 3. Scrittura del log condizionale
             if (enableLogging) {
                 const SearchStats& stats = engine.GetStats();
                 long long totalNodes = stats.nodesEvaluated + stats.qNodesEvaluated;
-                
                 long long nps = 0;
                 if (stats.lastMoveTimeMs > 0) {
                     nps = (totalNodes * 1000) / stats.lastMoveTimeMs;
                 }
-
+                
                 double cutoffPct = 0.0;
                 if (totalNodes > 0) {
                     cutoffPct = ((double)stats.betaCutoffs / totalNodes) * 100.0;
@@ -150,19 +179,19 @@ int main() {
 
                 std::ofstream logFile("engine_stats.log", std::ios::app);
                 if (logFile.is_open()) {
-                    logFile << "info time " << (int)stats.lastMoveTimeMs 
-                            << " nodes " << totalNodes 
-                            << " nps " << nps 
-                            << " cutoffs " << stats.betaCutoffs 
+                    logFile << "info time " << (int)stats.lastMoveTimeMs
+                            << " nodes " << totalNodes
+                            << " nps " << nps
+                            << " cutoffs " << stats.betaCutoffs
                             << " (" << cutoffPct << "%)"
                             << " hash fullness " << stats.hashFullness << "%"
                             << std::endl;
                 }
             }
 
-            std::cout << moveToString(best) << "\n";
-            std::cout.flush();          
-        } 
+            std::cout << "bestmove " << moveToString(best) << "\n";
+            std::cout.flush();     
+        }
         else {
             board.MakeMove(stringToMove(board, token));
         }

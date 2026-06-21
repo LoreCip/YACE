@@ -5,11 +5,14 @@
 
 /* PRIVATE */
 
-int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
-    if (board.IsRepetition()) return -10;
+int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
+    if (timeIsUp) return 0;
+    CheckTime();
+
+    if (board.GetHalfMoveClock() >= 100) return 0;
+    if (board.IsRepetition()) return 0;
 
     stats.nodesEvaluated++;
-
     if (depth == 0) return QuiescenceSearch(board, alpha, beta);
 
     // --- 1. PROBE TRANSPOSITION TABLE ---
@@ -33,7 +36,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
     ScoredMove scoredMoves[256];
     for (int i = 0; i < n_moves; i++) {
         scoredMoves[i].move = moveList[i];
-        scoredMoves[i].score = ScoreMove(board, moveList[i], ttMove);
+        scoredMoves[i].score = ScoreMove(board, moveList[i], ttMove, ply);
     }
 
     std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
@@ -48,12 +51,23 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
         if (board.MakeMove(move)) {
             legalMovesCount++; 
 
-            int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha); 
+            int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1); 
             board.UnmakeMove(move);
             
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
                 
+                int fflag = getMoveFlags(move);
+                if (fflag != FlagMap::MOVE && fflag != FlagMap::DMOVE && fflag != FlagMap::CASTLING){
+                    if (ply < MAX_PLY) {
+                        if (move != killerMoves[ply][0]) {
+                            killerMoves[ply][1] = killerMoves[ply][0];
+                            killerMoves[ply][0] = move;               
+                        }
+                    }
+                }
+
+
                 // --- RECORD BETA CUTOFF ---
                 tt.Record(hashKey, move, depth, beta, BETA);
                 return beta; 
@@ -85,6 +99,9 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
 }
 
 int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
+    if (timeIsUp) return 0;
+    CheckTime();
+
     stats.qNodesEvaluated++;
 
     int stand_pat = board.Evaluate();
@@ -106,7 +123,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
     ScoredMove scoredMoves[256];
     for (int i = 0; i < n_moves; i++) {
         scoredMoves[i].move = moveList[i];
-        scoredMoves[i].score = ScoreMove(board, moveList[i], (Move)0);
+        scoredMoves[i].score = ScoreMove(board, moveList[i], (Move)0, 0); // Or, pass ply to QuiescenceSearch and add it here
     }
 
     std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
@@ -238,10 +255,12 @@ void Engine::GeneratePawnMoves(Board& board, Move* moveList, int& moveCount) {
     }
 }
 
-Move Engine::GetBestMove(Board& board, int depth) {
+Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
     stats.ResetForNewMove();
-    auto startTime = std::chrono::high_resolution_clock::now();
-
+    startTime = std::chrono::high_resolution_clock::now();
+    timeLimitMs = allocatedTimeMs;
+    timeIsUp = false;
+    
     Move moveList[256];
     int n_moves = GenerateAllMoves(board, moveList);    
     if (n_moves == 0) return 0;
@@ -257,27 +276,47 @@ Move Engine::GetBestMove(Board& board, int depth) {
     if (mossaMiglioreAssoluta == 0) return 0; 
 
     // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
-    for (int d = 1; d <= depth; d++) {
+    for (int d = 1; d <= maxDepth; d++) {
         int alpha = -999999;
         int beta  = 999999;
         Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
 
-        std::sort(moveList, moveList + n_moves, [](const Move& a, const Move& b) {
-            return getMoveFlags(a) > getMoveFlags(b);
+        struct ScoredMove {
+            Move move;
+            int score;
+        };
+        ScoredMove scoredMoves[256];
+        for (int i = 0; i < n_moves; i++) {
+            scoredMoves[i].move = moveList[i];
+            // Passiamo "mossaMiglioreAssoluta" come ttMove per darle priorità 1.000.000
+            scoredMoves[i].score = ScoreMove(board, moveList[i], mossaMiglioreAssoluta, 0); 
+        }
+
+        std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+            return a.score > b.score;
         });
 
+    
         for (int i = 0; i < n_moves; i++) {
-            Move move = moveList[i];
+            Move move = scoredMoves[i].move; 
             
             if (board.MakeMove(move)) {
-                int score = -AlphaBeta(board, d - 1, -beta, -alpha);
+                int score = -AlphaBeta(board, d - 1, -beta, -alpha, 1);
                 board.UnmakeMove(move);
+                
+                if (timeIsUp) {
+                    break;
+                }
 
                 if (score > alpha) {
                     alpha = score;
                     bestMoveCurrentDepth = move;
                 }
             }
+        }
+
+        if (timeIsUp) {
+            break; 
         }
         
         mossaMiglioreAssoluta = bestMoveCurrentDepth;
@@ -298,7 +337,7 @@ Move Engine::GetBestMove(Board& board, int depth) {
     return mossaMiglioreAssoluta;
 }
 
-int Engine::ScoreMove(Board& board, Move move, Move ttMove) {
+int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
     if (move == ttMove) {
         return 1000000; // Priorità assoluta alla mossa della TT
     }
@@ -349,10 +388,31 @@ int Engine::ScoreMove(Board& board, Move move, Move ttMove) {
     }
     // --- Mosse normali ---
     else {
-        // Per ora diamo priorità a chi muove verso il centro o usa l'Arrocco
-        if (flags == FlagMap::CASTLING) score = 50000;
-        else score = 0; // Qui inserirai le Killer Moves in futuro
+        if (ply < MAX_PLY && move == killerMoves[ply][0]) {
+            score = 90000; // Killer Primaria: Altissima priorità tra le silenziose
+        } 
+        else if (ply < MAX_PLY && move == killerMoves[ply][1]) {
+            score = 80000; // Killer Secondaria: Alta priorità
+        } 
+        else if (flags == FlagMap::CASTLING) {
+            score = 50000; // Arrocco
+        } 
+        else {
+            score = 0;     // Mossa normale ignorata dalle euristiche
+        }
     }
 
     return score;
+}
+
+
+void Engine::CheckTime() {
+    if ((stats.nodesEvaluated & 2047) != 0) return;
+
+    auto now = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = now - startTime;
+
+    if (elapsed.count() >= timeLimitMs) {
+        timeIsUp = true;
+    }
 }

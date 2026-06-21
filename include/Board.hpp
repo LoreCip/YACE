@@ -48,6 +48,10 @@ private:
 
     uint64_t ComputeRay(int direction, uint64_t edge, int square);
 
+    void MovePiece(int color, PiecesEnum::Type piece, int from, int to);
+    void RemovePiece(int color, PiecesEnum::Type piece, int square);
+    void PutPiece(int color, PiecesEnum::Type piece, int square);
+
 
 public:
     void InitializeBoard();

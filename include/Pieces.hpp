@@ -16,9 +16,11 @@ namespace PiecesEnum {
         QUEEN,
         KING,
         NONE
-    };
+    };    
 
     static const Type All[] = { PAWNS, ROOKS, KNIGHTS, BISHOPS, QUEEN, KING };
+    const int pieceValues[6] = {100, 500, 300, 300, 900, 0};
+
 }
 #define NUM_PIECES 6
 

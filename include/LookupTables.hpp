@@ -18,12 +18,28 @@ namespace LookupTables{
     inline constexpr uint64_t notColumnADouble = 0xFCFCFCFCFCFCFCFC; // 11111100 (Azzera le colonne A e B)
     inline constexpr uint64_t notColumnHDouble = 0x3F3F3F3F3F3F3F3F; // 00111111 (Azzera le colonne G e H)
     inline constexpr uint64_t nullEdge = 0xFFFFFFFFFFFFFFFF;
-
+    
     inline constexpr uint64_t thirdRow = 0x0000000000FF0000;
     inline constexpr uint64_t sixthRow = 0x0000FF0000000000;
+    
+    // Masks for castling
+    inline constexpr uint64_t maskWK = 0x0000000000000060ULL; // f1, g1
+    inline constexpr uint64_t maskWQ = 0x000000000000000EULL; // b1, c1, d1
+    inline constexpr uint64_t maskBK = 0x6000000000000000ULL; // f8, g8
+    inline constexpr uint64_t maskBQ = 0x0E00000000000000ULL; // b8, c8, d8
 
+    const uint8_t castlingMasks[64] = {
+        13, 15, 15, 15, 12, 15, 15, 14, // Rango 1 (Bianco: A1 toglie WQ, E1 toglie WK+WQ, H1 toglie WK)
+        15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15,
+         7, 15, 15, 15,  3, 15, 15, 11  // Rango 8 (Nero: A8 toglie BQ, E8 toglie BK+BQ, H8 toglie BK)
+    };
 
-    // Esempio di Piece-Square Table per i Cavalli (incentiva il centro)
+    // PSTs
     const int knightPST[64] = {
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
@@ -93,6 +109,10 @@ namespace LookupTables{
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30,
         -30,-40,-40,-50,-50,-40,-40,-30
+    };
+
+    static const int* pstTables[6] = {
+        pawnPST, rookPST, knightPST, bishopPST, queenPST, kingMiddlePST
     };
 
     void init();

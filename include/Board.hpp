@@ -1,6 +1,7 @@
 #ifndef _BOARD
 #define _BOARD
 
+#include <sstream>
 #include <cstdint>
 #include "Pieces.hpp"
 #include "Move.hpp"
@@ -50,6 +51,7 @@ private:
 
 public:
     void InitializeBoard();
+    void InitializeFromFEN(const std::string& fen);
     void UpdateGlobalBoardState();
 
     bool MakeMove(Move move);

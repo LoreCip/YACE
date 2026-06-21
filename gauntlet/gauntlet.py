@@ -1,16 +1,20 @@
-import subprocess
-import chess
-import chess.pgn
-import time
-import concurrent.futures
 import os
 import queue
 import threading
+import concurrent.futures
+import subprocess
+
+import time
+import random
+
+import chess
+import chess.pgn
+import chess.engine
 
 BASEPATH   = "./versions/"
-ENGINE_A   = BASEPATH + "engine_v1"
+ENGINE_A   = BASEPATH + "engine_v2"
 ENGINE_B   = BASEPATH + "engine_v2"
-NUM_GAMES  = 10
+NUM_GAMES  = 1
 MAX_WORKERS = min(8, os.cpu_count() or 1, NUM_GAMES)
 
 
@@ -72,20 +76,32 @@ def request_move(proc: subprocess.Popen, timeout: float = 10.0) -> str | None:
 # Logica di partita
 # ---------------------------------------------------------------------------
 
-def play_game(white_path: str, black_path: str) -> tuple[str, chess.pgn.Game]:
-    board = chess.Board()
+def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pgn.Game]:
+    board = chess.Board(fen)
 
     game = chess.pgn.Game()
+    game.setup(board) # Configura il PGN per partire da questa posizione FEN
     game.headers["Event"] = "YACE Gauntlet"
     game.headers["White"] = white_path.split("/")[-1]
     game.headers["Black"] = black_path.split("/")[-1]
+    game.headers["FEN"] = fen # Salva il FEN nei metadati del PGN
     node = game
 
-    # Un processo per colore, vivi per tutta la partita
+    # Avvia i processi dei motori
     proc_w = start_engine(white_path)
     proc_b = start_engine(black_path)
 
     try:
+        # --- ATTIVAZIONE LOG (Opzionale) ---
+        proc_w.stdin.write("log on\n")
+        # proc_b.stdin.write("log on\n")
+
+        # --- SINCRONIZZAZIONE ENGINES ---
+        proc_w.stdin.write(f"fen {fen}\n")
+        proc_b.stdin.write(f"fen {fen}\n")
+        proc_w.stdin.flush()
+        proc_b.stdin.flush()
+
         while not board.is_game_over():
             active, passive = (proc_w, proc_b) if board.turn == chess.WHITE else (proc_b, proc_w)
 
@@ -110,9 +126,6 @@ def play_game(white_path: str, black_path: str) -> tuple[str, chess.pgn.Game]:
             board.push(move)
             node = node.add_variation(move)
 
-            # Entrambi i processi devono aggiornare il loro stato:
-            # - l'engine attivo non applica la mossa dopo 'go', va inviata esplicitamente
-            # - l'engine passivo deve sapere cosa ha giocato l'avversario
             send_move(proc_w, move_uci)
             send_move(proc_b, move_uci)
 
@@ -123,6 +136,24 @@ def play_game(white_path: str, black_path: str) -> tuple[str, chess.pgn.Game]:
     game.headers["Result"] = board.result()
     return board.result(), game
 
+def generate_random_opening_fen() -> str:
+    board = chess.Board()
+    
+    with chess.engine.SimpleEngine.popen_uci("stockfish") as sf:
+        for _ in range(4):
+            if board.is_game_over():
+                break
+            move = random.choice(list(board.legal_moves))
+            board.push(move)
+            
+        for _ in range(2):
+            if board.is_game_over():
+                break
+            result = sf.play(board, chess.engine.Limit(time=0.1))
+            if result.move:
+                board.push(result.move)
+                
+    return board.fen()
 
 # ---------------------------------------------------------------------------
 # Task parallelo (un thread = una partita completa)
@@ -136,8 +167,11 @@ def run_match_task(match_id: int) -> dict:
         white, black = ENGINE_B, ENGINE_A
         white_name, black_name = "Engine B", "Engine A"
 
+    start_fen = generate_random_opening_fen()
+
     t0 = time.time()
-    result, game = play_game(white, black)
+    result, game = play_game(white, black, start_fen) 
+    
     return {
         "id":         match_id + 1,
         "white":      white,
@@ -158,7 +192,7 @@ def main():
     print(f"--- ARENA: {ENGINE_A} vs {ENGINE_B} ---")
     print(f"Partite: {NUM_GAMES}  |  Thread: {MAX_WORKERS}\n")
 
-    score = {ENGINE_A: 0, ENGINE_B: 0, "Draws": 0}
+    score = {"Engine A": 0, "Engine B": 0, "Draws": 0}
 
     with open("gauntlet_results.pgn", "w", encoding="utf-8") as pgn_file:
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
@@ -175,25 +209,33 @@ def main():
                 pgn_file.flush()
 
                 if r == "1-0":
-                    score[res["white"]] += 1
+                    score[res["white_name"]] += 1
                     print(f"Vittoria BIANCO  ({res['duration']:.1f}s)")
                 elif r == "0-1":
-                    score[res["black"]] += 1
+                    score[res["black_name"]] += 1
                     print(f"Vittoria NERO    ({res['duration']:.1f}s)")
                 elif r == "1/2-1/2":
                     score["Draws"] += 1
                     print(f"Patta            ({res['duration']:.1f}s)")
-                else:
-                    print(f"Annullata ({r})")
 
-    print("\n" + "=" * 35)
+    total_games = score["Engine A"] + score["Engine B"] + score["Draws"]
+    
+    if total_games > 0:
+        win_a_pct = (score["Engine A"] / total_games) * 100
+        win_b_pct = (score["Engine B"] / total_games) * 100
+        draw_pct  = (score["Draws"] / total_games) * 100
+    else:
+        win_a_pct = win_b_pct = draw_pct = 0.0
+
+    print("\n" + "=" * 45)
     print("RISULTATI FINALI")
-    print("=" * 35)
-    print(f"{ENGINE_A:<25}: {score[ENGINE_A]} vittorie")
-    print(f"{ENGINE_B:<25}: {score[ENGINE_B]} vittorie")
-    print(f"{'Patte':<25}: {score['Draws']}")
-    print("=" * 35)
-
+    print("=" * 45)
+    print(f"{'Engine A':<15} : {score['Engine A']:>3} vittorie ({win_a_pct:>5.1f}%)")
+    print(f"{'Engine B':<15} : {score['Engine B']:>3} vittorie ({win_b_pct:>5.1f}%)")
+    print(f"{'Patte':<15} : {score['Draws']:>3} patte    ({draw_pct:>5.1f}%)")
+    print("-" * 45)
+    print(f"{'Totale partite':<15} : {total_games}")
+    print("=" * 45)
 
 if __name__ == "__main__":
     main()

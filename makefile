@@ -1,31 +1,40 @@
-# Nome dell'eseguibile
-TARGET = build/main
+# Nomi degli eseguibili finali
+TARGET_MAIN = build/main_game
+TARGET_FEN  = build/main_fen
 
 # Compilatore e flag
 CXX = g++ -D_DEBUG
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude
+CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -O3 -fopenmp -flto
 
 # Cartelle
 SRC_DIR = src
 OBJ_DIR = build/objects
 
-# Trova tutti i file .cpp nella cartella src
-ALL_SRCS = $(wildcard $(SRC_DIR)/*.cpp)
-SRCS = $(filter-out $(SRC_DIR)/main_v%, $(ALL_SRCS))
+# 1. Isoliamo i file comuni dell'engine (tutti i .cpp tranne i vari main*.cpp)
+ALL_SRCS   = $(wildcard $(SRC_DIR)/*.cpp)
+ENGINE_SRCS = $(filter-out $(SRC_DIR)/main%, $(ALL_SRCS))
+ENGINE_OBJS = $(ENGINE_SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 
-# Crea la lista dei file oggetto (sostituisce src/file.cpp con build/objects/file.o)
-OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+# 2. Definiamo i file oggetto specifici per i due punti di ingresso
+OBJ_MAIN = $(OBJ_DIR)/main_game.o
+OBJ_FEN  = $(OBJ_DIR)/main_fen.o
 
-# Regola di default
-all: $(TARGET)
+# Regola di default: compila entrambi gli eseguibili
+all: $(TARGET_MAIN) $(TARGET_FEN)
 
-# Regola per creare l'eseguibile finale
-$(TARGET): $(OBJS)
+# Regola per creare l'eseguibile classico (main)
+$(TARGET_MAIN): $(ENGINE_OBJS) $(OBJ_MAIN)
 	@mkdir -p build
-	$(CXX) $(OBJS) -o $(TARGET)
-	@echo "Build completata: $(TARGET)"
+	$(CXX) $(CXXFLAGS) $(ENGINE_OBJS) $(OBJ_MAIN) -o $(TARGET_MAIN)
+	@echo "Build completata: $(TARGET_MAIN)"
 
-# Regola per compilare i file sorgente in oggetti
+# Regola per creare l'eseguibile di test FEN (main_fen)
+$(TARGET_FEN): $(ENGINE_OBJS) $(OBJ_FEN)
+	@mkdir -p build
+	$(CXX) $(CXXFLAGS) $(ENGINE_OBJS) $(OBJ_FEN) -o $(TARGET_FEN)
+	@echo "Build completata: $(TARGET_FEN)"
+
+# Regola generica per compilare qualsiasi file sorgente .cpp in un file oggetto .o
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -34,7 +43,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 clean:
 	rm -rf build
 
-
 # Uso: make release V=1.0
 release: all
 	@if [ -z "$(V)" ]; then \
@@ -42,6 +50,8 @@ release: all
 		exit 1; \
 	fi
 	@echo "Creazione dello snapshot per la versione v$(V)..."
+	@echo "v$(V)" > build/version.txt
+	@echo "Creato file di versione: build/version.txt"
 	@mkdir -p gauntlet/versions/v$(V)/src
 	@mkdir -p gauntlet/versions/v$(V)/include
 	@cp -r src/* gauntlet/versions/v$(V)/src/
@@ -50,12 +60,9 @@ release: all
 	@tar -czf gauntlet/versions/v$(V).tar.gz -C gauntlet/versions v$(V)
 	@echo "Pulizia della cartella temporanea..."
 	@rm -rf gauntlet/versions/v$(V)
-	@echo "Salvataggio dell'eseguibile..."
-	@cp build/main gauntlet/versions/engine_v$(V)
+	@echo "Salvataggio degli eseguibili..."
+	@cp build/main_game gauntlet/versions/engine_v$(V)
+	@cp build/main_fen gauntlet/versions/engine_fen_v$(V)
 	@echo "Versione v$(V) rilasciata con successo!"
-	@echo "Archivio sorgenti: gauntlet/versions/v$(V).tar.gz"
-	@echo "Eseguibile pronto: gauntlet/versions/engine_v$(V)"
 
-# Evita conflitti con file chiamati 'all' o 'clean'
 .PHONY: all clean release
-

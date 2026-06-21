@@ -1,7 +1,6 @@
 #include <cstdint>
 #include <sys/types.h>
 #include <algorithm>
-#include <ctime>
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
@@ -318,8 +317,22 @@ bool Board::MakeMove(Move move) {
         sides[us][PiecesEnum::ROOKS] = setBit(sides[us][PiecesEnum::ROOKS], rookTo);
     }
 
-    // Promozioni
-    // Esempio: se flags == FlagMap::PRQUEEN, rimuovi pedone in 'to' e aggiungi Donna in 'to'.
+    if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+        sides[us][PiecesEnum::QUEEN] = setBit(sides[us][PiecesEnum::QUEEN], to);
+    }
+    else if (flags == FlagMap::PRROOK || flags == FlagMap::PRCAPROOK) {
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+        sides[us][PiecesEnum::ROOKS] = setBit(sides[us][PiecesEnum::ROOKS], to);
+    }
+    else if (flags == FlagMap::PRBISHOP || flags == FlagMap::PRCAPBISHOP) {
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+        sides[us][PiecesEnum::BISHOPS] = setBit(sides[us][PiecesEnum::BISHOPS], to);
+    }
+    else if (flags == FlagMap::PRKNIGHT || flags == FlagMap::PRCAPKNIGHT) {
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+        sides[us][PiecesEnum::KNIGHTS] = setBit(sides[us][PiecesEnum::KNIGHTS], to);
+    }
 
     UpdateGlobalBoardState();
     sideToMove = them;
@@ -385,8 +398,22 @@ void Board::UnmakeMove(Move move) {
     sides[us][pieceType] = setBit(sides[us][pieceType], from);
     sides[us][pieceType] = clearBit(sides[us][pieceType], to);
 
-    // Gestione Promozioni: se era una promozione, devi rimuovere il pezzo promosso in 'to' 
-    // e rimettere un pedone in 'from'.
+    if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {
+        sides[us][PiecesEnum::QUEEN] = clearBit(sides[us][PiecesEnum::QUEEN], to);
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to); // Forza la pulizia in 'to'
+    }
+    else if (flags == FlagMap::PRROOK || flags == FlagMap::PRCAPROOK) {
+        sides[us][PiecesEnum::ROOKS] = clearBit(sides[us][PiecesEnum::ROOKS], to);
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+    }
+    else if (flags == FlagMap::PRBISHOP || flags == FlagMap::PRCAPBISHOP) {
+        sides[us][PiecesEnum::BISHOPS] = clearBit(sides[us][PiecesEnum::BISHOPS], to);
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+    }
+    else if (flags == FlagMap::PRKNIGHT || flags == FlagMap::PRCAPKNIGHT) {
+        sides[us][PiecesEnum::KNIGHTS] = clearBit(sides[us][PiecesEnum::KNIGHTS], to);
+        sides[us][PiecesEnum::PAWNS] = clearBit(sides[us][PiecesEnum::PAWNS], to);
+    }
 
     if (capturedPiece != PiecesEnum::NONE) {
         int captureSquare = to;
@@ -451,6 +478,7 @@ int Board::Evaluate() {
         return score;
     };
     
+    /**/
     whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::KNIGHTS], LookupTables::knightPST, false);
     whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::PAWNS], LookupTables::pawnPST, false);
     whiteScore += evaluatePST(sides[Color::WHITE][PiecesEnum::BISHOPS], LookupTables::bishopPST, false);
@@ -467,11 +495,10 @@ int Board::Evaluate() {
 
     if (__builtin_popcountll(sides[Color::WHITE][PiecesEnum::BISHOPS]) >= 2) whiteScore += 50;
     if (__builtin_popcountll(sides[Color::BLACK][PiecesEnum::BISHOPS]) >= 2) blackScore += 50;
-    
 
     int evaluation = whiteScore - blackScore;
 
-    return (sideToMove == Color::WHITE) ? evaluation + (rand() % 5) :  - (evaluation + (rand() % 5));
+    return (sideToMove == Color::WHITE) ? evaluation :  - evaluation;
 }
 
 
@@ -499,12 +526,86 @@ uint64_t Board::GetHash() {
 
 bool Board::IsRepetition() {
     uint64_t currentHash = GetHash();
-    
-    int limit = std::max(0, historyPly - 6);
-    for (int i = historyPly - 4; i >= limit; i -= 2) {
+    if (historyPly < 4) return false; 
+
+    for (int i = historyPly - 4; i >= 0; i -= 2) {
         if (positionHistory[i] == currentHash) {
-            return true; // Trovata!
+            return true; 
         }
     }
     return false;
+}
+
+
+void Board::InitializeFromFEN(const std::string& fen) {
+    // 1. Reset completo di tutte le bitboard e variabili di stato
+    for (int c = 0; c < 2; c++) {
+        for (int p = 0; p < NUM_PIECES; p++) {
+            sides[c][p] = 0ULL;
+        }
+    }
+    historyPly = 0;
+    halfMoveClock = 0;
+    enPassantSquare = 64;
+    castlingRights = 0;
+
+    std::stringstream ss(fen);
+    std::string pieces, activeColor, castling, enPassant, halfMove, fullMove;
+    
+    ss >> pieces >> activeColor >> castling >> enPassant >> halfMove >> fullMove;
+
+    int rank = 7;
+    int file = 0;
+
+    for (char c : pieces) {
+        if (c == '/') {
+            rank--;
+            file = 0;
+        } else if (std::isdigit(c)) {
+            file += (c - '0'); // Salta le caselle vuote
+        } else {
+            // Determiniamo il colore (Maiuscolo = Bianco, Minuscolo = Nero)
+            int color = std::isupper(c) ? Color::WHITE : Color::BLACK;
+            char lowerC = std::tolower(c);
+            
+            PiecesEnum::Type pieceType = PiecesEnum::NONE;
+            if (lowerC == 'p') pieceType = PiecesEnum::PAWNS;
+            else if (lowerC == 'n') pieceType = PiecesEnum::KNIGHTS;
+            else if (lowerC == 'b') pieceType = PiecesEnum::BISHOPS;
+            else if (lowerC == 'r') pieceType = PiecesEnum::ROOKS;
+            else if (lowerC == 'q') pieceType = PiecesEnum::QUEEN;
+            else if (lowerC == 'k') pieceType = PiecesEnum::KING;
+
+            if (pieceType != PiecesEnum::NONE) {
+                int square = rank * 8 + file;
+                sides[color][pieceType] = setBit(sides[color][pieceType], square);
+            }
+            file++;
+        }
+    }
+
+    sideToMove = (activeColor == "w") ? Color::WHITE : Color::BLACK;
+
+    if (castling != "-") {
+        for (char c : castling) {
+            if (c == 'K') castlingRights |= WK_CASTLE;
+            if (c == 'Q') castlingRights |= WQ_CASTLE;
+            if (c == 'k') castlingRights |= BK_CASTLE;
+            if (c == 'q') castlingRights |= BQ_CASTLE;
+        }
+    }
+
+    if (enPassant != "-") {
+        int epFile = enPassant[0] - 'a';
+        int epRank = enPassant[1] - '1';
+        enPassantSquare = epRank * 8 + epFile;
+    } else {
+        enPassantSquare = 64; // Nessuna casella EP
+    }
+
+    if (!halfMove.empty()) {
+        halfMoveClock = std::stoi(halfMove);
+    }
+
+    UpdateGlobalBoardState();
 }

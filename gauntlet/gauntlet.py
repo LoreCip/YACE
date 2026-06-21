@@ -17,6 +17,8 @@ ENGINE_B   = BASEPATH + "engine_v2"
 NUM_GAMES  = 1
 MAX_WORKERS = min(8, os.cpu_count() or 1, NUM_GAMES)
 
+LOG_A = True
+LOG_B = False
 
 # ---------------------------------------------------------------------------
 # Gestione processi persistenti
@@ -45,7 +47,7 @@ def send_move(proc: subprocess.Popen, move_uci: str) -> None:
     proc.stdin.write(move_uci + "\n")
     proc.stdin.flush()
 
-def request_move(proc: subprocess.Popen, timeout: float = 10.0) -> str | None:
+def request_move(proc: subprocess.Popen, timeout: float = 30.0) -> str | None:
     """
     Invia 'go' e attende la risposta con un timeout.
     La lettura avviene in un thread separato per non bloccare il chiamante.
@@ -93,8 +95,10 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
 
     try:
         # --- ATTIVAZIONE LOG (Opzionale) ---
-        proc_w.stdin.write("log on\n")
-        # proc_b.stdin.write("log on\n")
+        if LOG_A:
+            proc_w.stdin.write("log on\n")
+        if LOG_B:
+            proc_b.stdin.write("log on\n")
 
         # --- SINCRONIZZAZIONE ENGINES ---
         proc_w.stdin.write(f"fen {fen}\n")

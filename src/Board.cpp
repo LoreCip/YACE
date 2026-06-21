@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <sys/types.h>
+#include <string>
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
@@ -179,16 +180,7 @@ uint64_t Board::ComputeRay(int direction, uint64_t edge, int square){
     return allMoves;
 }
 
-inline void Board::MovePiece(int color, PiecesEnum::Type piece, int from, int to) {
-    sides[color][piece] = clearBit(sides[color][piece], from);
-    sides[color][piece] = setBit(sides[color][piece], to);
-}
-inline void Board::RemovePiece(int color, PiecesEnum::Type piece, int square) {
-    sides[color][piece] = clearBit(sides[color][piece], square);
-}
-inline void Board::PutPiece(int color, PiecesEnum::Type piece, int square) {
-    sides[color][piece] = setBit(sides[color][piece], square);
-}
+
 
 
 /* PUBLIC  */
@@ -199,18 +191,18 @@ void Board::InitializeBoard(){
     for (int color = 0; color < 2; color++){
         int startPos = color == Color::WHITE ? 8 : 48;
         for (int nPawn = 0; nPawn < 8; nPawn++){
-            PutPiece(color, PiecesEnum::PAWNS, startPos);
+            AddPiece(color, PiecesEnum::PAWNS, startPos);
         }
 
         startPos = color == Color::WHITE ? 0 : 56;
-        PutPiece(color, PiecesEnum::ROOKS, startPos);
-        PutPiece(color, PiecesEnum::ROOKS, startPos + 7);
-        PutPiece(color, PiecesEnum::KNIGHTS, startPos + 1);
-        PutPiece(color, PiecesEnum::KNIGHTS, startPos + 6);
-        PutPiece(color, PiecesEnum::BISHOPS, startPos + 2);
-        PutPiece(color, PiecesEnum::BISHOPS, startPos + 5);
-        PutPiece(color, PiecesEnum::QUEEN, startPos + 3);
-        PutPiece(color, PiecesEnum::KING, startPos + 4);
+        AddPiece(color, PiecesEnum::ROOKS, startPos);
+        AddPiece(color, PiecesEnum::ROOKS, startPos + 7);
+        AddPiece(color, PiecesEnum::KNIGHTS, startPos + 1);
+        AddPiece(color, PiecesEnum::KNIGHTS, startPos + 6);
+        AddPiece(color, PiecesEnum::BISHOPS, startPos + 2);
+        AddPiece(color, PiecesEnum::BISHOPS, startPos + 5);
+        AddPiece(color, PiecesEnum::QUEEN, startPos + 3);
+        AddPiece(color, PiecesEnum::KING, startPos + 4);
     }
     
     UpdateGlobalBoardState();
@@ -453,6 +445,9 @@ uint64_t Board::GetHash() {
             }
         }
     }
+
+    hash ^= LookupTables::castlingKeys[castlingRights];
+    hash ^= LookupTables::enPassantKeys[enPassantSquare];
     return hash;
 }
 

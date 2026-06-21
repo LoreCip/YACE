@@ -1,27 +1,50 @@
-#include "Engine.hpp"
 #include <algorithm>
 
+#include "Engine.hpp"
 #include "LookupTables.hpp"
 
 /* PRIVATE */
 
 int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
-    if (board.IsRepetition()) return -10; 
-    
+    if (board.IsRepetition()) return -10;
+
     stats.nodesEvaluated++;
 
     if (depth == 0) return QuiescenceSearch(board, alpha, beta);
+
+    // --- 1. PROBE TRANSPOSITION TABLE ---
+    uint64_t hashKey = board.GetHash();
+    Move ttMove = 0;
+    int ttScore = 0;
+    if (tt.Probe(hashKey, depth, alpha, beta, ttScore, ttMove)) {
+        return ttScore;
+    }
 
     Move moveList[256];
     int n_moves = GenerateAllMoves(board, moveList); 
     int legalMovesCount = 0; 
 
-    std::sort(moveList, moveList + n_moves, [](const Move& a, const Move& b) {
-        return getMoveFlags(a) > getMoveFlags(b); 
+    // --- ORDERING WITH TT-MOVE ---
+    struct ScoredMove {
+        Move move;
+        int score;
+    };
+
+    ScoredMove scoredMoves[256];
+    for (int i = 0; i < n_moves; i++) {
+        scoredMoves[i].move = moveList[i];
+        scoredMoves[i].score = ScoreMove(board, moveList[i], ttMove);
+    }
+
+    std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+        return a.score > b.score;
     });
 
+    Move bestMoveInThisPosition = 0;
+    int originalAlpha = alpha; 
+
     for (int i = 0; i < n_moves; i++) {
-        Move move = moveList[i];
+        Move move = scoredMoves[i].move;
         if (board.MakeMove(move)) {
             legalMovesCount++; 
 
@@ -30,10 +53,14 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
             
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
+                
+                // --- RECORD BETA CUTOFF ---
+                tt.Record(hashKey, move, depth, beta, BETA);
                 return beta; 
             }
             if (currentScore > alpha) {
                 alpha = currentScore; 
+                bestMoveInThisPosition = move;
             }
         }
     }
@@ -41,7 +68,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
     if (legalMovesCount == 0) {
         int us = board.GetSideToMove();
         int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
-        uint64_t myKing = __builtin_ctzll(board.GetPieceBitBoard(us, PiecesEnum::KING));
+        uint64_t myKing = __builtin_ctzll(board.GetBitBoard(us, PiecesEnum::KING));
 
         if (board.IsSquareAttacked(myKing, them)) {
             return -(999999 - depth); 
@@ -49,6 +76,10 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta) {
             return 0; 
         }
     }
+
+    // --- 2. RECORD TT ENTRY (EXACT o ALPHA) ---
+    TTFlag flag = (alpha <= originalAlpha) ? ALPHA : EXACT;
+    tt.Record(hashKey, bestMoveInThisPosition, depth, alpha, flag);
 
     return alpha;
 }
@@ -67,8 +98,19 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
     Move moveList[256];
     int n_moves = GenerateAllMoves(board, moveList);
 
-    std::sort(moveList, moveList + n_moves, [](const Move& a, const Move& b) {
-        return getMoveFlags(a) > getMoveFlags(b);
+    struct ScoredMove {
+        Move move;
+        int score;
+    };
+
+    ScoredMove scoredMoves[256];
+    for (int i = 0; i < n_moves; i++) {
+        scoredMoves[i].move = moveList[i];
+        scoredMoves[i].score = ScoreMove(board, moveList[i], (Move)0);
+    }
+
+    std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+        return a.score > b.score;
     });
 
     for (int i = 0; i < n_moves; i++) {
@@ -104,7 +146,7 @@ int Engine::GenerateAllMoves(Board& board, Move* moveList) {
     for (const auto piece : PiecesEnum::All) {
         if (piece == PiecesEnum::PAWNS) continue;
 
-        uint64_t bitboard = board.GetPieceBitBoard(us, piece);
+        uint64_t bitboard = board.GetBitBoard(us, piece);
 
         while (bitboard != (uint64_t)0) {
             int from = __builtin_ctzll(bitboard); 
@@ -127,14 +169,14 @@ int Engine::GenerateAllMoves(Board& board, Move* moveList) {
     }
 
     GeneratePawnMoves(board, moveList, moveCount);
-    return moveCount; // Ritorna il numero totale di mosse scritte nell'array
+    return moveCount; 
 }
 
 void Engine::GeneratePawnMoves(Board& board, Move* moveList, int& moveCount) {
     int us = board.GetSideToMove();
     int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
     
-    uint64_t myPawns = board.GetPieceBitBoard(us, PiecesEnum::PAWNS);
+    uint64_t myPawns = board.GetBitBoard(us, PiecesEnum::PAWNS);
     uint64_t emptySquares = board.GetFreeCells();
     uint64_t enemyOccupation = board.GetColorOccupation(them);
     
@@ -201,39 +243,116 @@ Move Engine::GetBestMove(Board& board, int depth) {
     auto startTime = std::chrono::high_resolution_clock::now();
 
     Move moveList[256];
-    int n_moves = GenerateAllMoves(board, moveList);
-    Move bestMove = 0;
-
-    int alpha = -999999;
-    int beta  =  999999;
-
-    std::sort(moveList, moveList + n_moves, [](const Move& a, const Move& b) {
-        return getMoveFlags(a) > getMoveFlags(b);
-    });
-
+    int n_moves = GenerateAllMoves(board, moveList);    
+    if (n_moves == 0) return 0;
+    
+    Move mossaMiglioreAssoluta = 0;
     for (int i = 0; i < n_moves; i++) {
-        Move move = moveList[i];
-        if (board.MakeMove(move)) {
-            int score = -AlphaBeta(board, depth - 1, -beta, -alpha);
-            board.UnmakeMove(move);
-
-            if (score > alpha) {
-                alpha = score;
-                bestMove = move;
-            }
+        if (board.MakeMove(moveList[i])) {
+            mossaMiglioreAssoluta = moveList[i];
+            board.UnmakeMove(moveList[i]);
+            break; 
         }
     }
+    if (mossaMiglioreAssoluta == 0) return 0; 
 
+    // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
+    for (int d = 1; d <= depth; d++) {
+        int alpha = -999999;
+        int beta  = 999999;
+        Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
+
+        std::sort(moveList, moveList + n_moves, [](const Move& a, const Move& b) {
+            return getMoveFlags(a) > getMoveFlags(b);
+        });
+
+        for (int i = 0; i < n_moves; i++) {
+            Move move = moveList[i];
+            
+            if (board.MakeMove(move)) {
+                int score = -AlphaBeta(board, d - 1, -beta, -alpha);
+                board.UnmakeMove(move);
+
+                if (score > alpha) {
+                    alpha = score;
+                    bestMoveCurrentDepth = move;
+                }
+            }
+        }
+        
+        mossaMiglioreAssoluta = bestMoveCurrentDepth;
+    }
+    
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = endTime - startTime;
     
     stats.lastMoveTimeMs = elapsed.count();
-    
     stats.totalTimeMs += stats.lastMoveTimeMs;
     stats.movesPlayed++;
     stats.totalNodesSession += (stats.nodesEvaluated + stats.qNodesEvaluated);
     if (stats.lastMoveTimeMs < stats.minTimeMs) stats.minTimeMs = stats.lastMoveTimeMs;
     if (stats.lastMoveTimeMs > stats.maxTimeMs) stats.maxTimeMs = stats.lastMoveTimeMs;
+    
+    stats.hashFullness = tt.GetFullnessPercentage();
+    
+    return mossaMiglioreAssoluta;
+}
 
-    return bestMove;
+int Engine::ScoreMove(Board& board, Move move, Move ttMove) {
+    if (move == ttMove) {
+        return 1000000; // Priorità assoluta alla mossa della TT
+    }
+
+    int score = 0;
+    int flags = getMoveFlags(move);
+    int from = getMoveFrom(move);
+    int to = getMoveTo(move);
+
+    // --- Catture (MVV - LVA) ---
+    if (flags == FlagMap::CAPTURE || flags == FlagMap::PRCAPQUEEN || /* altri flag di cattura */ flags == FlagMap::ENPASS) {
+        int us = board.GetSideToMove();
+        int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
+
+        // Trova il pezzo attaccante
+        PiecesEnum::Type attacker = PiecesEnum::NONE;
+        for (const auto piece : PiecesEnum::All) {
+            if (getBit(board.GetBitBoard(us, piece), from)) {
+                attacker = piece;
+                break;
+            }
+        }
+
+        // Trova il pezzo vittima
+        PiecesEnum::Type victim = PiecesEnum::NONE;
+        if (flags == FlagMap::ENPASS) {
+            victim = PiecesEnum::PAWNS;
+        } else {
+            for (const auto piece : PiecesEnum::All) {
+                if (getBit(board.GetBitBoard(them, piece), to)) {
+                    victim = piece;
+                    break;
+                }
+            }
+        }
+
+        // Formula MVV-LVA: Vittima * 10 - Attaccante
+        if (attacker != PiecesEnum::NONE && victim != PiecesEnum::NONE) {
+            score = 100000 + (PiecesEnum::pieceValues[victim] * 10) - PiecesEnum::pieceValues[attacker];
+        }
+    } 
+    // --- Promozioni (non di cattura) ---
+    else if (flags == FlagMap::PRQUEEN) {
+        score = 90000; 
+    } 
+    else if (flags == FlagMap::PRROOK || flags == FlagMap::PRBISHOP || flags == FlagMap::PRKNIGHT) {
+        score = 80000;
+    }
+    // --- Mosse normali ---
+    else {
+        // Per ora diamo priorità a chi muove verso il centro o usa l'Arrocco
+        if (flags == FlagMap::CASTLING) score = 50000;
+        else score = 0; // Qui inserirai le Killer Moves in futuro
+    }
+
+    return score;
 }

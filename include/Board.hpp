@@ -24,7 +24,7 @@ struct UndoState {
 
 class Board {
 private:
-    uint64_t sides[2][NUM_PIECES] = {(uint64_t)0};
+    uint64_t sides[2][NUM_PIECES] = {{(uint64_t)0}};
     uint64_t colorOccupation[2] = {(uint64_t)0};
     uint64_t totalOccupation{(uint64_t)0};
     uint64_t freeCells{(uint64_t)0};
@@ -48,9 +48,13 @@ private:
 
     uint64_t ComputeRay(int direction, uint64_t edge, int square);
 
-    void MovePiece(int color, PiecesEnum::Type piece, int from, int to);
-    void RemovePiece(int color, PiecesEnum::Type piece, int square);
-    void PutPiece(int color, PiecesEnum::Type piece, int square);
+    inline void MovePiece(int color, PiecesEnum::Type piece, int from, int to) {
+        sides[color][piece] = clearBit(sides[color][piece], from);
+        sides[color][piece] = setBit(sides[color][piece], to);
+    }
+    inline void RemovePiece(int color, PiecesEnum::Type piece, int square) {
+        sides[color][piece] = clearBit(sides[color][piece], square);
+    }
 
 
 public:
@@ -68,13 +72,13 @@ public:
 
     uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece);
 
-    uint64_t GetPieceBitBoard(int color, PiecesEnum::Type piece){
+    uint64_t GetBitBoard(int color, PiecesEnum::Type piece){
         return sides[color][piece];
     }
-    void SetPieceBitBoard(int color, PiecesEnum::Type pieceType, uint64_t bitboard) {
+    void SetBitBoard(int color, PiecesEnum::Type pieceType, uint64_t bitboard) {
         sides[color][pieceType] = bitboard;
     }
-    void AddPiece(int color, PiecesEnum::Type pieceType, int square) {
+    inline void AddPiece(int color, PiecesEnum::Type pieceType, int square) {
         sides[color][pieceType] = setBit(sides[color][pieceType], square);
     }
     int GetSideToMove() {

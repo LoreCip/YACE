@@ -1,78 +1,161 @@
-info time 26 nodes 92265 nps 3498273 cutoffs 49918 (54.1029%)
-info time 87 nodes 319341 nps 3632183 cutoffs 178234 (55.8131%)
-info time 62 nodes 209253 nps 3351395 cutoffs 117615 (56.2071%)
-info time 38 nodes 144653 nps 3749819 cutoffs 78361 (54.1717%)
-info time 14 nodes 50800 nps 3480076 cutoffs 27504 (54.1417%)
-info time 52 nodes 179860 nps 3402203 cutoffs 110537 (61.4572%)
-info time 3 nodes 13323 nps 3644948 cutoffs 6859 (51.4824%)
-info time 34 nodes 129191 nps 3720221 cutoffs 70201 (54.3389%)
-info time 83 nodes 274899 nps 3311069 cutoffs 150682 (54.8136%)
-info time 213 nodes 669527 nps 3131463 cutoffs 394555 (58.9304%)
-info time 303 nodes 910341 nps 3001797 cutoffs 548561 (60.2588%)
-info time 110 nodes 331132 nps 3001823 cutoffs 214378 (64.7409%)
-info time 35 nodes 121874 nps 3421120 cutoffs 76341 (62.6393%)
-info time 405 nodes 1336553 nps 3294790 cutoffs 835884 (62.5403%)
-info time 69 nodes 232335 nps 3366954 cutoffs 140584 (60.5092%)
-info time 25 nodes 95827 nps 3743438 cutoffs 57185 (59.6752%)
-info time 17 nodes 66526 nps 3699578 cutoffs 40941 (61.5414%)
-info time 1 nodes 9752 nps 5163804 cutoffs 5261 (53.9479%)
-info time 42 nodes 195028 nps 4642749 cutoffs 103202 (52.9165%)
-info time 39 nodes 174568 nps 4414687 cutoffs 95902 (54.9368%)
-info time 38 nodes 159848 nps 4180987 cutoffs 92925 (58.1334%)
-info time 31 nodes 137001 nps 4351700 cutoffs 79347 (57.9171%)
-info time 36 nodes 154656 nps 4277678 cutoffs 96689 (62.5188%)
-info time 26 nodes 123100 nps 4689997 cutoffs 73916 (60.0455%)
-info time 17 nodes 81976 nps 4757177 cutoffs 44751 (54.5904%)
-info time 30 nodes 120889 nps 3970356 cutoffs 72418 (59.9045%)
-info time 8 nodes 39556 nps 4511441 cutoffs 21483 (54.3103%)
-info time 5 nodes 27662 nps 4877735 cutoffs 14882 (53.7994%)
-info time 0 nodes 1657 nps 5123479 cutoffs 778 (46.9523%)
-info time 1 nodes 12293 nps 6167611 cutoffs 5672 (46.1401%)
-info time 17 nodes 90543 nps 5313915 cutoffs 45773 (50.5539%)
-info time 3 nodes 20954 nps 5344669 cutoffs 10439 (49.8187%)
-info time 3 nodes 16583 nps 4859458 cutoffs 8846 (53.3438%)
-info time 0 nodes 3763 nps 6537650 cutoffs 1885 (50.093%)
-info time 7 nodes 32820 nps 4640904 cutoffs 16829 (51.2767%)
-info time 14 nodes 69702 nps 4661463 cutoffs 36788 (52.779%)
-info time 16 nodes 77471 nps 4682251 cutoffs 39845 (51.4321%)
-info time 8 nodes 46314 nps 5165357 cutoffs 22648 (48.901%)
-info time 11 nodes 52644 nps 4710183 cutoffs 28227 (53.6186%)
-info time 15 nodes 73885 nps 4896083 cutoffs 37800 (51.1606%)
-info time 27 nodes 135532 nps 4945110 cutoffs 68315 (50.4051%)
-info time 27 nodes 128802 nps 4741100 cutoffs 71198 (55.2771%)
-info time 1 nodes 6124 nps 5102857 cutoffs 3380 (55.1927%)
-info time 21 nodes 105551 nps 4819967 cutoffs 60112 (56.9507%)
-info time 15 nodes 73992 nps 4850637 cutoffs 39949 (53.991%)
-info time 16 nodes 86940 nps 5269166 cutoffs 47544 (54.686%)
-info time 15 nodes 88955 nps 5628331 cutoffs 49047 (55.1369%)
-info time 17 nodes 82579 nps 4644975 cutoffs 48916 (59.2354%)
-info time 5 nodes 26698 nps 5122152 cutoffs 15723 (58.8921%)
-info time 3 nodes 25515 nps 7587470 cutoffs 12517 (49.0574%)
-info time 0 nodes 7672 nps 8136211 cutoffs 3704 (48.2795%)
-info time 5 nodes 39394 nps 6875306 cutoffs 18629 (47.2889%)
-info time 6 nodes 48826 nps 7733812 cutoffs 23660 (48.4578%)
-info time 1 nodes 8120 nps 6909873 cutoffs 3713 (45.7266%)
-info time 0 nodes 3982 nps 8868695 cutoffs 1871 (46.9864%)
-info time 3 nodes 22842 nps 6877168 cutoffs 10214 (44.7159%)
-info time 3 nodes 26370 nps 6759212 cutoffs 11746 (44.543%)
-info time 1 nodes 11472 nps 8001300 cutoffs 4975 (43.3665%)
-info time 0 nodes 6782 nps 8403246 cutoffs 2970 (43.7924%)
-info time 1 nodes 8712 nps 6929288 cutoffs 3753 (43.0785%)
-info time 0 nodes 4145 nps 9719027 cutoffs 1854 (44.7286%)
-info time 0 nodes 5372 nps 10844287 cutoffs 2451 (45.6255%)
-info time 1 nodes 16285 nps 8822861 cutoffs 7122 (43.7335%)
-info time 2 nodes 19105 nps 9145134 cutoffs 8659 (45.3232%)
-info time 0 nodes 7049 nps 9452812 cutoffs 3228 (45.7937%)
-info time 2 nodes 25093 nps 9304227 cutoffs 11507 (45.8574%)
-info time 2 nodes 22256 nps 8840028 cutoffs 9859 (44.2982%)
-info time 1 nodes 16736 nps 8713231 cutoffs 7451 (44.5208%)
-info time 1 nodes 14429 nps 10454600 cutoffs 6689 (46.358%)
-info time 0 nodes 8059 nps 10278877 cutoffs 3696 (45.8618%)
-info time 0 nodes 8524 nps 10086929 cutoffs 3936 (46.1755%)
-info time 0 nodes 4644 nps 12904014 cutoffs 2217 (47.739%)
-info time 1 nodes 10946 nps 9533389 cutoffs 4938 (45.1124%)
-info time 2 nodes 20638 nps 9649584 cutoffs 9389 (45.4937%)
-info time 2 nodes 22750 nps 9033818 cutoffs 10182 (44.756%)
-info time 2 nodes 17572 nps 8748107 cutoffs 7783 (44.2921%)
-info time 1 nodes 11042 nps 8688337 cutoffs 4958 (44.9013%)
-info time 0 nodes 2528 nps 8352054 cutoffs 1154 (45.6487%)
+info time 11 nodes 34919 nps 2986234 cutoffs 20624 (59.0624%) hash fullness 0.0329375%
+info time 0 nodes 4437 nps 4502424 cutoffs 2396 (54.0005%) hash fullness 0.0395537%
+info time 0 nodes 3781 nps 4827124 cutoffs 1766 (46.7072%) hash fullness 0.0439525%
+info time 20 nodes 77643 nps 3763675 cutoffs 39251 (50.5532%) hash fullness 0.134969%
+info time 18 nodes 63613 nps 3358042 cutoffs 34960 (54.9573%) hash fullness 0.209463%
+info time 48 nodes 137264 nps 2828367 cutoffs 81077 (59.0665%) hash fullness 0.303304%
+info time 131 nodes 336455 nps 2556902 cutoffs 220722 (65.6022%) hash fullness 0.398076%
+info time 1709 nodes 4188033 nps 2450351 cutoffs 2827492 (67.5136%) hash fullness 0.528467%
+info time 771 nodes 1906518 nps 2470643 cutoffs 1289738 (67.6489%) hash fullness 0.636542%
+info time 27 nodes 80459 nps 2913699 cutoffs 52944 (65.8025%) hash fullness 0.697231%
+info time 74 nodes 193397 nps 2606342 cutoffs 127212 (65.7776%) hash fullness 0.758314%
+info time 311 nodes 777473 nps 2498404 cutoffs 504015 (64.8273%) hash fullness 0.895107%
+info time 259 nodes 675594 nps 2607569 cutoffs 448461 (66.3803%) hash fullness 1.03261%
+info time 25 nodes 80029 nps 3156371 cutoffs 50633 (63.2683%) hash fullness 1.10074%
+info time 111 nodes 290782 nps 2601350 cutoffs 184431 (63.4259%) hash fullness 1.19984%
+info time 121 nodes 325207 nps 2678448 cutoffs 215461 (66.2535%) hash fullness 1.26461%
+info time 404 nodes 1005449 nps 2485664 cutoffs 659385 (65.5811%) hash fullness 1.40018%
+info time 11 nodes 40657 nps 3469767 cutoffs 24694 (60.7374%) hash fullness 1.46395%
+info time 47 nodes 134113 nps 2830886 cutoffs 81207 (60.5512%) hash fullness 1.54077%
+info time 21 nodes 71436 nps 3370750 cutoffs 44998 (62.9906%) hash fullness 1.64666%
+info time 13 nodes 47660 nps 3650841 cutoffs 29103 (61.0638%) hash fullness 1.72069%
+info time 6 nodes 29047 nps 4526677 cutoffs 16600 (57.1488%) hash fullness 1.77773%
+info time 5 nodes 24531 nps 4574514 cutoffs 13332 (54.3476%) hash fullness 1.82669%
+info time 4 nodes 21025 nps 4602405 cutoffs 10836 (51.5386%) hash fullness 1.85577%
+info time 14 nodes 56268 nps 3895695 cutoffs 29992 (53.3021%) hash fullness 1.93323%
+info time 10 nodes 47378 nps 4408223 cutoffs 24297 (51.2833%) hash fullness 2.01412%
+info time 28 nodes 92683 nps 3213813 cutoffs 54971 (59.3108%) hash fullness 2.12181%
+info time 17 nodes 66404 nps 3815257 cutoffs 38554 (58.0598%) hash fullness 2.22334%
+info time 14 nodes 52094 nps 3492321 cutoffs 30835 (59.1911%) hash fullness 2.28818%
+info time 3 nodes 12351 nps 4070936 cutoffs 6736 (54.5381%) hash fullness 2.32794%
+info time 21 nodes 71746 nps 3374604 cutoffs 36575 (50.9785%) hash fullness 2.40194%
+info time 19 nodes 66874 nps 3499164 cutoffs 32847 (49.1177%) hash fullness 2.4774%
+info time 3 nodes 14154 nps 3808676 cutoffs 7137 (50.4239%) hash fullness 2.5074%
+info time 14 nodes 55694 nps 3850096 cutoffs 26541 (47.655%) hash fullness 2.61798%
+info time 7 nodes 30056 nps 4115897 cutoffs 14427 (48.0004%) hash fullness 2.68654%
+info time 5 nodes 26378 nps 4511206 cutoffs 12011 (45.5342%) hash fullness 2.76096%
+info time 3 nodes 14886 nps 4647906 cutoffs 7058 (47.4137%) hash fullness 2.80552%
+info time 4 nodes 19567 nps 4746631 cutoffs 9554 (48.8271%) hash fullness 2.85051%
+info time 4 nodes 21928 nps 4766878 cutoffs 10925 (49.8221%) hash fullness 2.90644%
+info time 0 nodes 5675 nps 5745811 cutoffs 2397 (42.2379%) hash fullness 2.93226%
+info time 2 nodes 10342 nps 4795264 cutoffs 4520 (43.7053%) hash fullness 2.97564%
+info time 7 nodes 33058 nps 4585822 cutoffs 14821 (44.8333%) hash fullness 3.08815%
+info time 6 nodes 27844 nps 4210562 cutoffs 13484 (48.427%) hash fullness 3.1605%
+info time 4 nodes 22557 nps 4787080 cutoffs 10314 (45.7242%) hash fullness 3.2262%
+info time 8 nodes 35916 nps 4215113 cutoffs 16828 (46.8538%) hash fullness 3.30763%
+info time 6 nodes 27148 nps 4226955 cutoffs 13360 (49.2117%) hash fullness 3.36624%
+info time 8 nodes 35273 nps 3936388 cutoffs 17174 (48.6888%) hash fullness 3.4161%
+info time 16 nodes 62089 nps 3689915 cutoffs 30264 (48.7429%) hash fullness 3.5383%
+info time 2 nodes 10800 nps 4314206 cutoffs 5075 (46.9907%) hash fullness 3.57227%
+info time 4 nodes 16641 nps 4138055 cutoffs 7590 (45.6102%) hash fullness 3.62249%
+info time 4 nodes 16780 nps 4163583 cutoffs 8817 (52.5447%) hash fullness 3.67144%
+info time 2 nodes 11092 nps 4635120 cutoffs 5218 (47.0429%) hash fullness 3.70724%
+info time 2 nodes 9965 nps 4498820 cutoffs 4775 (47.9177%) hash fullness 3.73743%
+info time 2 nodes 11170 nps 4892910 cutoffs 4519 (40.4566%) hash fullness 3.76518%
+info time 1 nodes 5950 nps 5122584 cutoffs 2473 (41.563%) hash fullness 3.78653%
+info time 0 nodes 3565 nps 6125271 cutoffs 1491 (41.8233%) hash fullness 3.80173%
+info time 0 nodes 6501 nps 6549551 cutoffs 2334 (35.9022%) hash fullness 3.82043%
+info time 0 nodes 3827 nps 6915956 cutoffs 1430 (37.3661%) hash fullness 3.83331%
+info time 1 nodes 7750 nps 7081104 cutoffs 2593 (33.4581%) hash fullness 3.8568%
+info time 1 nodes 9468 nps 6594481 cutoffs 3333 (35.2028%) hash fullness 3.88831%
+info time 0 nodes 3532 nps 6443139 cutoffs 1353 (38.3069%) hash fullness 3.90312%
+info time 0 nodes 4496 nps 6799614 cutoffs 1566 (34.831%) hash fullness 3.91635%
+info time 0 nodes 5418 nps 6392746 cutoffs 1998 (36.8771%) hash fullness 3.93874%
+info time 1 nodes 7366 nps 6486581 cutoffs 2817 (38.2433%) hash fullness 3.9642%
+info time 0 nodes 6167 nps 6723607 cutoffs 2139 (34.6846%) hash fullness 3.98591%
+info time 1 nodes 6299 nps 5501276 cutoffs 1994 (31.6558%) hash fullness 4.01019%
+info time 0 nodes 6040 nps 6697359 cutoffs 2092 (34.6358%) hash fullness 4.02939%
+info time 0 nodes 5695 nps 6010903 cutoffs 1917 (33.6611%) hash fullness 4.04767%
+info time 0 nodes 5034 nps 6989482 cutoffs 1923 (38.2002%) hash fullness 4.06673%
+info time 0 nodes 4239 nps 6471647 cutoffs 1516 (35.7632%) hash fullness 4.081%
+info time 0 nodes 6487 nps 6634260 cutoffs 2299 (35.4401%) hash fullness 4.10385%
+info time 0 nodes 4464 nps 6779527 cutoffs 1651 (36.9848%) hash fullness 4.11902%
+info time 0 nodes 7148 nps 7585662 cutoffs 2950 (41.2703%) hash fullness 4.14333%
+info time 0 nodes 5998 nps 6944975 cutoffs 2271 (37.8626%) hash fullness 4.17019%
+info time 0 nodes 4190 nps 7044337 cutoffs 1579 (37.685%) hash fullness 4.18697%
+info time 0 nodes 3790 nps 6628353 cutoffs 1423 (37.5462%) hash fullness 4.20227%
+info time 0 nodes 3848 nps 6611013 cutoffs 1409 (36.6164%) hash fullness 4.2199%
+info time 0 nodes 3728 nps 6444308 cutoffs 1410 (37.8219%) hash fullness 4.23678%
+info time 0 nodes 3424 nps 6336915 cutoffs 1328 (38.785%) hash fullness 4.25331%
+info time 0 nodes 4882 nps 6816550 cutoffs 1778 (36.4195%) hash fullness 4.27348%
+info time 0 nodes 4301 nps 6534696 cutoffs 1533 (35.6429%) hash fullness 4.29286%
+info time 0 nodes 6253 nps 7074913 cutoffs 2432 (38.8933%) hash fullness 4.31439%
+info time 0 nodes 4667 nps 6982910 cutoffs 1705 (36.5331%) hash fullness 4.32987%
+info time 0 nodes 3799 nps 6329862 cutoffs 1394 (36.6939%) hash fullness 4.34593%
+info time 0 nodes 3089 nps 6164106 cutoffs 1098 (35.5455%) hash fullness 4.35884%
+info time 0 nodes 3030 nps 6942757 cutoffs 1180 (38.9439%) hash fullness 4.36946%
+info time 0 nodes 3322 nps 6403151 cutoffs 1198 (36.0626%) hash fullness 4.38191%
+info time 1 nodes 7972 nps 7744302 cutoffs 3202 (40.1656%) hash fullness 4.40912%
+info time 0 nodes 5799 nps 7320610 cutoffs 2298 (39.6275%) hash fullness 4.42633%
+info time 0 nodes 6797 nps 7253406 cutoffs 2532 (37.2517%) hash fullness 4.44628%
+info time 0 nodes 4467 nps 6570489 cutoffs 1570 (35.1466%) hash fullness 4.46198%
+info time 0 nodes 3924 nps 6764735 cutoffs 1476 (37.6147%) hash fullness 4.47607%
+info time 0 nodes 5218 nps 6514983 cutoffs 1884 (36.1058%) hash fullness 4.49442%
+info time 0 nodes 3180 nps 6253330 cutoffs 1139 (35.8176%) hash fullness 4.50693%
+info time 0 nodes 4374 nps 6876580 cutoffs 1677 (38.3402%) hash fullness 4.51813%
+info time 0 nodes 3895 nps 6541095 cutoffs 1527 (39.2041%) hash fullness 4.53065%
+info time 0 nodes 3345 nps 6809479 cutoffs 1320 (39.4619%) hash fullness 4.54027%
+info time 1 nodes 7602 nps 6323417 cutoffs 2809 (36.9508%) hash fullness 4.57113%
+info time 0 nodes 5236 nps 6817104 cutoffs 2062 (39.3812%) hash fullness 4.59123%
+info time 0 nodes 3694 nps 6763808 cutoffs 1406 (38.0617%) hash fullness 4.60589%
+info time 0 nodes 4880 nps 7059082 cutoffs 1934 (39.6311%) hash fullness 4.6202%
+info time 0 nodes 2139 nps 6339768 cutoffs 840 (39.2707%) hash fullness 4.62796%
+info time 0 nodes 3987 nps 6359571 cutoffs 1497 (37.547%) hash fullness 4.6424%
+info time 0 nodes 4591 nps 6126618 cutoffs 1707 (37.1814%) hash fullness 4.65914%
+info time 0 nodes 3067 nps 6374324 cutoffs 1157 (37.7242%) hash fullness 4.67001%
+info time 0 nodes 4833 nps 6281060 cutoffs 1762 (36.4577%) hash fullness 4.68768%
+info time 0 nodes 3068 nps 6532120 cutoffs 1166 (38.0052%) hash fullness 4.69694%
+info time 0 nodes 3912 nps 5660844 cutoffs 1373 (35.0971%) hash fullness 4.70932%
+info time 0 nodes 2931 nps 6224714 cutoffs 1106 (37.7346%) hash fullness 4.71776%
+info time 0 nodes 3416 nps 5887137 cutoffs 1281 (37.5%) hash fullness 4.72838%
+info time 0 nodes 5047 nps 6139559 cutoffs 1819 (36.0412%) hash fullness 4.74154%
+info time 0 nodes 4710 nps 5868032 cutoffs 1807 (38.3652%) hash fullness 4.7576%
+info time 0 nodes 1441 nps 5025879 cutoffs 581 (40.3192%) hash fullness 4.76414%
+info time 0 nodes 3267 nps 6493532 cutoffs 1271 (38.9042%) hash fullness 4.77319%
+info time 0 nodes 3559 nps 6870497 cutoffs 1404 (39.4493%) hash fullness 4.78352%
+info time 0 nodes 1892 nps 6016988 cutoffs 766 (40.4863%) hash fullness 4.78885%
+info time 0 nodes 2634 nps 5519790 cutoffs 941 (35.7251%) hash fullness 4.79636%
+info time 0 nodes 3927 nps 6015440 cutoffs 1427 (36.3382%) hash fullness 4.80763%
+info time 0 nodes 4215 nps 5162341 cutoffs 1293 (30.6762%) hash fullness 4.822%
+info time 0 nodes 2864 nps 6218030 cutoffs 1062 (37.081%) hash fullness 4.83052%
+info time 0 nodes 4110 nps 4655092 cutoffs 1433 (34.8662%) hash fullness 4.84461%
+info time 0 nodes 2176 nps 5181285 cutoffs 786 (36.1213%) hash fullness 4.85323%
+info time 0 nodes 1850 nps 5824680 cutoffs 728 (39.3514%) hash fullness 4.85906%
+info time 0 nodes 2553 nps 5607809 cutoffs 948 (37.1328%) hash fullness 4.86535%
+info time 0 nodes 2234 nps 5000223 cutoffs 813 (36.3921%) hash fullness 4.87175%
+info time 0 nodes 1469 nps 4954752 cutoffs 540 (36.7597%) hash fullness 4.87758%
+info time 0 nodes 5087 nps 5988778 cutoffs 1821 (35.7971%) hash fullness 4.89804%
+info time 0 nodes 2371 nps 6068144 cutoffs 894 (37.7056%) hash fullness 4.90598%
+info time 0 nodes 3505 nps 5994045 cutoffs 1355 (38.6591%) hash fullness 4.91853%
+info time 0 nodes 3375 nps 6407700 cutoffs 1260 (37.3333%) hash fullness 4.92693%
+info time 0 nodes 2988 nps 6316844 cutoffs 1176 (39.3574%) hash fullness 4.93337%
+info time 0 nodes 3570 nps 6596379 cutoffs 1360 (38.0952%) hash fullness 4.94342%
+info time 0 nodes 4642 nps 6522814 cutoffs 1790 (38.561%) hash fullness 4.95662%
+info time 0 nodes 3785 nps 6144420 cutoffs 1351 (35.6935%) hash fullness 4.96713%
+info time 0 nodes 4891 nps 7011713 cutoffs 1780 (36.3934%) hash fullness 4.97983%
+info time 1 nodes 6380 nps 6209741 cutoffs 2396 (37.5549%) hash fullness 4.99781%
+info time 0 nodes 5341 nps 6551766 cutoffs 1945 (36.4164%) hash fullness 5.01412%
+info time 0 nodes 3653 nps 6299264 cutoffs 1257 (34.4101%) hash fullness 5.02803%
+info time 0 nodes 3804 nps 5807128 cutoffs 1327 (34.8843%) hash fullness 5.04238%
+info time 0 nodes 4471 nps 5699011 cutoffs 1612 (36.0546%) hash fullness 5.06179%
+info time 0 nodes 3257 nps 5642855 cutoffs 1060 (32.5453%) hash fullness 5.07292%
+info time 0 nodes 3879 nps 5457791 cutoffs 1321 (34.0552%) hash fullness 5.09037%
+info time 0 nodes 1929 nps 6352917 cutoffs 804 (41.6796%) hash fullness 5.09906%
+info time 0 nodes 3427 nps 6254642 cutoffs 1315 (38.3718%) hash fullness 5.11758%
+info time 0 nodes 2312 nps 6569058 cutoffs 907 (39.2301%) hash fullness 5.1276%
+info time 0 nodes 2548 nps 6767901 cutoffs 985 (38.6578%) hash fullness 5.13865%
+info time 0 nodes 3299 nps 6330121 cutoffs 1238 (37.5265%) hash fullness 5.15238%
+info time 0 nodes 2992 nps 5612708 cutoffs 1178 (39.3717%) hash fullness 5.16976%
+info time 1 nodes 6981 nps 5477480 cutoffs 2666 (38.1894%) hash fullness 5.20445%
+info time 1 nodes 5662 nps 5300297 cutoffs 2167 (38.2727%) hash fullness 5.23507%
+info time 1 nodes 6938 nps 5054390 cutoffs 2676 (38.5702%) hash fullness 5.27426%
+info time 0 nodes 5220 nps 5529075 cutoffs 1950 (37.3563%) hash fullness 5.29601%
+info time 1 nodes 6100 nps 5070745 cutoffs 2309 (37.8525%) hash fullness 5.32136%
+info time 0 nodes 2200 nps 4839472 cutoffs 807 (36.6818%) hash fullness 5.32751%
+info time 1 nodes 4840 nps 4829360 cutoffs 1882 (38.8843%) hash fullness 5.3489%
+info time 1 nodes 8199 nps 5425514 cutoffs 3129 (38.1632%) hash fullness 5.38459%
+info time 1 nodes 8779 nps 4789202 cutoffs 3353 (38.1934%) hash fullness 5.42218%
+info time 1 nodes 6633 nps 5474814 cutoffs 2562 (38.6251%) hash fullness 5.44317%
+info time 1 nodes 8521 nps 4832060 cutoffs 2922 (34.2917%) hash fullness 5.47643%
+info time 1 nodes 6096 nps 4823280 cutoffs 2395 (39.2881%) hash fullness 5.49649%
+info time 1 nodes 6864 nps 5386579 cutoffs 2622 (38.1993%) hash fullness 5.52335%

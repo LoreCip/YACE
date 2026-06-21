@@ -7,7 +7,9 @@ namespace LookupTables{
     extern uint64_t knightAttacks[64];
     extern uint64_t kingAttacks[64];
     extern uint64_t pawnAttacks[2][64];
-
+    extern uint64_t castlingKeys[16];
+    extern uint64_t enPassantKeys[65];
+    
     // Zobrist Keys
     extern uint64_t pieceKeys[2][6][64];
     extern uint64_t sideKey;
@@ -28,7 +30,7 @@ namespace LookupTables{
     inline constexpr uint64_t maskBK = 0x6000000000000000ULL; // f8, g8
     inline constexpr uint64_t maskBQ = 0x0E00000000000000ULL; // b8, c8, d8
 
-    const uint8_t castlingMasks[64] = {
+    inline constexpr uint8_t castlingMasks[64] = {
         13, 15, 15, 15, 12, 15, 15, 14, // Rango 1 (Bianco: A1 toglie WQ, E1 toglie WK+WQ, H1 toglie WK)
         15, 15, 15, 15, 15, 15, 15, 15,
         15, 15, 15, 15, 15, 15, 15, 15,

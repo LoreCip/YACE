@@ -50,7 +50,7 @@ Move stringToMove(Board& board, std::string moveStr) {
 
     PiecesEnum::Type movingPiece = PiecesEnum::NONE;
     for (const auto piece : PiecesEnum::All) {
-        if (getBit(board.GetPieceBitBoard(us, piece), from)) {
+        if (getBit(board.GetBitBoard(us, piece), from)) {
             movingPiece = piece;
             break;
         }
@@ -148,14 +148,15 @@ int main() {
                     cutoffPct = ((double)stats.betaCutoffs / totalNodes) * 100.0;
                 }
 
-                // Apre il file in modalità append (aggiunge in coda senza sovrascrivere)
                 std::ofstream logFile("engine_stats.log", std::ios::app);
                 if (logFile.is_open()) {
                     logFile << "info time " << (int)stats.lastMoveTimeMs 
                             << " nodes " << totalNodes 
                             << " nps " << nps 
                             << " cutoffs " << stats.betaCutoffs 
-                            << " (" << cutoffPct << "%)" << std::endl;
+                            << " (" << cutoffPct << "%)"
+                            << " hash fullness " << stats.hashFullness << "%"
+                            << std::endl;
                 }
             }
 

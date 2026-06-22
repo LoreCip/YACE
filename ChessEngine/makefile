@@ -52,17 +52,17 @@ release: all
 	@echo "Creazione dello snapshot per la versione v$(V)..."
 	@echo "v$(V)" > build/version.txt
 	@echo "Creato file di versione: build/version.txt"
-	@mkdir -p gauntlet/versions/v$(V)/src
-	@mkdir -p gauntlet/versions/v$(V)/include
-	@cp -r src/* gauntlet/versions/v$(V)/src/
-	@cp -r include/* gauntlet/versions/v$(V)/include/
+	@mkdir -p ../gauntlet/versions/v$(V)/src
+	@mkdir -p ../gauntlet/versions/v$(V)/include
+	@cp -r src/* ../gauntlet/versions/v$(V)/src/
+	@cp -r include/* ../gauntlet/versions/v$(V)/include/
 	@echo "Compressione dei sorgenti in v$(V).tar.gz in corso..."
-	@tar -czf gauntlet/versions/v$(V).tar.gz -C gauntlet/versions v$(V)
+	@tar -czf ../gauntlet/versions/v$(V).tar.gz -C ../gauntlet/versions v$(V)
 	@echo "Pulizia della cartella temporanea..."
-	@rm -rf gauntlet/versions/v$(V)
+	@rm -rf ../gauntlet/versions/v$(V)
 	@echo "Salvataggio degli eseguibili..."
-	@cp build/main_game gauntlet/versions/engine_v$(V)
-	@cp build/main_fen gauntlet/versions/engine_fen_v$(V)
+	@cp build/main_game ../gauntlet/versions/engine_v$(V)
+	@cp build/main_fen ../gauntlet/versions/engine_fen_v$(V)
 	@echo "Versione v$(V) rilasciata con successo!"
 
 .PHONY: all clean release

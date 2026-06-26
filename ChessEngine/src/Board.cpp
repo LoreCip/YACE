@@ -7,16 +7,9 @@
 #include "LookupTables.hpp"
 #include "Move.hpp"
 #include "Pieces.hpp"
+#include "NnueAdapter.hpp"
 
-PiecesEnum::Type GetPromotionPiece(int flag) {
-    switch (flag) {
-        case FlagMap::PRQUEEN:  case FlagMap::PRCAPQUEEN:  return PiecesEnum::QUEEN;
-        case FlagMap::PRROOK:   case FlagMap::PRCAPROOK:   return PiecesEnum::ROOKS;
-        case FlagMap::PRBISHOP: case FlagMap::PRCAPBISHOP: return PiecesEnum::BISHOPS;
-        case FlagMap::PRKNIGHT: case FlagMap::PRCAPKNIGHT: return PiecesEnum::KNIGHTS;
-        default: return PiecesEnum::NONE;
-    }
-}
+
 
 /* PRIVATE */
 
@@ -267,6 +260,8 @@ bool Board::MakeMove(Move move) {
     history[historyPly].halfMoveClock = halfMoveClock;
     historyPly++;
 
+    NnueAdapter::OnMakeMove(*this, move);
+
     if (pieceType == PiecesEnum::PAWNS || captured) {
         halfMoveClock = 0; // Reset
     } else {
@@ -389,6 +384,7 @@ void Board::UnmakeMove(Move move) {
 
     sideToMove = us;
     UpdateGlobalBoardState();
+    NnueAdapter::OnUnmakeMove();
 }
 
 void Board::UpdateGlobalBoardState() {
@@ -401,32 +397,6 @@ void Board::UpdateGlobalBoardState() {
     totalOccupation = colorOccupation[0] | colorOccupation[1];
     freeCells = ~totalOccupation;  
 }
-
-int Board::Evaluate() {
-    int scores[2] = {0, 0};
-
-    for (int color = 0; color < 2; color++) {
-        for (const auto piece : PiecesEnum::All) {
-            uint64_t bitboard = sides[color][piece];
-            
-            scores[color] += __builtin_popcountll(bitboard) * PiecesEnum::pieceValues[piece];
-            
-            while (bitboard) {
-                int sq = __builtin_ctzll(bitboard);
-                int pstSquare = (color == Color::BLACK) ? (sq ^ 56) : sq; 
-                scores[color] += LookupTables::pstTables[piece][pstSquare];
-                
-                bitboard &= bitboard - 1;
-            }
-        }
-        
-        if (__builtin_popcountll(sides[color][PiecesEnum::BISHOPS]) >= 2) scores[color] += 50;
-    }
-
-    int evaluation = scores[Color::WHITE] - scores[Color::BLACK];
-    return (sideToMove == Color::WHITE) ? evaluation : -evaluation;
-}
-
 
 uint64_t Board::GetHash() {
     uint64_t hash = 0;
@@ -533,4 +503,14 @@ void Board::InitializeFromFEN(const std::string& fen) {
     }
 
     UpdateGlobalBoardState();
+}
+
+PiecesEnum::Type Board::GetPromotionPiece(int flag) {
+    switch (flag) {
+        case FlagMap::PRQUEEN:  case FlagMap::PRCAPQUEEN:  return PiecesEnum::QUEEN;
+        case FlagMap::PRROOK:   case FlagMap::PRCAPROOK:   return PiecesEnum::ROOKS;
+        case FlagMap::PRBISHOP: case FlagMap::PRCAPBISHOP: return PiecesEnum::BISHOPS;
+        case FlagMap::PRKNIGHT: case FlagMap::PRCAPKNIGHT: return PiecesEnum::KNIGHTS;
+        default: return PiecesEnum::NONE;
+    }
 }

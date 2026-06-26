@@ -6,6 +6,11 @@ enum Color{
     BLACK
 };
 
+static Color operator ! (const Color& self) {
+    return self == Color::WHITE ? Color::BLACK : Color::WHITE;
+}
+
+
 namespace PiecesEnum {
 
     enum Type{

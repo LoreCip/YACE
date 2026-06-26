@@ -39,6 +39,8 @@ private:
     UndoState history[1024]; 
     int historyPly = 0;
 
+    bool useNnue = true;
+
     uint64_t ComputePawnMoves(int color, uint64_t bitboard);
     uint64_t ComputeKnightMoves(int color, uint64_t bitboard);
     uint64_t ComputeKingMoves(int color, uint64_t bitboard);
@@ -64,13 +66,13 @@ public:
 
     bool MakeMove(Move move);
     void UnmakeMove(Move move);
-    int Evaluate();
     bool IsSquareAttacked(int square, int attackingColor);
 
     uint64_t GetHash();
     bool IsRepetition();
 
     uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece);
+    PiecesEnum::Type GetPromotionPiece(int flag);
 
     uint64_t GetBitBoard(int color, PiecesEnum::Type piece){
         return sides[color][piece];
@@ -104,6 +106,12 @@ public:
     }
     uint8_t GetHalfMoveClock() {
         return halfMoveClock;
+    }
+    UndoState GetHistory(int ply){
+        return history[ply];
+    }
+    int GetHistoryPly(){
+        return historyPly;
     }
 
 };

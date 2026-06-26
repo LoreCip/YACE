@@ -2,9 +2,9 @@
 
 #include "Engine.hpp"
 #include "LookupTables.hpp"
+#include "NnueAdapter.hpp"
 
 /* PRIVATE */
-
 int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     if (timeIsUp) return 0;
     CheckTime();
@@ -104,7 +104,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
 
     stats.qNodesEvaluated++;
 
-    int stand_pat = board.Evaluate();
+    int stand_pat = GetEvaluation(board);
     
     if (stand_pat >= beta){
         stats.betaCutoffs++;
@@ -405,6 +405,38 @@ int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
     return score;
 }
 
+int Engine::TraditionalEvaluate(Board& board) {
+    int scores[2] = {0, 0};
+
+    for (int color = 0; color < 2; color++) {
+        for (const auto piece : PiecesEnum::All) {
+            uint64_t bitboard = board.GetBitBoard(color, piece);
+            
+            scores[color] += __builtin_popcountll(bitboard) * PiecesEnum::pieceValues[piece];
+            
+            while (bitboard) {
+                int sq = __builtin_ctzll(bitboard);
+                int pstSquare = (color == Color::BLACK) ? (sq ^ 56) : sq; 
+                scores[color] += LookupTables::pstTables[piece][pstSquare];
+                
+                bitboard &= bitboard - 1;
+            }
+        }
+        
+        if (__builtin_popcountll(board.GetBitBoard(color, PiecesEnum::BISHOPS) >= 2)) scores[color] += 50;
+    }
+
+    int evaluation = scores[Color::WHITE] - scores[Color::BLACK];
+    return (board.GetSideToMove() == Color::WHITE) ? evaluation : -evaluation;
+}
+
+int Engine::GetEvaluation(Board& board) {
+    if (useNnue) {
+        return NnueAdapter::NnueEvaluate(board);
+    } else {
+        return TraditionalEvaluate(board);
+    }
+}
 
 void Engine::CheckTime() {
     if ((stats.nodesEvaluated & 2047) != 0) return;

@@ -4,7 +4,7 @@ TARGET_FEN  = build/main_fen
 
 # Compilatore e flag
 CXX = g++ -D_DEBUG
-CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -O3 -fopenmp -flto
+CXXFLAGS = -Wall -Wextra -std=c++17 -Iinclude -I../NNUE/include -O3 -fopenmp -flto
 
 # Cartelle
 SRC_DIR = src

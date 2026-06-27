@@ -1,186 +1,154 @@
 #include <iostream>
 #include <cmath>
-#include <vector>
 #include <cassert>
-#include "Board.hpp"
-#include "Engine.hpp"
-#include "Move.hpp"
+#include <cstring>
+#include <memory>
+#include <sstream>
+// ---------------------------------------------------------
+// HACK PER UNIT TESTING: Esponiamo i membri privati
+// ---------------------------------------------------------
+#define private public
 #include "NnueAdapter.hpp"
 #include "NnueNetwork.hpp"
+#include "Board.hpp"
+#undef private // <-- È buona norma chiudere l'hack subito dopo
 
-bool ConfrontaAccumulatori(const double* accIncremental, const double* accRefresh, int size, double epsilon = 1e-12) {
-    for (int i = 0; i < size; i++) {
-        if (std::abs(accIncremental[i] - accRefresh[i]) > epsilon) {
-            std::cerr << "  [ERRORE] Disallineamento neurone " << i 
-                      << " | Incrementele: " << accIncremental[i] 
-                      << " | Refresh: " << accRefresh[i] 
-                      << " | Delta: " << std::abs(accIncremental[i] - accRefresh[i]) << std::endl;
-            return false;
-        }
-    }
-    return true;
-}
-
-void EstraiAccumulatoreCorrente(double destination[2][256]) {
-    for(int c = 0; c < 2; c++) {
-        for(int i = 0; i < 256; i++) {
-            destination[c][i] = 0.0; 
-        }
+#include "Move.hpp"
+#include "Pieces.hpp"
+#include "LookupTables.hpp"
+// ---------------------------------------------------------
+// UTILS PER I TEST
+// ---------------------------------------------------------
+void AssertFloatEq(double a, double b, const std::string& msg, double epsilon = 1e-5) {
+    if (std::abs(a - b) > epsilon) {
+        std::cerr << "[FALLITO] " << msg << " | Atteso: " << a << ", Ottenuto: " << b << "\n";
+        exit(1);
     }
 }
 
-void ForzaRicalcoloCompleto(Board& board, double destination[2][256]) {
-    for(int c = 0; c < 2; c++) {
-        for(int i = 0; i < 256; i++) {
-            destination[c][i] = 0.0;
-        }
-    }
-}
+// ---------------------------------------------------------
+// 6.1 TEST DEL FEATURE SET
+// ---------------------------------------------------------
+void TestFeatureSet() {
+    std::cout << "--- Esecuzione 6.1: Test del Feature Set ---\n";
+    std::unique_ptr<NnueNetwork> testNet = std::make_unique<NnueNetwork>();
+    // 1. Verificare gli indici attesi
+    // Pedone bianco (PAWNS = 0), colore WHITE, Re in E1 (4), Prospettiva WHITE
+    int fIndexWhite = NnueAdapter::MakeFeatureIndex(12, PiecesEnum::PAWNS, WHITE, 4, WHITE);
+    assert(fIndexWhite == 2572 && "Indice feature pedone bianco errato");
 
-std::string MossaInStringaUCI(Move move) {
-    int from = getMoveFrom(move); 
-    int to = getMoveTo(move);
+    // 2. Verificare la simmetria
+    // Pedone nero (PAWNS = 0) in E7 (52), Re in E8 (60)
+    // Prospettiva BLACK flippa verticalmente la casa e il re
+    int fIndexBlack = NnueAdapter::MakeFeatureIndex(52, PiecesEnum::PAWNS, BLACK, 60, BLACK); 
+    assert(fIndexWhite == fIndexBlack && "Simmetria feature non rispettata tra Bianco e Nero");
 
-    char fileFrom = 'a' + (from % 8);
-    char rankFrom = '1' + (from / 8);
-    char fileTo   = 'a' + (to % 8);
-    char rankTo   = '1' + (to / 8);
-
-    std::string uci = "";
-    uci += fileFrom;
-    uci += rankFrom;
-    uci += fileTo;
-    uci += rankTo;
-
-    // Gestione opzionale del pezzo di promozione se la tua mossa ha dei flag
-    // if (move.IsPromotion()) { ... uci += 'q'; } 
-
-    return uci;
-}
-
-int main() {
-    std::cout << "=========================================" << std::endl;
-    std::cout << "   YACE NNUE CORE VALIDATION SYSTEM      " << std::endl;
-    std::cout << "=========================================" << std::endl;
-
-    // 1. Caricamento iniziale dei pesi generati dallo script Python
-    std::string weightsPath = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/test/random_network.bin";
-    if (!NnueAdapter::Initialize(weightsPath)) {
-        std::cerr << "[CRITICO] Impossibile caricare il file dei pesi binari: " << weightsPath << std::endl;
-        return 1;
-    }
-    std::cout << "[INFO] File pesi '" << weightsPath << "' caricato con successo in memoria." << std::endl;
-
-    // 2. Setup e inizializzazione della scacchiera
-    Engine engine;
+    // 3. Verificare il refresh sul movimento del Re
     Board board;
-    board.InitializeBoard(); // Configura la posizione iniziale classica sui bitboard
-    NnueAdapter::Reset(board); // Sincronizza l'adapter NNUE al ply 0
-    std::cout << "[INFO] Scacchiera e Adapter NNUE resettati." << std::endl;
-
-    std::vector<Move> moveHistoryStack;
-    bool testSuitePassed = true;
-    int executedPlies = 0;
-
-    std::cout << "\n--- AVVIO: FASE A - TEST DI DERIVA INCREMENTALE (MakeMove) ---" << std::endl;
-    std::cout << "Sequenza di mosse eseguite: " << std::endl;
-
-    while (executedPlies < 10) {
-        Move moveList[1024];
-        int nMoves = engine.GenerateAllMoves(board, moveList);
-        
-        if (nMoves == 0) {
-            std::cout << "[FINE] Nessun'altra mossa generata." << std::endl;
-            break;
-        }
-
-        bool moveMade = false;
-        Move acceptedMove;
-
-        for (int i = 0; i < nMoves; i++) {
-            Move currentMove = moveList[i];
-            
-            if (board.MakeMove(currentMove)) {
-                executedPlies++;
-                moveHistoryStack.push_back(currentMove);
-                acceptedMove = currentMove;
-                moveMade = true;
-                break; 
-            }
-        }
-
-        if (!moveMade) {
-            std::cout << "\n[FINE] Tutte le mosse generate erano illegali (Re sotto scacco)." << std::endl;
-            break;
-        }
-
-        // STAMPA DELLA MOSSA APPENA COPIATA
-        std::cout << "Ply #" << executedPlies << " -> Eseguita: " << MossaInStringaUCI(acceptedMove) << std::endl;
-
-        // Estraiamo i valori calcolati incrementalmente dall'adapter al ply corrente
-        double accIncrementalValues[2][256];
-        EstraiAccumulatoreCorrente(accIncrementalValues);
-
-        // Calcoliamo da zero (Refresh completo) i valori teorici sulla nuova configurazione di scacchiera
-        double accRefreshTheoreticalValues[2][256];
-        ForzaRicalcoloCompleto(board, accRefreshTheoreticalValues);
-
-        // Controllo incrociato matematico rigoroso con tolleranza macchina per White e Black
-        bool matchWhite = ConfrontaAccumulatori(accIncrementalValues[WHITE], accRefreshTheoreticalValues[WHITE], 256);
-        bool matchBlack = ConfrontaAccumulatori(accIncrementalValues[BLACK], accRefreshTheoreticalValues[BLACK], 256);
-
-        if (!matchWhite || !matchBlack) {
-            std::cerr << "[FALLITO] Rilevata deriva matematica al ply " << executedPlies << " durante MakeMove!" << std::endl;
-            testSuitePassed = false;
-            break;
-        }
-
-        int evalAfter = NnueAdapter::NnueEvaluate(board);
-        std::cout << "  -> [OK] Accumulatori validi. Valutazione NNUE corrente: " << evalAfter << " cp." << std::endl;
-    }
-
-    // 3. Verifica della fase di Backtracking (UnmakeMove)
-    std::cout << "\n--- AVVIO: FASE B - TEST DI COERENZA BACKTRACKING (UnmakeMove) ---" << std::endl;
+    board.InitializeBoard(); 
+    NnueAdapter::Reset(board);
+    assert(NnueAdapter::nnueStack[0].computed[WHITE] == true && "Accumulatore base non calcolato");
     
-    if (testSuitePassed) {
-        while (!moveHistoryStack.empty()) {
-            Move lastExecutedMove = moveHistoryStack.back();
-            moveHistoryStack.pop_back();
+    Move kMove = createMove(4, 12, FlagMap::MOVE); // e1 -> e2
+    bool isValid = board.MakeMove(kMove);
+    assert(isValid && "ATTENZIONE: La mossa del re doveva essere legale!");
+    
+    NnueAdapter::OnMakeMove(board, kMove); 
+    
+    // Avendo giocato 3 mosse (e4, e5, Ke2), il ply dell'adapter ora è a 3!
+    assert(NnueAdapter::nnueStack[3].computed[WHITE] == false && "Il movimento del re non ha invalidato l'accumulatore");
 
-            board.UnmakeMove(lastExecutedMove);
-            executedPlies--;
+    NnueAdapter::SetEager(true);
 
-            std::cout << "Unmake eseguito -> Ritornati al ply " << executedPlies << ". Verifica integrita'..." << std::endl;
+    std::cout << "[OK] Test Feature Set completato.\n\n";
+}
 
-            // Estraiamo l'accumulatore ripristinato automaticamente dallo stack parallelo a costo zero
-            double accRestoredValues[2][256];
-            EstraiAccumulatoreCorrente(accRestoredValues);
+// ---------------------------------------------------------
+// 6.2 TEST DELL'ACCUMULATORE
+// ---------------------------------------------------------
+void TestAccumulator() {
+    std::cout << "--- Esecuzione 6.2: Test dell'Accumulatore ---\n";
 
-            // Generiamo l'oracolo ricalcolando la scacchiera regredita da zero
-            double accRefreshRegressedValues[2][256];
-            ForzaRicalcoloCompleto(board, accRefreshRegressedValues);
-
-            // Verifica di uguaglianza
-            bool matchWhiteUnmake = ConfrontaAccumulatori(accRestoredValues[WHITE], accRefreshRegressedValues[WHITE], 256);
-            bool matchBlackUnmake = ConfrontaAccumulatori(accRestoredValues[BLACK], accRefreshRegressedValues[BLACK], 256);
-
-            if (!matchWhiteUnmake || !matchBlackUnmake) {
-                std::cerr << "[FALLITO] Errore di sincronizzazione stack NNUE al ply " << executedPlies << " durante UnmakeMove!" << std::endl;
-                testSuitePassed = false;
-                break;
-            }
-            std::cout << "  -> [OK] Stato neuronale ripristinato correttamente al livello precedente." << std::endl;
+    // Impostiamo pesi dummy casuali ma deterministici sulla rete reale
+    for(int i = 0; i < NUM_FEATURES; i++) {
+        for(int j = 0; j < M; j++) {
+            NnueAdapter::network.L0[i][j] = (i + j) * 0.0001; 
         }
     }
 
-    std::cout << "\n=========================================" << std::endl;
-    if (testSuitePassed) {
-        std::cout << "DIAGNOSTICA: TUTTI I TEST SONO STATI SUPERATI!" << std::endl;
-        std::cout << "La baseline float/double e' matematicamente solida." << std::endl;
-        return 0;
-    } else {
-        std::cout << "DIAGNOSTICA: CRASH/FALLIMENTO NEI TEST DI REGRESSIONE." << std::endl;
-        std::cout << "Verificare le scomposizioni logiche dei delta dei pezzi." << std::endl;
-        return 1;
+    Board board;
+    board.InitializeBoard();
+    NnueAdapter::Reset(board);
+
+    // Simuliamo una spinta doppia di pedone (e2-e4 -> da 12 a 28)
+    Move e2e4 = createMove(12, 28, FlagMap::DMOVE);
+    board.MakeMove(e2e4);
+    NnueAdapter::OnMakeMove(board, e2e4);
+
+    // Salviamo lo stato dell'accumulatore post-aggiornamento incrementale
+    double accIncremental[M];
+    std::memcpy(accIncremental, NnueAdapter::nnueStack[1].accumulator[WHITE], sizeof(double) * M);
+
+    // Forziamo un refresh totale invalidando il computed flag
+    NnueAdapter::nnueStack[1].computed[WHITE] = false; 
+    NnueAdapter::RefreshAccumulator(board, WHITE); 
+    
+    // Confrontiamo i due risultati: Aggiornamento Incrementale vs Ricalcolo da zero
+    for (int i = 0; i < M; i++) {
+        AssertFloatEq(accIncremental[i], NnueAdapter::nnueStack[1].accumulator[WHITE][i], "Mismatch Accumulatore in pos " + std::to_string(i));
     }
+
+    std::cout << "[OK] Test Accumulatore completato.\n\n";
+}
+
+// ---------------------------------------------------------
+// 6.3 TEST DEL FORWARD PASS
+// ---------------------------------------------------------
+void TestForwardPass() {
+    std::cout << "--- Esecuzione 6.3: Test del Forward Pass ---\n";
+
+    std::unique_ptr<NnueNetwork> testNet = std::make_unique<NnueNetwork>();
+
+    std::memset(testNet->L0, 0, sizeof(testNet->L0));
+    std::memset(testNet->L0Bias, 0, sizeof(testNet->L0Bias));
+    std::memset(testNet->L1, 0, sizeof(testNet->L1));
+    std::memset(testNet->L1Bias, 0, sizeof(testNet->L1Bias));
+    std::memset(testNet->L2, 0, sizeof(testNet->L2));
+    testNet->L2Bias = 50.0; 
+
+    double smt[M] = {0};
+    double nsmt[M] = {0};
+
+    // Forward pass
+    int score = testNet->EvaluateNnue(smt, nsmt);
+    
+    int expectedScore = static_cast<int>(50.0 * 100.0);
+    assert(score == expectedScore && "L'output del forward pass non corrisponde al bias atteso");
+
+    // Test di determinismo sulla rete fissa
+    int score2 = testNet->EvaluateNnue(smt, nsmt);
+    assert(score == score2 && "L'inferenza NNUE non e' deterministica");
+
+    std::cout << "[OK] Test Forward Pass completato.\n\n";
+}
+
+// ---------------------------------------------------------
+// MAIN
+// ---------------------------------------------------------
+int main() {
+    std::cout << "=== Avvio Test Suite NNUE (Integrazione Engine) ===\n\n";
+
+    // Inizializza le maschere e le LookupTables necessarie al funzionamento della Board
+    LookupTables::init();
+
+    // Sblocchiamo l'esecuzione rimuovendo il disabilita per Perft
+    NnueAdapter::disableForPerft = false;
+    NnueAdapter::SetEager(true);
+
+    TestFeatureSet();
+    TestAccumulator();
+    TestForwardPass();
+
+    std::cout << "=== Tutti i test sono passati con successo! ===\n";
+    return 0;
 }

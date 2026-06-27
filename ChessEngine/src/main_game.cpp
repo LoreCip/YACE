@@ -6,6 +6,7 @@
 #include "Engine.hpp"
 #include "Move.hpp"
 #include "LookupTables.hpp"
+#include "NnueAdapter.hpp"
 
 std::string moveToString(Move move) {
     if (move == 0) return "0000"; // Ritorna formato standard per mossa nulla
@@ -35,7 +36,9 @@ std::string moveToString(Move move) {
 }
 
 Move stringToMove(Board& board, std::string moveStr) {
-    if (moveStr.length() < 4) return 0; 
+    if (moveStr.length() < 4 || moveStr.length() > 5) return 0; 
+    if (moveStr[0] < 'a' || moveStr[0] > 'h' || moveStr[2] < 'a' || moveStr[2] > 'h') return 0;
+    if (moveStr[1] < '1' || moveStr[1] > '8' || moveStr[3] < '1' || moveStr[3] > '8') return 0;
 
     int fromFile = moveStr[0] - 'a'; // 'a' -> 0, 'h' -> 7
     int fromRank = moveStr[1] - '1'; // '1' -> 0, '8' -> 7
@@ -105,6 +108,12 @@ int main() {
     Board board;
     board.InitializeBoard();
     Engine engine;
+    engine.SetUseNnue(true);
+    
+    if (engine.GetUseNnue()){
+        NnueAdapter::Initialize("/home/lorenzo/Scrivania/Projects/YACE/NNUE/test/random_network.bin");
+        NnueAdapter::Reset(board);
+    }
 
     bool enableLogging = false; 
 
@@ -189,11 +198,33 @@ int main() {
                 }
             }
 
+            if (best != 0) {
+                board.MakeMove(best);
+            }
+
             std::cout << "bestmove " << moveToString(best) << "\n";
             std::cout.flush();     
         }
+        else if (token == "move") {
+            std::string actualMove;
+            std::cin >> actualMove;
+            Move parsedMove = stringToMove(board, actualMove);
+            if (parsedMove != 0) {
+                if (!board.MakeMove(parsedMove)) {
+                    std::cout << "info string Mossa illegale (lascia il Re sotto scacco)!\n";
+                }
+            }
+        }
+        else if (token == "state") {
+            std::cout << "FEN attuale: " << board.GetFEN() << "\n";
+        }
         else {
-            board.MakeMove(stringToMove(board, token));
+            Move parsedMove = stringToMove(board, token);
+            if (parsedMove != 0) {
+                if (!board.MakeMove(parsedMove)) {
+                    std::cout << "info string Mossa illegale!\n";
+                }
+            }
         }
     }
     return 0;

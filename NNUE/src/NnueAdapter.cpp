@@ -39,7 +39,7 @@ void NnueAdapter::OnMakeMove(Board& board, Move move) {
     }
 
     nnueStack[currentPly] = nnueStack[prevPly];
-    int movedColor = board.GetSideToMove();
+    int movedColor = (board.GetSideToMove() == WHITE) ? BLACK : WHITE;
     int boardHistoryIdx = board.GetHistoryPly() - 1;
     if (board.GetHistory(boardHistoryIdx).movedPiece == PiecesEnum::KING) {
         nnueStack[currentPly].computed[movedColor] = false;
@@ -97,7 +97,6 @@ void NnueAdapter::RefreshAccumulator(Board& board, int perspective) {
     }
     
     int kingSq = __builtin_ctzll(kingBb);
-    if (perspective == BLACK) kingSq = FlipSquareVertical(kingSq);
 
     for (PiecesEnum::Type pt : PiecesEnum::All) {
         if (pt == PiecesEnum::KING) continue;
@@ -115,15 +114,15 @@ void NnueAdapter::RefreshAccumulator(Board& board, int perspective) {
         }
     }
 
-    // 7. Sanciamo che l'accumulatore per questa prospettiva al ply corrente è valido e aggiornato
     nnueStack[currentPly].computed[perspective] = true;
 }
 int NnueAdapter::MakeFeatureIndex(int square, PiecesEnum::Type pieceType, int pieceColor, int kingSq, int perspective) {
     int finalSquare = (perspective == BLACK) ? FlipSquareVertical(square) : square;
+    int finalKingSq = (perspective == BLACK) ? FlipSquareVertical(kingSq) : kingSq;
     int nnuePt = PIECE_TO_NNUE_IDX[pieceType];
     int relativeColor = (pieceColor != perspective) ? 1 : 0;
     int pIdx = nnuePt * 2 + relativeColor;
-    return finalSquare + (pIdx + kingSq * 10) * 64; 
+    return finalSquare + (pIdx + finalKingSq * 10) * 64; 
 }
 
 void NnueAdapter::IncrementalUpdate(Board& board, Move move, int perspective) {
@@ -132,7 +131,7 @@ void NnueAdapter::IncrementalUpdate(Board& board, Move move, int perspective) {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
-    int us = board.GetSideToMove();
+    int us = (board.GetSideToMove() == WHITE) ? BLACK : WHITE;
     int them = (us == WHITE) ? BLACK : WHITE;
 
     int boardHistoryIdx = board.GetHistoryPly() - 1;
@@ -142,7 +141,6 @@ void NnueAdapter::IncrementalUpdate(Board& board, Move move, int perspective) {
     // Ricaviamo la casa del re per questa prospettiva (flippata all'origine se BLACK)
     uint64_t king_bb = board.GetBitBoard(perspective, PiecesEnum::KING);
     int king_sq = __builtin_ctzll(king_bb);
-    if (perspective == BLACK) king_sq = FlipSquareVertical(king_sq);
 
     int removedFeatures[2];
     int addedFeatures[2];

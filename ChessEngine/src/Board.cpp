@@ -9,7 +9,7 @@
 #include "Pieces.hpp"
 #include "NnueAdapter.hpp"
 
-
+#include <iostream>
 
 /* PRIVATE */
 
@@ -22,7 +22,6 @@ uint64_t Board::ComputePawnMoves(int color, uint64_t bitboard) {
     allMoves |= singlePush;  // Save the valid steps
 
     // --- 2. Double push ---
-    // Take the pawns in the third (for white) or sixth (for black) raw and check for a double movement
     uint64_t doublePush = (color == Color::WHITE) ? (singlePush & LookupTables::thirdRow) : (singlePush & LookupTables::sixthRow);
     doublePush = (color == Color::WHITE) ? (doublePush << 8) : (doublePush >> 8);
     doublePush &= freeCells;
@@ -30,23 +29,25 @@ uint64_t Board::ComputePawnMoves(int color, uint64_t bitboard) {
 
     // --- 3. Check for capture in parallel ---
     uint64_t enemyCells = GetColorOccupation(color == Color::WHITE ? Color::BLACK : Color::WHITE);
+    // CORREZIONE: Sistemate le maschere notColumnA/H invertite per il Nero
     uint64_t westCapture = color == Color::WHITE ? ((bitboard & LookupTables::notColumnA) << 7) & enemyCells :
-                                            ((bitboard & LookupTables::notColumnH) >> 9) & enemyCells;
+                                            ((bitboard & LookupTables::notColumnA) >> 9) & enemyCells;
     uint64_t estCapture  = color == Color::WHITE ? ((bitboard & LookupTables::notColumnH) << 9) & enemyCells :
-                                            ((bitboard & LookupTables::notColumnA) >> 7) & enemyCells;
+                                            ((bitboard & LookupTables::notColumnH) >> 7) & enemyCells;
 
     // --- 4. En passant ---
     uint64_t epMoves = (uint64_t) 0;
     if (enPassantSquare != 64 /* == -1 */) {
         uint64_t epBB = (uint64_t)1 << enPassantSquare;
         
+        // CORREZIONE: Sistemate le maschere notColumnA/H anche qui
         uint64_t epWestCapture = color == Color::WHITE ? 
             ((bitboard & LookupTables::notColumnA) << 7) & epBB :
-            ((bitboard & LookupTables::notColumnH) >> 9) & epBB;
+            ((bitboard & LookupTables::notColumnA) >> 9) & epBB;
             
         uint64_t epEstCapture = color == Color::WHITE ? 
             ((bitboard & LookupTables::notColumnH) << 9) & epBB :
-            ((bitboard & LookupTables::notColumnA) >> 7) & epBB;
+            ((bitboard & LookupTables::notColumnH) >> 7) & epBB;
             
         epMoves = epWestCapture | epEstCapture;
     }
@@ -185,6 +186,7 @@ void Board::InitializeBoard(){
         int startPos = color == Color::WHITE ? 8 : 48;
         for (int nPawn = 0; nPawn < 8; nPawn++){
             AddPiece(color, PiecesEnum::PAWNS, startPos);
+            startPos++;
         }
 
         startPos = color == Color::WHITE ? 0 : 56;
@@ -230,6 +232,10 @@ bool Board::MakeMove(Move move) {
         }
     }
 
+    if (pieceType == PiecesEnum::NONE) {
+        return false;
+    }
+
     bool captured = false;
     PiecesEnum::Type capturedPieceType = PiecesEnum::NONE;
     int captureSquare = to; 
@@ -251,7 +257,7 @@ bool Board::MakeMove(Move move) {
         }
         RemovePiece(them, capturedPieceType, to);
     }
-
+    
     positionHistory[historyPly] = GetHash();
     history[historyPly].movedPiece = pieceType;
     history[historyPly].capturedPiece = capturedPieceType;
@@ -299,6 +305,7 @@ bool Board::MakeMove(Move move) {
 
     uint64_t kingPosition = __builtin_ctzll(sides[us][PiecesEnum::KING]);
     if (IsSquareAttacked(kingPosition, them)) {
+        //std::cout << "info string ATTENZIONE: Il Re in " << kingPosition << " subisce scacco fantasma da colore " << them << "\n";
         UnmakeMove(move);
         return false;
     }
@@ -307,17 +314,22 @@ bool Board::MakeMove(Move move) {
 }
 
 bool Board::IsSquareAttacked(int square, int attackingColor) {
+    // 1. Trucco del reverse-lookup: per vedere se siamo attaccati, 
+    // proiettiamo i pattern di attacco DALLA casella verso gli attaccanti, 
+    // quindi usiamo il colore opposto.
     int us = (attackingColor == Color::WHITE) ? Color::BLACK : Color::WHITE;
-
+    
     uint64_t pawnTriggers = LookupTables::pawnAttacks[us][square];
     if (pawnTriggers & sides[attackingColor][PiecesEnum::PAWNS]) return true;
 
+    // 2. Cavalli e Re sono simmetrici, non hanno bisogno di reverse-lookup
     uint64_t knightTriggers = LookupTables::knightAttacks[square];
     if (knightTriggers & sides[attackingColor][PiecesEnum::KNIGHTS]) return true;
 
     uint64_t kingTriggers = LookupTables::kingAttacks[square];
     if (kingTriggers & sides[attackingColor][PiecesEnum::KING]) return true;
 
+    // 3. Attacchi diagonali (Alfieri e Regine)
     uint64_t bishopTriggers = (uint64_t)0;
     bishopTriggers |= ComputeRay(9, LookupTables::notColumnH,  square);
     bishopTriggers |= ComputeRay(7, LookupTables::notColumnA,  square);
@@ -327,6 +339,7 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
     uint64_t diagonalThreaths = sides[attackingColor][PiecesEnum::BISHOPS] | sides[attackingColor][PiecesEnum::QUEEN];
     if (bishopTriggers & diagonalThreaths) return true;
 
+    // 4. Attacchi ortogonali (Torri e Regine)
     uint64_t rookTriggers = (uint64_t)0;
     rookTriggers |= ComputeRay(8, ~0ULL,  square);
     rookTriggers |= ComputeRay(1, LookupTables::notColumnH,  square);
@@ -513,4 +526,97 @@ PiecesEnum::Type Board::GetPromotionPiece(int flag) {
         case FlagMap::PRKNIGHT: case FlagMap::PRCAPKNIGHT: return PiecesEnum::KNIGHTS;
         default: return PiecesEnum::NONE;
     }
+}
+
+
+std::string Board::GetFEN() {
+    std::stringstream fen;
+
+    for (int rank = 7; rank >= 0; rank--) {
+        int emptySquares = 0;
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            
+            int foundColor = -1;
+            PiecesEnum::Type foundPiece = PiecesEnum::NONE;
+
+            for (int color = 0; color < 2; color++) {
+                for (const auto piece : PiecesEnum::All) {
+                    if (getBit(sides[color][piece], square)) {
+                        foundColor = color;
+                        foundPiece = piece;
+                        break;
+                    }
+                }
+                if (foundPiece != PiecesEnum::NONE) break;
+            }
+
+            if (foundPiece != PiecesEnum::NONE) {
+                if (emptySquares > 0) {
+                    fen << emptySquares;
+                    emptySquares = 0;
+                }
+                
+                char pieceChar = ' ';
+                if (foundPiece == PiecesEnum::PAWNS)   pieceChar = 'p';
+                else if (foundPiece == PiecesEnum::KNIGHTS) pieceChar = 'n';
+                else if (foundPiece == PiecesEnum::BISHOPS) pieceChar = 'b';
+                else if (foundPiece == PiecesEnum::ROOKS)   pieceChar = 'r';
+                else if (foundPiece == PiecesEnum::QUEEN)   pieceChar = 'q';
+                else if (foundPiece == PiecesEnum::KING)    pieceChar = 'k';
+
+                if (foundColor == Color::WHITE) {
+                    pieceChar = std::toupper(pieceChar);
+                }
+                fen << pieceChar;
+            } else {
+                emptySquares++;
+            }
+        }
+
+        if (emptySquares > 0) {
+            fen << emptySquares;
+        }
+
+        if (rank > 0) {
+            fen << "/";
+        }
+    }
+
+    fen << (sideToMove == Color::WHITE ? " w " : " b ");
+
+    if (castlingRights == 0) {
+        fen << "-";
+    } else {
+        if (castlingRights & WK_CASTLE) fen << "K";
+        if (castlingRights & WQ_CASTLE) fen << "Q";
+        if (castlingRights & BK_CASTLE) fen << "k";
+        if (castlingRights & BQ_CASTLE) fen << "q";
+    }
+
+    fen << " ";
+    if (enPassantSquare == 64) {
+        fen << "-";
+    } else {
+        int us = sideToMove;
+        uint64_t myPawns = sides[us][PiecesEnum::PAWNS];
+        uint64_t epBB = 1ULL << enPassantSquare;
+        
+        int opponentColor = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
+        uint64_t attackers = LookupTables::pawnAttacks[opponentColor][enPassantSquare] & myPawns;
+
+        if (attackers != 0ULL) {
+            char epFile = 'a' + (enPassantSquare % 8);
+            char epRank = '1' + (enPassantSquare / 8);
+            fen << epFile << epRank;
+        } else {
+            fen << "-";
+        }
+    }
+
+    // 5. Halfmove clock (regola delle 50 mosse)
+    fen << " " << (int)halfMoveClock;
+    fen << " " << (historyPly / 2 + 1);
+
+    return fen.str();
 }

@@ -63,7 +63,13 @@ public:
 
     const SearchStats& GetStats() const { return stats; }
     void SetTTActive(bool state) { tt.SetTTActive(state); }
-    
+  
+    void SetUseNnue(bool var){
+        useNnue = var;
+    }
+    bool GetUseNnue(){
+        return useNnue;
+    }
 };
 
 #endif

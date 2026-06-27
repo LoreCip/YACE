@@ -4,6 +4,9 @@
 #include "LookupTables.hpp"
 #include "NnueAdapter.hpp"
 
+#include <iostream>
+std::string moveToString(Move move);
+
 /* PRIVATE */
 int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     if (timeIsUp) return 0;
@@ -24,7 +27,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     }
 
     Move moveList[256];
-    int n_moves = GenerateAllMoves(board, moveList); 
+    int nMoves = GenerateAllMoves(board, moveList); 
     int legalMovesCount = 0; 
 
     // --- ORDERING WITH TT-MOVE ---
@@ -34,19 +37,19 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     };
 
     ScoredMove scoredMoves[256];
-    for (int i = 0; i < n_moves; i++) {
+    for (int i = 0; i < nMoves; i++) {
         scoredMoves[i].move = moveList[i];
         scoredMoves[i].score = ScoreMove(board, moveList[i], ttMove, ply);
     }
 
-    std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+    std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
         return a.score > b.score;
     });
 
     Move bestMoveInThisPosition = 0;
     int originalAlpha = alpha; 
 
-    for (int i = 0; i < n_moves; i++) {
+    for (int i = 0; i < nMoves; i++) {
         Move move = scoredMoves[i].move;
         if (board.MakeMove(move)) {
             legalMovesCount++; 
@@ -58,7 +61,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                 stats.betaCutoffs++;
                 
                 int fflag = getMoveFlags(move);
-                if (fflag != FlagMap::MOVE && fflag != FlagMap::DMOVE && fflag != FlagMap::CASTLING){
+                if (fflag == FlagMap::MOVE || fflag == FlagMap::DMOVE || fflag == FlagMap::CASTLING) {
                     if (ply < MAX_PLY) {
                         if (move != killerMoves[ply][0]) {
                             killerMoves[ply][1] = killerMoves[ply][0];
@@ -113,7 +116,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
     if (alpha < stand_pat) alpha = stand_pat;
 
     Move moveList[256];
-    int n_moves = GenerateAllMoves(board, moveList);
+    int nMoves = GenerateAllMoves(board, moveList);
 
     struct ScoredMove {
         Move move;
@@ -121,17 +124,17 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
     };
 
     ScoredMove scoredMoves[256];
-    for (int i = 0; i < n_moves; i++) {
+    for (int i = 0; i < nMoves; i++) {
         scoredMoves[i].move = moveList[i];
         scoredMoves[i].score = ScoreMove(board, moveList[i], (Move)0, 0); // Or, pass ply to QuiescenceSearch and add it here
     }
 
-    std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+    std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
         return a.score > b.score;
     });
 
-    for (int i = 0; i < n_moves; i++) {
-        Move move = moveList[i];
+    for (int i = 0; i < nMoves; i++) {
+        Move move = scoredMoves[i].move;
         int flag = getMoveFlags(move);
         
         if (flag == FlagMap::CAPTURE || flag == FlagMap::ENPASS || 
@@ -262,11 +265,11 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
     timeIsUp = false;
     
     Move moveList[256];
-    int n_moves = GenerateAllMoves(board, moveList);    
-    if (n_moves == 0) return 0;
+    int nMoves = GenerateAllMoves(board, moveList);    
+    if (nMoves == 0) return 0;
     
     Move mossaMiglioreAssoluta = 0;
-    for (int i = 0; i < n_moves; i++) {
+    for (int i = 0; i < nMoves; i++) {
         if (board.MakeMove(moveList[i])) {
             mossaMiglioreAssoluta = moveList[i];
             board.UnmakeMove(moveList[i]);
@@ -286,18 +289,17 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
             int score;
         };
         ScoredMove scoredMoves[256];
-        for (int i = 0; i < n_moves; i++) {
+        for (int i = 0; i < nMoves; i++) {
             scoredMoves[i].move = moveList[i];
-            // Passiamo "mossaMiglioreAssoluta" come ttMove per darle priorità 1.000.000
             scoredMoves[i].score = ScoreMove(board, moveList[i], mossaMiglioreAssoluta, 0); 
         }
 
-        std::sort(scoredMoves, scoredMoves + n_moves, [](const ScoredMove& a, const ScoredMove& b) {
+        std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
             return a.score > b.score;
         });
 
     
-        for (int i = 0; i < n_moves; i++) {
+        for (int i = 0; i < nMoves; i++) {
             Move move = scoredMoves[i].move; 
             
             if (board.MakeMove(move)) {
@@ -423,11 +425,10 @@ int Engine::TraditionalEvaluate(Board& board) {
             }
         }
         
-        if (__builtin_popcountll(board.GetBitBoard(color, PiecesEnum::BISHOPS) >= 2)) scores[color] += 50;
+        if (__builtin_popcountll(board.GetBitBoard(color, PiecesEnum::BISHOPS)) >= 2) scores[color] += 50;
     }
 
-    int evaluation = scores[Color::WHITE] - scores[Color::BLACK];
-    return (board.GetSideToMove() == Color::WHITE) ? evaluation : -evaluation;
+    return scores[Color::WHITE] - scores[Color::BLACK];
 }
 
 int Engine::GetEvaluation(Board& board) {

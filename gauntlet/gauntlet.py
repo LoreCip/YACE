@@ -13,15 +13,15 @@ import chess.engine
 
 BASEPATH   = "./versions/"
 ENGINE_A   = BASEPATH + "engine_v2"
-ENGINE_B   = BASEPATH + "engine_v2"
-NUM_GAMES  = 100
+ENGINE_B   = BASEPATH + "engine_v3"
+NUM_GAMES  = 1
 MAX_WORKERS = min(8, os.cpu_count() or 1, NUM_GAMES)
 
 LOG_A = True
 LOG_B = False
 
 # --- CONFIGURAZIONE TEMPO DI GIOCO ---
-START_TIME_MS = 5000   # Tempo iniziale per giocatore in ms
+START_TIME_MS = 50000   # Tempo iniziale per giocatore in ms
 INCREMENT_MS  = 100    # Incremento a ogni mossa in ms
 
 
@@ -48,7 +48,7 @@ def stop_engine(proc: subprocess.Popen) -> None:
         proc.kill()
 
 def send_move(proc: subprocess.Popen, move_uci: str) -> None:
-    proc.stdin.write(move_uci + "\n")
+    proc.stdin.write("move " + move_uci + "\n")
     proc.stdin.flush()
 
 def request_move(proc: subprocess.Popen, go_command: str, timeout: float) -> str | None:
@@ -80,7 +80,6 @@ def request_move(proc: subprocess.Popen, go_command: str, timeout: float) -> str
 # ---------------------------------------------------------------------------
 # Logica di partita
 # ---------------------------------------------------------------------------
-
 def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pgn.Game]:
     board = chess.Board(fen)
 
@@ -100,6 +99,8 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
     proc_w = start_engine(white_path)
     proc_b = start_engine(black_path)
 
+    termination_reason = "Normal"
+
     try:
         if LOG_A: proc_w.stdin.write("log on\n")
         if LOG_B: proc_b.stdin.write("log on\n")
@@ -116,8 +117,6 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
             # Costruisci il comando UCI con il tempo rimanente
             go_cmd = f"go wtime {int(wtime)} btime {int(btime)}"
             
-            # Il timeout del Python deve essere un po' più grande del tempo logico sull'orologio,
-            # per dare all'engine il tempo fisico di stampare la mossa quando il suo tempo interno scade.
             my_time_sec = (wtime if is_white_turn else btime) / 1000.0
             safety_timeout = max(5.0, my_time_sec + 2.0) 
 
@@ -131,46 +130,76 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
                 wtime -= elapsed_ms
                 if wtime < 0:
                     game.headers["Result"] = "0-1"
+                    game.headers["Termination"] = "Time forfeiture"
+                    node.comment = "White loses on time"
                     return "0-1 (Timeout)", game
                 wtime += INCREMENT_MS
             else:
                 btime -= elapsed_ms
                 if btime < 0:
                     game.headers["Result"] = "1-0"
+                    game.headers["Termination"] = "Time forfeiture"
+                    node.comment = "Black loses on time"
                     return "1-0 (Timeout)", game
                 btime += INCREMENT_MS
 
             if not response:
                 result = "1-0" if not is_white_turn else "0-1"
                 game.headers["Result"] = result
+                game.headers["Termination"] = "Rules infraction"
+                node.comment = f"{'White' if is_white_turn else 'Black'} engine crashed"
                 return result + " (Crash)", game
 
-            # Estrai la mossa vera e propria (gestisce sia "bestmove e2e4" che "e2e4")
+            # Estrai la mossa vera e propria 
             move_uci = response.split()[1] if response.startswith("bestmove") else response.strip()
 
             try:
                 move = chess.Move.from_uci(move_uci)
             except ValueError:
+                game.headers["Termination"] = "Abandoned"
+                node.comment = f"Format error from {'White' if is_white_turn else 'Black'}"
                 return "Errore Formato", game
 
             if move not in board.legal_moves:
                 print(f"\n  [DEBUG] Mossa ILLEGALE: '{move_uci}'")
                 result = "1-0" if not is_white_turn else "0-1"
                 game.headers["Result"] = result
+                game.headers["Termination"] = "Rules infraction"
+                node.comment = f"Illegal move played by {'White' if is_white_turn else 'Black'}: {move_uci}"
                 return result + " (Illegale)", game
 
             board.push(move)
             node = node.add_variation(move)
 
-            send_move(proc_w, move_uci)
-            send_move(proc_b, move_uci)
+            send_move(passive, move_uci)
 
     finally:
         stop_engine(proc_w)
         stop_engine(proc_b)
 
-    game.headers["Result"] = board.result()
-    return board.result(), game
+    # Gestione dei motivi di fine partita regolamentari (Scacco matto, Patta, ecc.)
+    result = board.result()
+    game.headers["Result"] = result
+
+    if board.is_checkmate():
+        game.headers["Termination"] = "Mate"
+        node.comment = "Checkmate"
+    elif board.is_stalemate():
+        game.headers["Termination"] = "Stalemate"
+        node.comment = "Stalemate"
+    elif board.is_insufficient_material():
+        game.headers["Termination"] = "Insufficient material"
+        node.comment = "Draw by insufficient material"
+    elif board.is_fivefold_repetition() or board.is_repetition(3):
+        game.headers["Termination"] = "Repetition"
+        node.comment = "Draw by repetition"
+    elif board.is_fifty_moves():
+        game.headers["Termination"] = "50-move rule"
+        node.comment = "Draw by 50-move rule"
+    else:
+        game.headers["Termination"] = "Normal"
+
+    return result, game
 
 def generate_random_opening_fen() -> str:
     board = chess.Board()

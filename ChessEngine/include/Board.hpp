@@ -73,6 +73,7 @@ public:
 
     uint64_t GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type piece);
     PiecesEnum::Type GetPromotionPiece(int flag);
+    std::string GetFEN();
 
     uint64_t GetBitBoard(int color, PiecesEnum::Type piece){
         return sides[color][piece];

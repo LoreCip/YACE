@@ -64,8 +64,8 @@ public:
     void InitializeFromFEN(const std::string& fen);
     void UpdateGlobalBoardState();
 
-    bool MakeMove(Move move);
-    void UnmakeMove(Move move);
+    bool MakeMove(Move move, bool useNnue);
+    void UnmakeMove(Move move, bool useNnue);
     bool IsSquareAttacked(int square, int attackingColor);
 
     uint64_t GetHash();

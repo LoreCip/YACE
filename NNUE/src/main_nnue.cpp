@@ -11,7 +11,7 @@
 #include "NnueAdapter.hpp"
 #include "NnueNetwork.hpp"
 #include "Board.hpp"
-#undef private // <-- È buona norma chiudere l'hack subito dopo
+#undef private
 
 #include "Move.hpp"
 #include "Pieces.hpp"
@@ -50,7 +50,7 @@ void TestFeatureSet() {
     assert(NnueAdapter::nnueStack[0].computed[WHITE] == true && "Accumulatore base non calcolato");
     
     Move kMove = createMove(4, 12, FlagMap::MOVE); // e1 -> e2
-    bool isValid = board.MakeMove(kMove);
+    bool isValid = board.MakeMove(kMove, true);
     assert(isValid && "ATTENZIONE: La mossa del re doveva essere legale!");
     
     NnueAdapter::OnMakeMove(board, kMove); 
@@ -82,7 +82,7 @@ void TestAccumulator() {
 
     // Simuliamo una spinta doppia di pedone (e2-e4 -> da 12 a 28)
     Move e2e4 = createMove(12, 28, FlagMap::DMOVE);
-    board.MakeMove(e2e4);
+    board.MakeMove(e2e4, true);
     NnueAdapter::OnMakeMove(board, e2e4);
 
     // Salviamo lo stato dell'accumulatore post-aggiornamento incrementale

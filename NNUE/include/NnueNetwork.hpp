@@ -2,7 +2,7 @@
 #define NNUENETWORK
 
 #include "Constants.hpp"
-#include<string>
+#include <string>
 #include <cstring>
 
 /*
@@ -46,7 +46,7 @@ BINARY FILE MAP (RAW SEQUENTIAL BYTES)
         Data: 32 doubles (256 bytes)
 */
 
-class NnueNetwork{
+class NnueNetwork {
 private:
     void ActivationFunction(double* arr, int len);
     void DenseLayerLinear(const double* input, const double* weights, const double* bias, double* output, int rows, int cols);
@@ -55,7 +55,7 @@ private:
 public:
     double L0[NUM_FEATURES][M] = {{0}};
     double L0Bias[M] = {0};
-    double L1[2*M][K] = {{0}};
+    double L1[K][2*M] = {{0}};
     double L1Bias[K] = {0};
     double L2[K] = {0};
     double L2Bias = 0;
@@ -65,8 +65,6 @@ public:
 
     bool InitializeFromFile(std::string path);
     int EvaluateNnue(double* smt, double* nsmt);
-
 };
-
 
 #endif

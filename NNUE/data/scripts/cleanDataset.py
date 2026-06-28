@@ -86,6 +86,7 @@ def is_valid_position(data: dict, board: chess.Board) -> bool:
 # TRASFORMAZIONE IN HALFKP BINARIO
 # ==========================================
 def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
+    PAD_VAL = 40960 
     parts = fen.split(' ')
     board_str = parts[0]
     is_white_turn = (parts[1] == 'w')
@@ -104,7 +105,7 @@ def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
             sq = rank * 8 + file
             if char == 'K': wk_sq = sq
             elif char == 'k': bk_sq = sq
-            else: pieces.append((PIECE_MAP[char], sq))
+            else: pieces.append((char, sq))
             file += 1
             
     if wk_sq == -1 or bk_sq == -1 or len(pieces) > 30:
@@ -113,16 +114,26 @@ def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
     white_perspectives = []
     black_perspectives = []
     
-    for p_idx, sq in pieces:
-        # Prospettiva Bianco
-        w_idx = p_idx * 4096 + wk_sq * 64 + sq
+    # Helper speculare a Constants.hpp
+    def get_p_idx(char, perspective_is_white):
+        is_piece_white = char.isupper()
+        pt_char = char.lower()
+        # 0=Pawn, 1=Knight, 2=Bishop, 3=Rook, 4=Queen
+        nnue_pt = {'p': 0, 'n': 1, 'b': 2, 'r': 3, 'q': 4}[pt_char]
+        relative_color = 0 if (is_piece_white == perspective_is_white) else 1
+        return nnue_pt * 2 + relative_color
+
+    for char, sq in pieces:
+        # --- PROSPETTIVA BIANCO ---
+        p_idx_w = get_p_idx(char, perspective_is_white=True)
+        w_idx = sq + p_idx_w * 64 + wk_sq * 640
         white_perspectives.append(w_idx)
         
-        # Prospettiva Nero
-        mirrored_bk = bk_sq ^ 56
-        mirrored_sq = sq ^ 56
-        p_idx_b = (p_idx + 5) % 10
-        b_idx = p_idx_b * 4096 + mirrored_bk * 64 + mirrored_sq
+        # --- PROSPETTIVA NERO ---
+        p_idx_b = get_p_idx(char, perspective_is_white=False)
+        flipped_sq = sq ^ 56
+        flipped_bk_sq = bk_sq ^ 56
+        b_idx = flipped_sq + p_idx_b * 64 + flipped_bk_sq * 640
         black_perspectives.append(b_idx)
         
     if is_white_turn:
@@ -135,11 +146,11 @@ def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
     while len(us_indices) < 32: us_indices.append(PAD_VAL)
     while len(them_indices) < 32: them_indices.append(PAD_VAL)
     
-    # Il cp di Lichess è già dal punto di vista di chi ha la mossa! Nessuna moltiplicazione.
+    # Sigmoide per il target CP (Standard per training NNUE)
     target = 1.0 / (1.0 + math.exp(-cp / 400.0))
     
     valori = us_indices + them_indices + [target]
-    return struct.pack(STRUCT_FORMAT, *valori)
+    return struct.pack('<64Hf', *valori)
 
 # ==========================================
 # PIPELINE MULTIPROCESSING

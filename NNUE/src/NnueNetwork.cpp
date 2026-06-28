@@ -51,7 +51,7 @@ int NnueNetwork::EvaluateNnue(double* smt, double* nsmt){
     std::memcpy(inputBuffer + M, nsmt, M * sizeof(double));
     
     ActivationFunction(inputBuffer, 2*M);    
-    DenseLayerLinear(inputBuffer, (double*)L1, L1Bias, outputBuffer, K, 2*M);
+    DenseLayerLinear(inputBuffer, &L1[0][0], L1Bias, outputBuffer, K, 2*M);
     ActivationFunction(outputBuffer, K);
     double finalScore = OutputLayerDotProduct(outputBuffer, L2, L2Bias, K);
 

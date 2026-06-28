@@ -16,11 +16,11 @@ uint64_t Perft(Engine& engine, Board& board, int depth) {
     uint64_t nodes = 0;
 
     for (int i = 0; i < n_moves; i++) {
-        if (!board.MakeMove(moveList[i])) {
+        if (!board.MakeMove(moveList[i], false)) {
             continue;
         }
         nodes += Perft(engine, board, depth - 1);
-        board.UnmakeMove(moveList[i]);
+        board.UnmakeMove(moveList[i], false);
     }
     return nodes;
 } 
@@ -42,7 +42,7 @@ uint64_t PerftParallel(Engine& engine, Board& rootBoard, int depth) {
         Board threadBoard = rootBoard; 
         Move move = moveList[i];
 
-        if (threadBoard.MakeMove(move)) {
+        if (threadBoard.MakeMove(move, false)) {
             // Chiamiamo il Perft ricorsivo standard (che è sequenziale) sulla board privata del thread
             uint64_t nodesForThisMove = Perft(engine, threadBoard, depth - 1);
             totalNodes += nodesForThisMove;
@@ -62,6 +62,7 @@ bool assertUint64ArrayEqual(uint64_t* a, uint64_t* b, int len) {
 int main() {
     LookupTables::init();
     Engine myEngine;
+    myEngine.SetUseNnue(false);
     Board gameBoard;
 
     /* https://www.chessprogramming.org/Perft_Results */

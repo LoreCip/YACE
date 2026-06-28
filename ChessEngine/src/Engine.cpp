@@ -51,11 +51,11 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
 
     for (int i = 0; i < nMoves; i++) {
         Move move = scoredMoves[i].move;
-        if (board.MakeMove(move)) {
+        if (board.MakeMove(move, useNnue)) {
             legalMovesCount++; 
 
             int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1); 
-            board.UnmakeMove(move);
+            board.UnmakeMove(move, useNnue);
             
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
@@ -141,9 +141,9 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
             flag == FlagMap::PRCAPQUEEN || flag == FlagMap::PRCAPROOK || 
             flag == FlagMap::PRCAPBISHOP || flag == FlagMap::PRCAPKNIGHT) {
             
-            if (board.MakeMove(move)) {
+            if (board.MakeMove(move, useNnue)) {
                 int score = -QuiescenceSearch(board, -beta, -alpha);
-                board.UnmakeMove(move);
+                board.UnmakeMove(move, useNnue);
 
                 if (score >= beta){
                     stats.betaCutoffs++;
@@ -270,9 +270,9 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
     
     Move mossaMiglioreAssoluta = 0;
     for (int i = 0; i < nMoves; i++) {
-        if (board.MakeMove(moveList[i])) {
+        if (board.MakeMove(moveList[i], useNnue)) {
             mossaMiglioreAssoluta = moveList[i];
-            board.UnmakeMove(moveList[i]);
+            board.UnmakeMove(moveList[i], useNnue);
             break; 
         }
     }
@@ -302,9 +302,9 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
         for (int i = 0; i < nMoves; i++) {
             Move move = scoredMoves[i].move; 
             
-            if (board.MakeMove(move)) {
+            if (board.MakeMove(move, useNnue)) {
                 int score = -AlphaBeta(board, d - 1, -beta, -alpha, 1);
-                board.UnmakeMove(move);
+                board.UnmakeMove(move, useNnue);
                 
                 if (timeIsUp) {
                     break;

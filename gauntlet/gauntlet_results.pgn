@@ -2,12 +2,38 @@
 [Site "?"]
 [Date "????.??.??"]
 [Round "?"]
-[White "engine_v2"]
-[Black "engine_v3"]
-[Result "1-0"]
-[FEN "rnbqkbnr/2p1pppp/p2p4/1p6/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 4"]
+[White "engine_v4"]
+[Black "engine_v1"]
+[Result "0-1"]
+[FEN "rnbqkbnr/p1pp1pp1/4p2p/1Q6/2P5/8/PP1PPPPP/RNB1KBNR w KQkq - 0 4"]
+[SetUp "1"]
+[Termination "Rules infraction"]
+
+4. Na3 Qh4 5. g4 Qxg4 6. Qxd7+ Kxd7 7. h3 Qe4 8. Bg2 Qxg2 9. b3 Qxh1 10. e3 Qxg1+ 11. Ke2 Qg5 12. Ke1 Qh5 13. Nb5 c5 14. a4 a6 15. Bb2 axb5 16. Be5 Qxe5 17. axb5 Rxa1+ 18. Ke2 Ra2 19. Kd1 Qh5+ 20. f3 Qxf3+ 21. Ke1 g5 22. d3 Qxe3+ 23. Kd1 Qxd3+ 24. Kc1 Qxb3 25. h4 gxh4 26. b6 Qxb6 27. Kd1 Qc6 28. Ke1 Qg2 29. Kd1 Qb2 30. Ke1 Qf6 31. Kd1 Qf2 32. Kc1 Qd2+ 33. Kb1 Qg2 34. Kc1 Qg7 35. Kb1 Qc3 { engine_v4 engine crashed } 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "engine_v1"]
+[Black "engine_v4"]
+[Result "0-1"]
+[FEN "rnbqkbnr/ppp2p1p/8/3pp1p1/3P4/2P4P/PP2PPP1/RNBQKBNR w KQkq - 0 4"]
 [SetUp "1"]
 [Termination "Time forfeiture"]
 
-4. Qe2 Ra7 5. a3 Rb7 6. Ra2 Rb6 7. Nc3 c6 8. Nf3 Rb7 9. Qe3 Qc7 10. Bd3 Rb6 11. O-O Rb7 12. e5 h5 13. exd6 e6 14. dxc7 Rxc7 15. Qf4 Rb7 16. Ne4 Rb6 17. Qc7 Rb7 18. Qxc8+ Ke7 19. Qe8+ Kxe8 20. Ne5 Rb6 21. Rd1 Be7 22. Be2 Rb7 23. Ra1 g5 24. Re1 Rb6 25. d3 f6 26. b4 h4 27. Be3 Rb7 28. Ng6 Kf7 29. c4 Kxg6 30. cxb5 Rxb5 31. Ba7 Nh6 32. d4 a5 33. Bxb5 e5 34. Bd3 { Black loses on time } 1-0
+4. Rh2 Na6 5. Rh1 Bd7 { White loses on time } 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "engine_v4"]
+[Black "engine_v1"]
+[Result "0-1"]
+[FEN "r2qkbnr/ppp1pppp/2np4/8/6b1/8/PPPPPPBP/RNBQK1NR w KQkq - 2 4"]
+[SetUp "1"]
+[Termination "Rules infraction"]
+
+4. a4 Qc8 5. c4 Qf5 6. Bxc6+ Kd8 7. Bxb7 Rb8 8. h3 Rxb7 9. hxg4 Qxg4 10. d4 Qg2 11. Bd2 Qf1+ 12. Kxf1 a6 13. b3 h5 14. d5 Kc8 15. Bf4 Kb8 { engine_v4 engine crashed } 0-1
 

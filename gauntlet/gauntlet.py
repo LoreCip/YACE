@@ -11,19 +11,44 @@ import chess
 import chess.pgn
 import chess.engine
 
-BASEPATH   = "./versions/"
-ENGINE_A   = BASEPATH + "engine_v2"
-ENGINE_B   = BASEPATH + "engine_v3"
-NUM_GAMES  = 1
-MAX_WORKERS = min(8, os.cpu_count() or 1, NUM_GAMES)
+BASEPATH   = "/home/lorenzo/Scrivania/Projects/YACE/gauntlet/versions/"
+VA = "engine_v4"
+VB = "engine_v1"
+ENGINE_A   = BASEPATH + VA
+ENGINE_B   = BASEPATH + VB
+NUM_GAMES  = 100
+MAX_WORKERS = 1 
 
-LOG_A = True
+LOG_A = False
 LOG_B = False
 
+# --- FLAG PER IL LOGGING DELLA COMUNICAZIONE ---
+DEBUG_COMM = False 
+
 # --- CONFIGURAZIONE TEMPO DI GIOCO ---
-START_TIME_MS = 50000   # Tempo iniziale per giocatore in ms
+START_TIME_MS = 5000   # Tempo iniziale per giocatore in ms
 INCREMENT_MS  = 100    # Incremento a ogni mossa in ms
 
+# ---------------------------------------------------------------------------
+# Funzioni di I/O con Intercettazione
+# ---------------------------------------------------------------------------
+
+def send_command(engine, command, engine_name="Engine"):
+    """Invia un comando al motore e, se DEBUG_COMM è attivo, lo stampa a schermo."""
+    clean_cmd = command.strip()
+    if DEBUG_COMM:
+        print(f"\033[94m[GAUNTLET -> {engine_name}]\033[0m {clean_cmd}") # Testo blu
+    
+    engine.stdin.write(clean_cmd + "\n")
+    engine.stdin.flush()
+
+def read_line(engine, engine_name="Engine"):
+    """Legge una riga dal motore e, se DEBUG_COMM è attivo, la stampa a schermo."""
+    line = engine.stdout.readline()
+    if line and DEBUG_COMM:
+        clean_line = line.strip()
+        print(f"\033[92m[{engine_name} -> GAUNTLET]\033[0m {clean_line}") # Testo verde
+    return line
 
 # ---------------------------------------------------------------------------
 # Gestione processi persistenti
@@ -39,33 +64,37 @@ def start_engine(path: str) -> subprocess.Popen:
         bufsize=1,
     )
 
-def stop_engine(proc: subprocess.Popen) -> None:
+def stop_engine(proc: subprocess.Popen, engine_name="Engine") -> None:
     try:
-        proc.stdin.write("quit\n")
-        proc.stdin.flush()
-        proc.wait(timeout=2)
+        if proc.poll() is None: 
+            send_command(proc, "quit", engine_name)
+            proc.wait(timeout=2)
     except Exception:
-        proc.kill()
+        pass
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+        if proc.stdin: proc.stdin.close()
+        if proc.stdout: proc.stdout.close()
+        if proc.stderr: proc.stderr.close()
 
-def send_move(proc: subprocess.Popen, move_uci: str) -> None:
-    proc.stdin.write("move " + move_uci + "\n")
-    proc.stdin.flush()
+def send_move(proc: subprocess.Popen, move_uci: str, engine_name="Engine") -> None:
+    send_command(proc, "move " + move_uci, engine_name)
 
-def request_move(proc: subprocess.Popen, go_command: str, timeout: float) -> str | None:
+def request_move(proc: subprocess.Popen, go_command: str, timeout: float, engine_name="Engine") -> str | None:
     """
-    Invia il comando 'go' (con i tempi logici) e attende la risposta con un timeout di sicurezza.
+    Invia il comando 'go' e attende la risposta con timeout, tracciando i log.
     """
     result_q: queue.Queue[str | None] = queue.Queue()
 
     def _reader():
         try:
-            line = proc.stdout.readline()
+            line = read_line(proc, engine_name)
             result_q.put(line.strip() if line else None)
         except Exception:
             result_q.put(None)
 
-    proc.stdin.write(go_command + "\n")
-    proc.stdin.flush()
+    send_command(proc, go_command, engine_name)
 
     t = threading.Thread(target=_reader, daemon=True)
     t.start()
@@ -73,21 +102,23 @@ def request_move(proc: subprocess.Popen, go_command: str, timeout: float) -> str
     try:
         return result_q.get(timeout=timeout)
     except queue.Empty:
-        print("  [WARN] Timeout assoluto (Il motore si è bloccato e non ha rispettato il wtime/btime)!")
+        print(f"  [WARN] Timeout assoluto (Il motore {engine_name} si è bloccato e non ha rispettato il tempo)!")
         return None
-
-
+    
 # ---------------------------------------------------------------------------
 # Logica di partita
 # ---------------------------------------------------------------------------
 def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pgn.Game]:
     board = chess.Board(fen)
 
+    white_name = white_path.split("/")[-1]
+    black_name = black_path.split("/")[-1]
+
     game = chess.pgn.Game()
     game.setup(board)
     game.headers["Event"] = "YACE Gauntlet"
-    game.headers["White"] = white_path.split("/")[-1]
-    game.headers["Black"] = black_path.split("/")[-1]
+    game.headers["White"] = white_name
+    game.headers["Black"] = black_name
     game.headers["FEN"] = fen
     
     # Inizializza gli orologi
@@ -99,20 +130,20 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
     proc_w = start_engine(white_path)
     proc_b = start_engine(black_path)
 
-    termination_reason = "Normal"
-
     try:
-        if LOG_A: proc_w.stdin.write("log on\n")
-        if LOG_B: proc_b.stdin.write("log on\n")
+        if LOG_A: send_command(proc_w, "log on", white_name)
+        if LOG_B: send_command(proc_b, "log on", black_name)
 
-        proc_w.stdin.write(f"fen {fen}\n")
-        proc_b.stdin.write(f"fen {fen}\n")
-        proc_w.stdin.flush()
-        proc_b.stdin.flush()
+        send_command(proc_w, f"fen {fen}", white_name)
+        send_command(proc_b, f"fen {fen}", black_name)
 
         while not board.is_game_over():
             is_white_turn = (board.turn == chess.WHITE)
+            
+            # Assegna il processo attivo/passivo e i rispettivi nomi per i log
             active, passive = (proc_w, proc_b) if is_white_turn else (proc_b, proc_w)
+            active_name = white_name if is_white_turn else black_name
+            passive_name = black_name if is_white_turn else white_name
 
             # Costruisci il comando UCI con il tempo rimanente
             go_cmd = f"go wtime {int(wtime)} btime {int(btime)}"
@@ -121,7 +152,7 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
             safety_timeout = max(5.0, my_time_sec + 2.0) 
 
             t0 = time.time()
-            response = request_move(active, go_cmd, timeout=safety_timeout)
+            response = request_move(active, go_cmd, timeout=safety_timeout, engine_name=active_name)
             t1 = time.time()
 
             # Scaliamo il tempo consumato
@@ -147,7 +178,7 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
                 result = "1-0" if not is_white_turn else "0-1"
                 game.headers["Result"] = result
                 game.headers["Termination"] = "Rules infraction"
-                node.comment = f"{'White' if is_white_turn else 'Black'} engine crashed"
+                node.comment = f"{active_name} engine crashed"
                 return result + " (Crash)", game
 
             # Estrai la mossa vera e propria 
@@ -157,27 +188,28 @@ def play_game(white_path: str, black_path: str, fen: str) -> tuple[str, chess.pg
                 move = chess.Move.from_uci(move_uci)
             except ValueError:
                 game.headers["Termination"] = "Abandoned"
-                node.comment = f"Format error from {'White' if is_white_turn else 'Black'}"
+                node.comment = f"Format error from {active_name}"
                 return "Errore Formato", game
 
             if move not in board.legal_moves:
-                print(f"\n  [DEBUG] Mossa ILLEGALE: '{move_uci}'")
+                print(f"\n  [DEBUG] Mossa ILLEGALE: '{move_uci}' giocata da {active_name}")
                 result = "1-0" if not is_white_turn else "0-1"
                 game.headers["Result"] = result
                 game.headers["Termination"] = "Rules infraction"
-                node.comment = f"Illegal move played by {'White' if is_white_turn else 'Black'}: {move_uci}"
+                node.comment = f"Illegal move played by {active_name}: {move_uci}"
                 return result + " (Illegale)", game
 
             board.push(move)
             node = node.add_variation(move)
 
-            send_move(passive, move_uci)
+            # Invia la mossa all'avversario
+            send_move(passive, move_uci, engine_name=passive_name)
 
     finally:
-        stop_engine(proc_w)
-        stop_engine(proc_b)
+        stop_engine(proc_w, white_name)
+        stop_engine(proc_b, black_name)
 
-    # Gestione dei motivi di fine partita regolamentari (Scacco matto, Patta, ecc.)
+    # Gestione dei motivi di fine partita regolamentari
     result = board.result()
     game.headers["Result"] = result
 
@@ -234,6 +266,9 @@ def run_match_task(match_id: int) -> dict:
 
     start_fen = generate_random_opening_fen()
 
+    if DEBUG_COMM:
+        print(f"\n--- INIZIO PARTITA {match_id + 1} ---")
+
     t0 = time.time()
     result, game = play_game(white, black, start_fen) 
     
@@ -254,8 +289,9 @@ def run_match_task(match_id: int) -> dict:
 # ---------------------------------------------------------------------------
 
 def main():
-    print(f"--- ARENA: {ENGINE_A} vs {ENGINE_B} ---")
-    print(f"Partite: {NUM_GAMES}  |  Thread: {MAX_WORKERS}\n")
+    if not DEBUG_COMM:
+        print(f"--- ARENA: {VA} vs {VB} ---")
+        print(f"Partite: {NUM_GAMES}  |  Thread: {MAX_WORKERS}\n")
 
     score = {"Engine A": 0, "Engine B": 0, "Draws": 0}
 
@@ -267,21 +303,25 @@ def main():
                 res = future.result()
                 r   = res["result"]
 
-                print(f"Partita {res['id']:>2}/{NUM_GAMES}: "
-                      f"{res['white_name']} (B) vs {res['black_name']} (N) — ", end="", flush=True)
+                if not DEBUG_COMM:
+                    print(f"Partita {res['id']:>2}/{NUM_GAMES}: "
+                          f"{res['white_name']} (B) vs {res['black_name']} (N) — ", end="", flush=True)
 
                 print(res["game"], file=pgn_file, end="\n\n")
                 pgn_file.flush()
 
                 if r == "1-0":
                     score[res["white_name"]] += 1
-                    print(f"Vittoria BIANCO  ({res['duration']:.1f}s)")
+                    if not DEBUG_COMM: print(f"Vittoria BIANCO  ({res['duration']:.1f}s)")
                 elif r == "0-1":
                     score[res["black_name"]] += 1
-                    print(f"Vittoria NERO    ({res['duration']:.1f}s)")
+                    if not DEBUG_COMM: print(f"Vittoria NERO    ({res['duration']:.1f}s)")
                 elif r == "1/2-1/2":
                     score["Draws"] += 1
-                    print(f"Patta            ({res['duration']:.1f}s)")
+                    if not DEBUG_COMM: print(f"Patta            ({res['duration']:.1f}s)")
+                
+                if DEBUG_COMM:
+                    print(f"--- FINE PARTITA {res['id']} (Risultato: {r}) ---")
 
     total_games = score["Engine A"] + score["Engine B"] + score["Draws"]
     
@@ -292,15 +332,13 @@ def main():
     else:
         win_a_pct = win_b_pct = draw_pct = 0.0
 
-    print("\n" + "=" * 45)
-    print("RISULTATI FINALI")
-    print("=" * 45)
-    print(f"{'Engine A':<15} : {score['Engine A']:>3} vittorie ({win_a_pct:>5.1f}%)")
-    print(f"{'Engine B':<15} : {score['Engine B']:>3} vittorie ({win_b_pct:>5.1f}%)")
+    print("\n" + "="*45)
+    print(f"{VA:<15} : {score['Engine A']:>3} vittorie ({win_a_pct:>5.1f}%)")
+    print(f"{VB:<15} : {score['Engine B']:>3} vittorie ({win_b_pct:>5.1f}%)")
     print(f"{'Patte':<15} : {score['Draws']:>3} patte    ({draw_pct:>5.1f}%)")
     print("-" * 45)
     print(f"{'Totale partite':<15} : {total_games}")
-    print("=" * 45)
+    print("="*45)
 
 if __name__ == "__main__":
     main()

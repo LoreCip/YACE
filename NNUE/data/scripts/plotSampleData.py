@@ -80,5 +80,6 @@ def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
     plt.show()
 
 if __name__ == "__main__":
-    PATH_FILE = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp.bin"
+    # PATH_FILE = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp.bin"
+    PATH_FILE = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin"
     analizza_dataset_nnue(PATH_FILE)

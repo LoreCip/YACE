@@ -104,6 +104,7 @@ Move stringToMove(Board& board, std::string moveStr) {
 
 
 int main() {
+    std::cout << std::unitbuf;
     LookupTables::init();
     Board board;
     board.InitializeBoard();
@@ -111,7 +112,7 @@ int main() {
     engine.SetUseNnue(true);
     
     if (engine.GetUseNnue()){
-        NnueAdapter::Initialize("/home/lorenzo/Scrivania/Projects/YACE/NNUE/test/random_network.bin");
+        NnueAdapter::Initialize("/home/lorenzo/Scrivania/Projects/YACE/NNUE/training/weights/nnue_weights_v1.bin");
         NnueAdapter::Reset(board);
     }
 
@@ -199,7 +200,7 @@ int main() {
             }
 
             if (best != 0) {
-                board.MakeMove(best);
+                board.MakeMove(best, engine.GetUseNnue());
             }
 
             std::cout << "bestmove " << moveToString(best) << "\n";
@@ -210,7 +211,7 @@ int main() {
             std::cin >> actualMove;
             Move parsedMove = stringToMove(board, actualMove);
             if (parsedMove != 0) {
-                if (!board.MakeMove(parsedMove)) {
+                if (!board.MakeMove(parsedMove, engine.GetUseNnue())) {
                     std::cout << "info string Mossa illegale (lascia il Re sotto scacco)!\n";
                 }
             }
@@ -221,7 +222,7 @@ int main() {
         else {
             Move parsedMove = stringToMove(board, token);
             if (parsedMove != 0) {
-                if (!board.MakeMove(parsedMove)) {
+                if (!board.MakeMove(parsedMove, engine.GetUseNnue())) {
                     std::cout << "info string Mossa illegale!\n";
                 }
             }

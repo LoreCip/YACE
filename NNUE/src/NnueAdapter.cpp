@@ -13,7 +13,7 @@ NnueState NnueAdapter::nnueStack[MAX_HISTORY_PLY];
 int NnueAdapter::currentPly = 0;
 NnueNetwork NnueAdapter::network;
 bool NnueAdapter::eager = true;
-bool NnueAdapter::disableForPerft = true;
+bool NnueAdapter::disableForPerft = false;
 
 
 bool NnueAdapter::Initialize(const std::string& weightsPath) {
@@ -116,6 +116,7 @@ void NnueAdapter::RefreshAccumulator(Board& board, int perspective) {
 
     nnueStack[currentPly].computed[perspective] = true;
 }
+
 int NnueAdapter::MakeFeatureIndex(int square, PiecesEnum::Type pieceType, int pieceColor, int kingSq, int perspective) {
     int finalSquare = (perspective == BLACK) ? FlipSquareVertical(square) : square;
     int finalKingSq = (perspective == BLACK) ? FlipSquareVertical(kingSq) : kingSq;

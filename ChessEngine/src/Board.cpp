@@ -4,6 +4,7 @@
 
 #include "Board.hpp"
 #include "BitOperations.hpp"
+#include "Engine.hpp"
 #include "LookupTables.hpp"
 #include "Move.hpp"
 #include "Pieces.hpp"
@@ -216,7 +217,7 @@ uint64_t Board::GetGeneratedMoves(int color, uint64_t bitboard, PiecesEnum::Type
     return 0;
 }
 
-bool Board::MakeMove(Move move) {
+bool Board::MakeMove(Move move, bool useNnue) {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
@@ -266,7 +267,7 @@ bool Board::MakeMove(Move move) {
     history[historyPly].halfMoveClock = halfMoveClock;
     historyPly++;
 
-    NnueAdapter::OnMakeMove(*this, move);
+    if (useNnue) NnueAdapter::OnMakeMove(*this, move);
 
     if (pieceType == PiecesEnum::PAWNS || captured) {
         halfMoveClock = 0; // Reset
@@ -306,7 +307,7 @@ bool Board::MakeMove(Move move) {
     uint64_t kingPosition = __builtin_ctzll(sides[us][PiecesEnum::KING]);
     if (IsSquareAttacked(kingPosition, them)) {
         //std::cout << "info string ATTENZIONE: Il Re in " << kingPosition << " subisce scacco fantasma da colore " << them << "\n";
-        UnmakeMove(move);
+        UnmakeMove(move, useNnue);
         return false;
     }
 
@@ -352,7 +353,7 @@ bool Board::IsSquareAttacked(int square, int attackingColor) {
     return false;
 }
 
-void Board::UnmakeMove(Move move) {
+void Board::UnmakeMove(Move move, bool useNnue) {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
@@ -397,7 +398,7 @@ void Board::UnmakeMove(Move move) {
 
     sideToMove = us;
     UpdateGlobalBoardState();
-    NnueAdapter::OnUnmakeMove();
+    if (useNnue) NnueAdapter::OnUnmakeMove();
 }
 
 void Board::UpdateGlobalBoardState() {

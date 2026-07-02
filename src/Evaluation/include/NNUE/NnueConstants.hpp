@@ -1,5 +1,5 @@
-#ifndef CONSTANTS
-#define CONSTANTS
+#ifndef NNUE_CONSTANTS_HPP
+#define NNUE_CONSTANTS_HPP
 
 constexpr int NUM_FEATURES = 40960; // Number of inputs
 constexpr int M = 256; // Accumulator size 

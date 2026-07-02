@@ -4,18 +4,23 @@
 #include <cstring>
 #include <memory>
 #include <sstream>
+
 // ---------------------------------------------------------
-// HACK PER UNIT TESTING: Esponiamo i membri privati
+// HACK PER UNIT TESTING: 
 // ---------------------------------------------------------
 #define private public
-#include "NnueAdapter.hpp"
+#include "NnueEvaluator.hpp" 
 #include "NnueNetwork.hpp"
 #include "Board.hpp"
 #undef private
 
 #include "Move.hpp"
-#include "Pieces.hpp"
+#include "Types.hpp" 
 #include "LookupTables.hpp"
+
+const int WHITE_IDX = static_cast<int>(Color::WHITE);
+const int BLACK_IDX = static_cast<int>(Color::BLACK);
+
 // ---------------------------------------------------------
 // UTILS PER I TEST
 // ---------------------------------------------------------
@@ -31,34 +36,37 @@ void AssertFloatEq(double a, double b, const std::string& msg, double epsilon = 
 // ---------------------------------------------------------
 void TestFeatureSet() {
     std::cout << "--- Esecuzione 6.1: Test del Feature Set ---\n";
-    std::unique_ptr<NnueNetwork> testNet = std::make_unique<NnueNetwork>();
+    
+    // Istanziamo l'oggetto al posto del vecchio Adapter statico
+    NnueEvaluator nnue; 
+
     // 1. Verificare gli indici attesi
-    // Pedone bianco (PAWNS = 0), colore WHITE, Re in E1 (4), Prospettiva WHITE
-    int fIndexWhite = NnueAdapter::MakeFeatureIndex(12, PiecesEnum::PAWNS, WHITE, 4, WHITE);
+    // Pedone bianco, colore WHITE, Re in E1 (4), Prospettiva WHITE
+    int fIndexWhite = nnue.MakeFeatureIndex(12, PieceType::PAWN, WHITE_IDX, 4, WHITE_IDX);
     assert(fIndexWhite == 2572 && "Indice feature pedone bianco errato");
 
     // 2. Verificare la simmetria
-    // Pedone nero (PAWNS = 0) in E7 (52), Re in E8 (60)
-    // Prospettiva BLACK flippa verticalmente la casa e il re
-    int fIndexBlack = NnueAdapter::MakeFeatureIndex(52, PiecesEnum::PAWNS, BLACK, 60, BLACK); 
+    // Pedone nero in E7 (52), Re in E8 (60), Prospettiva BLACK
+    int fIndexBlack = nnue.MakeFeatureIndex(52, PieceType::PAWN, BLACK_IDX, 60, BLACK_IDX); 
     assert(fIndexWhite == fIndexBlack && "Simmetria feature non rispettata tra Bianco e Nero");
 
     // 3. Verificare il refresh sul movimento del Re
     Board board;
     board.InitializeBoard(); 
-    NnueAdapter::Reset(board);
-    assert(NnueAdapter::nnueStack[0].computed[WHITE] == true && "Accumulatore base non calcolato");
+    nnue.Reset(board);
+    assert(nnue.nnueStack[0].computed[WHITE_IDX] == true && "Accumulatore base non calcolato");
     
-    Move kMove = createMove(4, 12, FlagMap::MOVE); // e1 -> e2
-    bool isValid = board.MakeMove(kMove, true);
+    // Forziamo una mossa del Re (e1 -> e2)
+    Move kMove = createMove(4, 12, FlagMap::MOVE); 
+    bool isValid = board.MakeMove(kMove); // Niente più 'true' come secondo parametro
     assert(isValid && "ATTENZIONE: La mossa del re doveva essere legale!");
     
-    NnueAdapter::OnMakeMove(board, kMove); 
+    nnue.OnMakeMove(board, kMove); 
     
-    // Avendo giocato 3 mosse (e4, e5, Ke2), il ply dell'adapter ora è a 3!
-    assert(NnueAdapter::nnueStack[3].computed[WHITE] == false && "Il movimento del re non ha invalidato l'accumulatore");
+    // Avendo giocato 1 mossa (Ke2), il ply dell'adapter ora è a 1.
+    assert(nnue.nnueStack[1].computed[WHITE_IDX] == false && "Il movimento del re non ha invalidato l'accumulatore");
 
-    NnueAdapter::SetEager(true);
+    nnue.SetEager(true);
 
     std::cout << "[OK] Test Feature Set completato.\n\n";
 }
@@ -69,33 +77,35 @@ void TestFeatureSet() {
 void TestAccumulator() {
     std::cout << "--- Esecuzione 6.2: Test dell'Accumulatore ---\n";
 
-    // Impostiamo pesi dummy casuali ma deterministici sulla rete reale
+    NnueEvaluator nnue;
+
+    // Impostiamo pesi dummy casuali ma deterministici sulla rete reale dell'oggetto
     for(int i = 0; i < NUM_FEATURES; i++) {
         for(int j = 0; j < M; j++) {
-            NnueAdapter::network.L0[i][j] = (i + j) * 0.0001; 
+            nnue.network.L0[i][j] = (i + j) * 0.0001; 
         }
     }
 
     Board board;
     board.InitializeBoard();
-    NnueAdapter::Reset(board);
+    nnue.Reset(board);
 
     // Simuliamo una spinta doppia di pedone (e2-e4 -> da 12 a 28)
     Move e2e4 = createMove(12, 28, FlagMap::DMOVE);
-    board.MakeMove(e2e4, true);
-    NnueAdapter::OnMakeMove(board, e2e4);
+    board.MakeMove(e2e4);
+    nnue.OnMakeMove(board, e2e4);
 
     // Salviamo lo stato dell'accumulatore post-aggiornamento incrementale
     double accIncremental[M];
-    std::memcpy(accIncremental, NnueAdapter::nnueStack[1].accumulator[WHITE], sizeof(double) * M);
+    std::memcpy(accIncremental, nnue.nnueStack[1].accumulator[WHITE_IDX], sizeof(double) * M);
 
     // Forziamo un refresh totale invalidando il computed flag
-    NnueAdapter::nnueStack[1].computed[WHITE] = false; 
-    NnueAdapter::RefreshAccumulator(board, WHITE); 
+    nnue.nnueStack[1].computed[WHITE_IDX] = false; 
+    nnue.RefreshAccumulator(board, WHITE_IDX); 
     
     // Confrontiamo i due risultati: Aggiornamento Incrementale vs Ricalcolo da zero
     for (int i = 0; i < M; i++) {
-        AssertFloatEq(accIncremental[i], NnueAdapter::nnueStack[1].accumulator[WHITE][i], "Mismatch Accumulatore in pos " + std::to_string(i));
+        AssertFloatEq(accIncremental[i], nnue.nnueStack[1].accumulator[WHITE_IDX][i], "Mismatch Accumulatore in pos " + std::to_string(i));
     }
 
     std::cout << "[OK] Test Accumulatore completato.\n\n";
@@ -107,26 +117,26 @@ void TestAccumulator() {
 void TestForwardPass() {
     std::cout << "--- Esecuzione 6.3: Test del Forward Pass ---\n";
 
-    std::unique_ptr<NnueNetwork> testNet = std::make_unique<NnueNetwork>();
+    NnueNetwork testNet; // Basta istanziare la rete nuda e cruda
 
-    std::memset(testNet->L0, 0, sizeof(testNet->L0));
-    std::memset(testNet->L0Bias, 0, sizeof(testNet->L0Bias));
-    std::memset(testNet->L1, 0, sizeof(testNet->L1));
-    std::memset(testNet->L1Bias, 0, sizeof(testNet->L1Bias));
-    std::memset(testNet->L2, 0, sizeof(testNet->L2));
-    testNet->L2Bias = 50.0; 
+    std::memset(testNet.L0, 0, sizeof(testNet.L0));
+    std::memset(testNet.L0Bias, 0, sizeof(testNet.L0Bias));
+    std::memset(testNet.L1, 0, sizeof(testNet.L1));
+    std::memset(testNet.L1Bias, 0, sizeof(testNet.L1Bias));
+    std::memset(testNet.L2, 0, sizeof(testNet.L2));
+    testNet.L2Bias = 50.0; 
 
     double smt[M] = {0};
     double nsmt[M] = {0};
 
     // Forward pass
-    int score = testNet->EvaluateNnue(smt, nsmt);
+    int score = testNet.EvaluateNnue(smt, nsmt);
     
     int expectedScore = static_cast<int>(50.0 * 100.0);
     assert(score == expectedScore && "L'output del forward pass non corrisponde al bias atteso");
 
     // Test di determinismo sulla rete fissa
-    int score2 = testNet->EvaluateNnue(smt, nsmt);
+    int score2 = testNet.EvaluateNnue(smt, nsmt);
     assert(score == score2 && "L'inferenza NNUE non e' deterministica");
 
     std::cout << "[OK] Test Forward Pass completato.\n\n";
@@ -137,13 +147,7 @@ void TestForwardPass() {
 // ---------------------------------------------------------
 int main() {
     std::cout << "=== Avvio Test Suite NNUE (Integrazione Engine) ===\n\n";
-
-    // Inizializza le maschere e le LookupTables necessarie al funzionamento della Board
     LookupTables::init();
-
-    // Sblocchiamo l'esecuzione rimuovendo il disabilita per Perft
-    NnueAdapter::disableForPerft = false;
-    NnueAdapter::SetEager(true);
 
     TestFeatureSet();
     TestAccumulator();

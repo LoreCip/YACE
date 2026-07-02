@@ -1,15 +1,20 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <sstream>
+#include <cmath>
 
-#include "Board.hpp"
-#include "Engine.hpp"
-#include "Move.hpp"
 #include "LookupTables.hpp"
-#include "NnueAdapter.hpp"
+#include "Board.hpp"
+#include "TranspositionTable.hpp"
+#include "ClassicalEvaluator.hpp"
+#include "NnueEvaluator.hpp"
+#include "Engine.hpp"
+#include "MoveGenerator.hpp"
+#include "Types.hpp"
 
 std::string moveToString(Move move) {
-    if (move == 0) return "0000"; // Ritorna formato standard per mossa nulla
+    if (move == 0) return "0000";
     
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
@@ -25,7 +30,6 @@ std::string moveToString(Move move) {
     s += toFile;
     s += toRank;
     
-    // CORREZIONE: Gestione esplicita di tutti i tipi di promozione
     int flag = getMoveFlags(move);
     if (flag == FlagMap::PRQUEEN || flag == FlagMap::PRCAPQUEEN) s += "q";
     else if (flag == FlagMap::PRROOK || flag == FlagMap::PRCAPROOK) s += "r";
@@ -35,7 +39,7 @@ std::string moveToString(Move move) {
     return s;
 }
 
-Move stringToMove(Board& board, std::string moveStr) {
+Move stringToMove(const Board& board, std::string moveStr) {
     if (moveStr.length() < 4 || moveStr.length() > 5) return 0; 
     if (moveStr[0] < 'a' || moveStr[0] > 'h' || moveStr[2] < 'a' || moveStr[2] > 'h') return 0;
     if (moveStr[1] < '1' || moveStr[1] > '8' || moveStr[3] < '1' || moveStr[3] > '8') return 0;
@@ -48,11 +52,11 @@ Move stringToMove(Board& board, std::string moveStr) {
     int from = fromRank * 8 + fromFile;
     int to   = toRank * 8 + toFile;
 
-    int us = board.GetSideToMove();
-    int them = (us == Color::WHITE) ? Color::BLACK : Color::WHITE;
+    Color us = board.GetSideToMove();
+    Color them = !us;
 
-    PiecesEnum::Type movingPiece = PiecesEnum::NONE;
-    for (const auto piece : PiecesEnum::All) {
+    PieceType movingPiece = PieceType::NONE;
+    for (const auto piece : Pieces::All) {
         if (getBit(board.GetBitBoard(us, piece), from)) {
             movingPiece = piece;
             break;
@@ -63,7 +67,7 @@ Move stringToMove(Board& board, std::string moveStr) {
 
     int flag = FlagMap::MOVE;
 
-    if (movingPiece == PiecesEnum::PAWNS) {
+    if (movingPiece == PieceType::PAWN) {
         if (std::abs(to - from) == 16) {
             flag = FlagMap::DMOVE;
         }
@@ -88,7 +92,7 @@ Move stringToMove(Board& board, std::string moveStr) {
             flag = FlagMap::CAPTURE;
         }
     } 
-    else if (movingPiece == PiecesEnum::KING) {
+    else if (movingPiece == PieceType::KING) {
         if (std::abs(fromFile - toFile) == 2) {
             flag = FlagMap::CASTLING;
         } else if (isCapture) {
@@ -108,14 +112,24 @@ int main() {
     LookupTables::init();
     Board board;
     board.InitializeBoard();
-    Engine engine;
-    engine.SetUseNnue(true);
-    
-    if (engine.GetUseNnue()){
-        NnueAdapter::Initialize("/home/lorenzo/Scrivania/Projects/YACE/NNUE/training/weights/nnue_weights_v1.bin");
-        NnueAdapter::Reset(board);
+
+    TranspositionTable tt(64);
+    ClassicalEvaluator hce;
+    NnueEvaluator nnue;
+    IEvaluator* activeEvaluator = nullptr;
+
+    std::string weightsPath = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/training/weights/nnue_weights_v1.bin";
+    if (nnue.Initialize(weightsPath)) {
+        std::cout << "info string NNUE caricata con successo (" << weightsPath << ")\n";
+        nnue.Reset(board);
+        activeEvaluator = &nnue;
+    } else {
+        std::cout << "info string Attenzione: NNUE non trovata. Fallback alla Valutazione Classica (HCE).\n";
+        activeEvaluator = &hce;
     }
 
+    Engine engine(tt, activeEvaluator);
+    
     bool enableLogging = false; 
 
     std::string token;
@@ -139,6 +153,9 @@ int main() {
                 fenLine.erase(0, 1);
             }
             board.InitializeFromFEN(fenLine);
+            
+            // FONDAMENTALE: Quando forzi un FEN, la rete neurale deve resettare lo stack!
+            if (activeEvaluator) activeEvaluator->Reset(board);
         } 
         else if (token == "go") {
             std::string line;
@@ -162,7 +179,7 @@ int main() {
             }
 
             if (wtime != -1 && btime != -1) {
-                int us = board.GetSideToMove();
+                Color us = board.GetSideToMove();
                 int myTime = (us == Color::WHITE) ? wtime : btime;
                 
                 allocatedTimeMs = myTime / 30.0; 
@@ -200,7 +217,9 @@ int main() {
             }
 
             if (best != 0) {
-                board.MakeMove(best, engine.GetUseNnue());
+                if (board.MakeMove(best)) {
+                    if (activeEvaluator) activeEvaluator->OnMakeMove(board, best);
+                }
             }
 
             std::cout << "bestmove " << moveToString(best) << "\n";
@@ -211,7 +230,9 @@ int main() {
             std::cin >> actualMove;
             Move parsedMove = stringToMove(board, actualMove);
             if (parsedMove != 0) {
-                if (!board.MakeMove(parsedMove, engine.GetUseNnue())) {
+                if (board.MakeMove(parsedMove)) {
+                    if (activeEvaluator) activeEvaluator->OnMakeMove(board, parsedMove);
+                } else {
                     std::cout << "info string Mossa illegale (lascia il Re sotto scacco)!\n";
                 }
             }
@@ -220,9 +241,12 @@ int main() {
             std::cout << "FEN attuale: " << board.GetFEN() << "\n";
         }
         else {
+            // Gestione dei comandi "diretti" es. e2e4 senza "move" davanti
             Move parsedMove = stringToMove(board, token);
             if (parsedMove != 0) {
-                if (!board.MakeMove(parsedMove, engine.GetUseNnue())) {
+                if (board.MakeMove(parsedMove)) {
+                    if (activeEvaluator) activeEvaluator->OnMakeMove(board, parsedMove);
+                } else {
                     std::cout << "info string Mossa illegale!\n";
                 }
             }

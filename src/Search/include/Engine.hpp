@@ -1,12 +1,13 @@
-#ifndef _MINIMAX
-#define _MINIMAX
+#ifndef ENGINE_HPP
+#define ENGINE_HPP
     
 #include <chrono>
 
 #include "Board.hpp"
 #include "Move.hpp"
 #include "TranspositionTable.hpp"
-
+#include "IEvaluator.hpp"
+#include "MoveGenerator.hpp"
 
 struct SearchStats {
     long long nodesEvaluated = 0;
@@ -32,44 +33,34 @@ struct SearchStats {
 
 class Engine {
 private:
+    TranspositionTable& tt;
+    IEvaluator* evaluator;
     SearchStats stats;
-    TranspositionTable tt;
 
     static const int MAX_PLY = 64;
     Move killerMoves[MAX_PLY][2];
 
-    bool useNnue = true;
-
     int AlphaBeta(Board& board, int depth, int alpha, int beta, int ply);
     int QuiescenceSearch(Board& board, int alpha, int beta);
-    void GeneratePawnMoves(Board& board, Move* moveList, int& moveCount);
     int ScoreMove(Board& board, Move move, Move ttMove, int ply);
 
-    Move GetStoredMove(uint64_t key);
-
     std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
-    double timeLimitMs;   // Tempo massimo per questa mossa
-    bool timeIsUp;        // L'interruttore di emergenza
+    double timeLimitMs;   
+    bool timeIsUp;        
 
-    void CheckTime();     // Funzione per controllare l'orologio
+    void CheckTime();
 
 public:
-    Engine(): tt(64){}
+    Engine(TranspositionTable& t, IEvaluator* eval) : tt(t), evaluator(eval) {
+        for(int i = 0; i < MAX_PLY; ++i) {
+            killerMoves[i][0] = 0;
+            killerMoves[i][1] = 0;
+        }
+    }
 
     Move GetBestMove(Board& board, int maxDepth, double allocatedTimeMs);
-    int GenerateAllMoves(Board& board, Move* moveList);
-    int TraditionalEvaluate(Board& board); // La tua vecchia valutazione (PSQT, materiale, ecc.)
-    int GetEvaluation(Board& board);
 
     const SearchStats& GetStats() const { return stats; }
-    void SetTTActive(bool state) { tt.SetTTActive(state); }
-  
-    void SetUseNnue(bool var){
-        useNnue = var;
-    }
-    bool GetUseNnue(){
-        return useNnue;
-    }
 };
 
 #endif

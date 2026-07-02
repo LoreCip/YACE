@@ -2,6 +2,7 @@
 
 #include "cblas.h"
 #include <fstream>
+#include <cstring>
 
 bool NnueNetwork::InitializeFromFile(std::string path) {
     std::ifstream file(path, std::ios::binary);

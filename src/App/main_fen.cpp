@@ -3,48 +3,44 @@
 #include <string>
 #include <vector>
 #include <omp.h>
+
 #include "LookupTables.hpp"
 #include "Move.hpp"
 #include "Board.hpp"
-#include "Engine.hpp"
+#include "MoveGenerator.hpp"
 
-uint64_t Perft(Engine& engine, Board& board, int depth) {
+uint64_t Perft(Board& board, int depth) {
     if (depth == 0) return 1ULL;
 
-    Move moveList[256];
-    int n_moves = engine.GenerateAllMoves(board, moveList);
+    MoveList moveList;
+    MoveGen::GenerateAllMoves(board, moveList);
     uint64_t nodes = 0;
 
-    for (int i = 0; i < n_moves; i++) {
-        if (!board.MakeMove(moveList[i], false)) {
+    for (int i = 0; i < moveList.count; i++) {
+        if (!board.MakeMove(moveList.moves[i])) {
             continue;
         }
-        nodes += Perft(engine, board, depth - 1);
-        board.UnmakeMove(moveList[i], false);
+        nodes += Perft(board, depth - 1);
+        board.UnmakeMove(moveList.moves[i]);
     }
     return nodes;
 } 
 
-uint64_t PerftParallel(Engine& engine, Board& rootBoard, int depth) {
+uint64_t PerftParallel(Board& rootBoard, int depth) {
     if (depth == 0) return 1ULL;
 
-    Move moveList[256];
-    // Generiamo le mosse sulla board principale (radice) prima di entrare nel blocco parallelo
-    int n_moves = engine.GenerateAllMoves(rootBoard, moveList);
+    MoveList moveList;
+    MoveGen::GenerateAllMoves(rootBoard, moveList);
     uint64_t totalNodes = 0;
 
-    // Con OpenMP parallelizziamo il ciclo for. 
-    // Usiamo 'reduction(+:totalNodes)' per sommare in sicurezza i risultati di ciascun thread.
+    
     #pragma omp parallel for reduction(+:totalNodes) schedule(dynamic)
-    for (int i = 0; i < n_moves; i++) {
-        // Ciascun thread crea una COPIA LOCALE della board partendo dallo stato della radice.
-        // Questo evita qualsiasi data race (concorrenza sui dati).
+    for (int i = 0; i < moveList.count; i++) {
         Board threadBoard = rootBoard; 
-        Move move = moveList[i];
+        Move move = moveList.moves[i];
 
-        if (threadBoard.MakeMove(move, false)) {
-            // Chiamiamo il Perft ricorsivo standard (che è sequenziale) sulla board privata del thread
-            uint64_t nodesForThisMove = Perft(engine, threadBoard, depth - 1);
+        if (threadBoard.MakeMove(move)) {
+            uint64_t nodesForThisMove = Perft(threadBoard, depth - 1);
             totalNodes += nodesForThisMove;
         }
     }
@@ -60,9 +56,7 @@ bool assertUint64ArrayEqual(uint64_t* a, uint64_t* b, int len) {
 }
 
 int main() {
-    LookupTables::init();
-    Engine myEngine;
-    myEngine.SetUseNnue(false);
+    LookupTables::init(); 
     Board gameBoard;
 
     /* https://www.chessprogramming.org/Perft_Results */
@@ -86,6 +80,7 @@ int main() {
         {46, 2079, 89890, 3894594, 164075551ULL}
     };
 
+
     std::cout << "--- AVVIO TEST DI VALIDAZIONE ENGINE ---\n" << std::endl;
     int failedTestsCount = 0;
 
@@ -100,9 +95,8 @@ int main() {
         std::vector<uint64_t> expectedCounts(maxDepths, 0);
 
         for (int i = 0; i < maxDepths; i++) {
-            int targetDepth = i + 1; // La profondità della ricerca parte da 1
-            
-            currentCounts[i] = PerftParallel(myEngine, gameBoard, targetDepth);
+            int targetDepth = i + 1;
+            currentCounts[i] = PerftParallel(gameBoard, targetDepth);
             expectedCounts[i] = truthTable[f][i];
             
             std::cout << "  > Depth " << targetDepth << " -> Risultato: " << currentCounts[i] 

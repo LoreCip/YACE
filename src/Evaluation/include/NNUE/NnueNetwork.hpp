@@ -1,9 +1,8 @@
-#ifndef NNUENETWORK
-#define NNUENETWORK
+#ifndef NNUE_NETWORK_HPP
+#define NNUE_NETWORK_HPP
 
-#include "Constants.hpp"
+#include "NnueConstants.hpp"
 #include <string>
-#include <cstring>
 
 /*
 

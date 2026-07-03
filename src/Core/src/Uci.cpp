@@ -9,34 +9,8 @@ namespace UCI {
         std::cout << "id author LoreChip\n";
     }
 
-    std::string MoveToString(Move move) {
-        if (move == 0) return "0000"; // Mossa nulla
-
-        int from = getMoveFrom(move);
-        int to = getMoveTo(move);
-        
-        char fileFrom = 'a' + (from % 8);
-        char rankFrom = '1' + (from / 8);
-        char fileTo = 'a' + (to % 8);
-        char rankTo = '1' + (to / 8);
-
-        std::string moveStr = "";
-        moveStr += fileFrom; moveStr += rankFrom;
-        moveStr += fileTo; moveStr += rankTo;
-
-        if (isMovePromotion(move)) {
-            PieceType promo = getMovePromotionPiece(move);
-            if (promo == PieceType::QUEEN) moveStr += 'q';
-            else if (promo == PieceType::ROOK) moveStr += 'r';
-            else if (promo == PieceType::BISHOP) moveStr += 'b';
-            else if (promo == PieceType::KNIGHT) moveStr += 'n';
-        }
-
-        return moveStr;
-    }
-
     void ReportSearchInfo(int depth, int selDepth, int score, 
-                          long long timeMs, long long nodes, long long nps, 
+                          double timeMs, long long nodes, long long nps, 
                           int hashFull, const std::string& pvMove,
                           double moveOrdering, long long ttHits, long long qNodes) {
         
@@ -140,30 +114,30 @@ namespace UCI {
         }
     }
 
-    std::string moveToString(Move move) {
-        if (move == 0) return "0000";
-        
+    std::string MoveToString(Move move) {
+        if (move == 0) return "0000"; // Mossa nulla
+
         int from = getMoveFrom(move);
         int to = getMoveTo(move);
         
-        char fromFile = 'a' + (from % 8);
-        char fromRank = '1' + (from / 8);
-        char toFile = 'a' + (to % 8);
-        char toRank = '1' + (to / 8);
-        
-        std::string s = "";
-        s += fromFile;
-        s += fromRank;
-        s += toFile;
-        s += toRank;
-        
-        int flag = getMoveFlags(move);
-        if (flag == FlagMap::PRQUEEN || flag == FlagMap::PRCAPQUEEN) s += "q";
-        else if (flag == FlagMap::PRROOK || flag == FlagMap::PRCAPROOK) s += "r";
-        else if (flag == FlagMap::PRBISHOP || flag == FlagMap::PRCAPBISHOP) s += "b";
-        else if (flag == FlagMap::PRKNIGHT || flag == FlagMap::PRCAPKNIGHT) s += "n";
-        
-        return s;
+        char fileFrom = 'a' + (from % 8);
+        char rankFrom = '1' + (from / 8);
+        char fileTo = 'a' + (to % 8);
+        char rankTo = '1' + (to / 8);
+
+        std::string moveStr = "";
+        moveStr += fileFrom; moveStr += rankFrom;
+        moveStr += fileTo; moveStr += rankTo;
+
+        if (isMovePromotion(move)) {
+            PieceType promo = getMovePromotionPiece(move);
+            if (promo == PieceType::QUEEN) moveStr += 'q';
+            else if (promo == PieceType::ROOK) moveStr += 'r';
+            else if (promo == PieceType::BISHOP) moveStr += 'b';
+            else if (promo == PieceType::KNIGHT) moveStr += 'n';
+        }
+
+        return moveStr;
     }
 
     Move StringToMove(const Board& board, const std::string& moveStr) {

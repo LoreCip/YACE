@@ -7,6 +7,7 @@
 #include "Types.hpp"
 #include "Move.hpp"
 #include "BitOperations.hpp"
+#include "LookupTables.hpp"
 
 struct UndoState {
     PieceType movedPiece;
@@ -14,6 +15,11 @@ struct UndoState {
     uint8_t enPassantSquare;
     uint8_t castlingRights;  
     uint8_t halfMoveClock;   
+};
+
+struct SquareInfo {
+    PieceType piece;
+    Color color;
 };
 
 class Board {
@@ -31,32 +37,40 @@ private:
     uint64_t positionHistory[1024] = {(uint64_t) 0};
     UndoState history[1024]; 
     int historyPly = 0;
+    uint64_t zobristHash = 0;
+
+    SquareInfo board[64];
 
     inline void MovePiece(Color color, PieceType piece, int from, int to) {
-        int c = ColorInt(color);
-        int p = PieceInt(piece);
-        sides[c][p] = clearBit(sides[c][p], from);
-        sides[c][p] = setBit(sides[c][p], to);
+        RemovePiece(color, piece, from);
+        AddPiece(color, piece, to);
     }
     inline void RemovePiece(int color, PieceType piece, int square) {
         int p = PieceInt(piece);
         sides[color][p] = clearBit(sides[color][p], square);
+        board[square].piece = PieceType::NONE;
+
+        colorOccupation[color] = clearBit(colorOccupation[color], square);
+        zobristHash ^= LookupTables::pieceKeys[color][p][square];
     }
     inline void RemovePiece(Color color, PieceType piece, int square) {
         RemovePiece(ColorInt(color), piece, square);
     }
+    inline void TogglePiece(Color color, PieceType piece, int square) {
+        zobristHash ^= LookupTables::pieceKeys[ColorInt(color)][PieceInt(piece)][square];
+    }
 
+    uint64_t RecomputeHash() const;
+    void VerifyHash();
 public:
     void InitializeBoard();
     void InitializeFromFEN(const std::string& fen);
-    void UpdateGlobalBoardState();
 
     bool MakeMove(Move move);  
     void UnmakeMove(Move move);
     
     bool IsSquareAttacked(int square, Color attackingColor) const;
 
-    uint64_t GetHash() const;
     bool IsRepetition() const;
     std::string GetFEN() const;
 
@@ -95,18 +109,34 @@ public:
     uint8_t GetHalfMoveClock() const {
         return halfMoveClock;
     }
+    inline PieceType GetPieceOnSquare(int sq) const {
+        return board[sq].piece;
+    }
+    inline Color GetPieceColor(int sq) const {
+       return board[sq].color;
+    }
+    uint64_t GetHash() const {
+        return zobristHash;
+    }
 
     // --- SETTER ---
     void SetBitBoard(Color color, PieceType piece, uint64_t bitboard) {
         sides[ColorInt(color)][PieceInt(piece)] = bitboard;
     }
-    inline void AddPiece(int color, PieceType piece, int square) {
+    inline void AddPiece(int color, PieceType piece, int square) {        
         int p = PieceInt(piece);
         sides[color][p] = setBit(sides[color][p], square);
+        board[square].piece = piece;
+        board[square].color = static_cast<Color>(color);
+        colorOccupation[color] =
+    
+        setBit(colorOccupation[color], square);
+        zobristHash ^= LookupTables::pieceKeys[color][p][square];
     }
     inline void AddPiece(Color color, PieceType piece, int square) {
         AddPiece(ColorInt(color), piece, square);
     }
+    
 };
 
 #endif

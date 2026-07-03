@@ -39,14 +39,18 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], ttMove, ply);
     }
 
-    std::stable_sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
-        return a.score > b.score;
-    });
-
     Move bestMoveInThisPosition = 0;
     int originalAlpha = alpha; 
 
     for (int i = 0; i < nMoves; i++) {
+        /* ********** ON DEMAND SELECTION SORT ******************************************/
+        int bestIndex = i;
+        for (int j = i + 1; j < nMoves; j++) {
+            if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
+        }
+        if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
+        /********************************************************************************/
+        
         Move move = scoredMoves[i].move;
         
         if (board.MakeMove(move)) {
@@ -140,12 +144,16 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], (Move)0, 0); 
     }
 
-    std::stable_sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
-        return a.score > b.score;
-    });
-
     int qLegalMoves = 0;
     for (int i = 0; i < nMoves; i++) {
+        /* ********** ON DEMAND SELECTION SORT ******************************************/
+        int bestIndex = i;
+        for (int j = i + 1; j < nMoves; j++) {
+            if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
+        }
+        if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
+        /********************************************************************************/
+        
         Move move = scoredMoves[i].move;
         int flag = getMoveFlags(move);
         
@@ -237,14 +245,16 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, Inf
             }
         }
         
-        if (timeIsUp) break; 
+        if (timeIsUp) break;
+        auto now = std::chrono::high_resolution_clock::now();
+        stats.lastMoveTimeMs = std::chrono::duration<double, std::milli>(now - startTime).count();
         if (callback) callback(d, alpha, stats, bestMoveCurrentDepth);
         mossaMiglioreAssoluta = bestMoveCurrentDepth;
     }
     
     auto endTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = endTime - startTime;
-    
+
     stats.lastMoveTimeMs = elapsed.count();
     stats.totalTimeMs += stats.lastMoveTimeMs;
     stats.movesPlayed++;
@@ -278,18 +288,14 @@ int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
             }
         }
 
-        PieceType victim = PieceType::NONE;
+        attacker = board.GetPieceOnSquare(from);
+        PieceType victim;
         if (flags == FlagMap::ENPASS) {
             victim = PieceType::PAWN;
         } else {
-            for (int p = 0; p < 6; p++) {
-                if (getBit(board.GetBitBoard(them, static_cast<PieceType>(p)), to)) {
-                    victim = static_cast<PieceType>(p);
-                    break;
-                }
-            }
+            victim = board.GetPieceOnSquare(to);
         }
-
+        
         if (attacker != PieceType::NONE && victim != PieceType::NONE) {
             score = 100000 + (LookupTables::pieceValues[PieceInt(victim)] * 10) - LookupTables::pieceValues[PieceInt(attacker)];
         }

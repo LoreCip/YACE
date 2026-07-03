@@ -24,7 +24,7 @@ namespace UCI {
               MoveMadeCallback onMoveMade);
 
     void ReportSearchInfo(int depth, int selDepth, int score, 
-                          long long timeMs, long long nodes, long long nps, 
+                          double timeMs, long long nodes, long long nps, 
                           int hashFull, const std::string& pvMove,
                           double moveOrdering, long long ttHits, long long qNodes);
 

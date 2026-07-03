@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     }
 
     auto engine = std::make_unique<Engine>(*tt, activeEvaluator);
-    bool enableFileLogging = true;
+    bool enableLogging = true;
     
     auto handlePositionLoaded = [&]() {
         if (activeEvaluator) activeEvaluator->Reset(*board);
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
             std::string moveStr = UCI::MoveToString(bestMove);
             uciLogger(
                 depth, stats.selDepthReached, score,
-                static_cast<long long>(stats.lastMoveTimeMs),
+                stats.lastMoveTimeMs,
                 stats.GetTotalNodes(), stats.GetNPS(),
                 static_cast<int>(stats.hashFullness * 10), 
                 moveStr,
@@ -94,17 +94,6 @@ int main(int argc, char** argv) {
         };
 
         Move best = engine->GetBestMove(*board, targetDepth, allocatedTimeMs, engineReporter);
-        
-        if (enableFileLogging) {
-            const SearchStats& stats = engine->GetStats();
-            std::ofstream logFile("engine_stats.log", std::ios::app);
-            if (logFile.is_open()) {
-                logFile << "info time " << (int)stats.lastMoveTimeMs
-                        << " nodes " << stats.GetTotalNodes()
-                        << " nps " << stats.GetNPS()
-                        << " cutoffs " << stats.betaCutoffs << "\n";
-            }
-        }
         return best;
     };
 

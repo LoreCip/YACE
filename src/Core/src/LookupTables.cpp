@@ -1,6 +1,9 @@
 #include "LookupTables.hpp"
 #include "BitOperations.hpp"
 
+#include <iostream>
+#include <string>
+
 namespace LookupTables {
 
     const uint64_t notColumnA       = 0xFEFEFEFEFEFEFEFEULL;
@@ -25,9 +28,6 @@ namespace LookupTables {
     uint64_t realPieceKeys[2][6][64] = {{{0}}};
     uint64_t realSideKey = {0};
 
-    // Arbitrary values of the pieces, needed for Evaluation
-    int realPieceValues[6] = {100, 500, 300, 300, 900, 0};
-
     uint8_t realCastlingMasks[64] = {
         13, 15, 15, 15, 12, 15, 15, 14, // 0-7   (White: rook A1, king, rook H1)
         15, 15, 15, 15, 15, 15, 15, 15,
@@ -47,79 +47,30 @@ namespace LookupTables {
     const uint64_t (&enPassantKeys)[65]   = realEnPassantKeys;
     const uint64_t (&pieceKeys)[2][6][64] = realPieceKeys;
     const uint64_t &sideKey               = realSideKey;
-    const int (&pieceValues)[6]           = realPieceValues;
+    int pieceValues[6] = {100, 500, 300, 300, 900, 0};
+    int pstTables[6][64] = {{0}};
 
-    // --- PIECE-SQUARE TABLES (PST) ---
-    const int pstTables[6][64] = {
-        // (PAWNS)
-        {
-             0,  0,  0,  0,  0,  0,  0,  0,
-            50, 50, 50, 50, 50, 50, 50, 50,
-            10, 10, 20, 30, 30, 20, 10, 10,
-             5,  5, 10, 25, 25, 10,  5,  5,
-             0,  0,  0, 20, 20,  0,  0,  0,
-             5, -5,-10,  0,  0,-10, -5,  5,
-             5, 10, 10,-20,-20, 10, 10,  5,
-             0,  0,  0,  0,  0,  0,  0,  0
-        },
-        // (ROOKS)
-        {
-             0,  0,  0,  0,  0,  0,  0,  0,
-             5, 10, 10, 10, 10, 10, 10,  5,
-            -5,  0,  0,  0,  0,  0,  0, -5,
-            -5,  0,  0,  0,  0,  0,  0, -5,
-            -5,  0,  0,  0,  0,  0,  0, -5,
-            -5,  0,  0,  0,  0,  0,  0, -5,
-            -5,  0,  0,  0,  0,  0,  0, -5,
-             0,  0,  0,  5,  5,  0,  0,  0
-        },
-        // (KNIGHTS)
-        {
-            -50,-40,-30,-30,-30,-30,-40,-50,
-            -40,-20,  0,  0,  0,  0,-20,-40,
-            -30,  0, 10, 15, 15, 10,  0,-30,
-            -30,  5, 15, 20, 20, 15,  5,-30,
-            -30,  0, 15, 20, 20, 15,  0,-30,
-            -30,  5, 10, 15, 15, 10,  5,-30,
-            -40,-20,  0,  5,  5,  0,-20,-40,
-            -50,-40,-30,-30,-30,-30,-40,-50
-        },
-        // (BISHOPS)
-        {
-            -20,-10,-10,-10,-10,-10,-10,-20,
-            -10,  0,  0,  0,  0,  0,  0,-10,
-            -10,  0,  5, 10, 10,  5,  0,-10,
-            -10,  5,  5, 10, 10,  5,  5,-10,
-            -10,  0, 10, 10, 10, 10,  0,-10,
-            -10, 10, 10, 10, 10, 10, 10,-10,
-            -10,  5,  0,  0,  0,  0,  5,-10,
-            -20,-10,-10,-10,-10,-10,-10,-20
-        },
-        // (QUEENS)
-        {
-            -20,-10,-10, -5, -5,-10,-10,-20,
-            -10,  0,  0,  0,  0,  0,  0,-10,
-            -10,  0,  5,  5,  5,  5,  0,-10,
-             -5,  0,  5,  5,  5,  5,  0, -5,
-              0,  0,  5,  5,  5,  5,  0,  0,
-            -10,  5,  5,  5,  5,  5,  5,-10,
-            -10,  0,  5,  0,  0,  5,  0,-10,
-            -20,-10,-10, -5, -5,-10,-10,-20
-        },
-        // (KING)
-        {
-            -30,-40,-40,-50,-50,-40,-40,-30,
-            -30,-40,-40,-50,-50,-40,-40,-30,
-            -30,-40,-40,-50,-50,-40,-40,-30,
-            -30,-40,-40,-50,-50,-40,-40,-30,
-            -20,-30,-30,-40,-40,-30,-30,-20,
-            -10,-20,-20,-20,-20,-20,-20,-10,
-             20, 20,  0,  0,  0,  0, 20, 20,
-             20, 30, 10,  0,  0, 10, 30, 20
+    void init(const std::string& configFile) {
+
+        std::ifstream file(configFile);
+        if (!file.is_open()) {
+            std::cerr << "error cannot open file " << configFile << "\n";
+        } else {
+            
+            if (!readArrayBlock(file, pieceValues, 6)) {
+                std::cerr << "error failed loading of pieceValues array\n";
+            }
+
+            for (int p = 0; p < 6; p++) {
+                if (!readArrayBlock(file, pstTables[p], 64)) {
+                    std::cerr << "error failed loading of evaluation table " << p << "\n";
+                }
+            }
+            
+            file.close();
+            std::cout << "info evaluation tables loaded\n";
         }
-    };
 
-    void init() {
         // --- ZOBRIST KEYS INIT ---
         uint64_t pseudoRandom = 1070372ULL;
         auto rand64 = [&]() -> uint64_t {
@@ -195,5 +146,46 @@ namespace LookupTables {
             attacks |= ((bitboard & notColumnA) >> 9);  
             realPawnAttacks[1][i] = attacks;
         }
+    }
+
+
+    bool readArrayBlock(std::ifstream& file, int* targetArray, int expectedSize) {
+        std::string line;
+        std::string blockName = "";
+
+        while (std::getline(file, line)) {
+            if (line.empty()) continue;
+            
+            if (line[0] == '#') {
+                blockName = line;
+                break;
+            }
+        }
+        if (blockName.empty()) return false;
+
+        int size = 0;
+        if (!(file >> size)) {
+            std::cerr << "[ERROR] Impossibile leggere la dimensione nel blocco: " << blockName << "\n";
+            return false;
+        }
+
+        if (size != expectedSize) {
+            std::cerr << "[ERROR] Discrepanza sul blocco " << blockName 
+                      << " -> Attesi: " << expectedSize << ", Trovati sul file: " << size << "\n";
+            return false;
+        }
+
+        for (int i = 0; i < size; i++) {
+            if (!(file >> targetArray[i])) {
+                std::cerr << "[ERROR] Dati insufficienti o corrotti nel blocco: " << blockName 
+                          << " (Errore all'elemento " << i << ")\n";
+                return false;
+            }
+        }
+
+        std::string dummy;
+        std::getline(file, dummy);
+
+        return true;
     }
 }

@@ -2,6 +2,7 @@
 #define LOOKUPTABLES_HPP
 
 #include <cstdint>
+#include <fstream>
 
 namespace LookupTables {
     extern const uint64_t notColumnA;
@@ -30,10 +31,11 @@ namespace LookupTables {
     extern const uint64_t &sideKey;
 
     // --- PIECE-SQUARE TABLES (PST) ---
-    extern const int pstTables[6][64];
-    extern const int (&pieceValues)[6];
+    extern int pstTables[6][64];
+    extern int pieceValues[6];
 
-    void init();
+    void init(const std::string& configFile);
+    bool readArrayBlock(std::ifstream& file, int* targetArray, int expectedSize);
 }
 
 #endif

@@ -56,7 +56,7 @@ bool assertUint64ArrayEqual(uint64_t* a, uint64_t* b, int len) {
 }
 
 int main() {
-    LookupTables::init(); 
+    LookupTables::init("/home/lorenzo/Scrivania/Projects/YACE/parameters/evals.txt");; 
     Board gameBoard;
 
     /* https://www.chessprogramming.org/Perft_Results */

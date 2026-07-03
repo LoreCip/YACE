@@ -11,13 +11,14 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     if (board.IsRepetition()) return 0;
 
     stats.nodesEvaluated++;
-    if (depth == 0) return QuiescenceSearch(board, alpha, beta);
+    if (depth == 0) return QuiescenceSearch(board, alpha, beta, ply);
 
     // --- 1. PROBE TRANSPOSITION TABLE ---
     uint64_t hashKey = board.GetHash();
     Move ttMove = 0;
     int ttScore = 0;
     if (tt.Probe(hashKey, depth, alpha, beta, ttScore, ttMove)) {
+        stats.ttHits++;
         return ttScore;
     }
 
@@ -38,7 +39,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], ttMove, ply);
     }
 
-    std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
+    std::stable_sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
         return a.score > b.score;
     });
 
@@ -60,6 +61,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
             
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
+                if (legalMovesCount == 1) stats.firstMoveCutoffs++;
                 
                 int fflag = getMoveFlags(move);
                 if (fflag == FlagMap::MOVE || fflag == FlagMap::DMOVE || fflag == FlagMap::CASTLING) {
@@ -105,11 +107,12 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     return alpha;
 }
 
-int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
+int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     if (timeIsUp) return 0;
     CheckTime();
 
     stats.qNodesEvaluated++;
+    if (ply > stats.selDepthReached) stats.selDepthReached = ply;
 
     int stand_pat = evaluator->Evaluate(board);
     if (board.GetSideToMove() == Color::BLACK) {
@@ -137,10 +140,11 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], (Move)0, 0); 
     }
 
-    std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
+    std::stable_sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
         return a.score > b.score;
     });
 
+    int qLegalMoves = 0;
     for (int i = 0; i < nMoves; i++) {
         Move move = scoredMoves[i].move;
         int flag = getMoveFlags(move);
@@ -150,15 +154,17 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
             flag == FlagMap::PRCAPBISHOP || flag == FlagMap::PRCAPKNIGHT) {
             
             if (board.MakeMove(move)) {
+                qLegalMoves++;
                 evaluator->OnMakeMove(board, move);
 
-                int score = -QuiescenceSearch(board, -beta, -alpha);
+                int score = -QuiescenceSearch(board, -beta, -alpha, ply);
                 
                 evaluator->OnUnmakeMove();
                 board.UnmakeMove(move);
 
                 if (score >= beta){
                     stats.betaCutoffs++;
+                    if (qLegalMoves == 1) stats.firstMoveCutoffs++;
                     return beta;
                 }
                 if (score > alpha) alpha = score;
@@ -168,7 +174,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta) {
     return alpha;
 }
 
-Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
+Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, InfoReporter callback) {
     stats.ResetForNewMove();
     startTime = std::chrono::high_resolution_clock::now();
     timeLimitMs = allocatedTimeMs;
@@ -191,6 +197,7 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
 
     // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
     for (int d = 1; d <= maxDepth; d++) {
+        stats.maxDepthReached = d;
         int alpha = -999999;
         int beta  = 999999;
         Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
@@ -229,9 +236,9 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs) {
                 }
             }
         }
-
-        if (timeIsUp) break; 
         
+        if (timeIsUp) break; 
+        if (callback) callback(d, alpha, stats, bestMoveCurrentDepth);
         mossaMiglioreAssoluta = bestMoveCurrentDepth;
     }
     

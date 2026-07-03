@@ -147,7 +147,7 @@ void TestForwardPass() {
 // ---------------------------------------------------------
 int main() {
     std::cout << "=== Avvio Test Suite NNUE (Integrazione Engine) ===\n\n";
-    LookupTables::init();
+    LookupTables::init("/home/lorenzo/Scrivania/Projects/YACE/parameters/evals.txt");
 
     TestFeatureSet();
     TestAccumulator();

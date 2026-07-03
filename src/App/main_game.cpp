@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv) {
     // Defaults
-    std::string evalType = "nnue";
+    std::string evalType = "hce";
     std::string weightsPath = "/home/lorenzo/Scrivania/Projects/YACE/parameters/weights/nnue_weights_v1.bin";
     std::string evalsPath = "/home/lorenzo/Scrivania/Projects/YACE/parameters/evals.txt";
     int ttSize = 64;

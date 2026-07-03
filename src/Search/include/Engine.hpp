@@ -23,6 +23,7 @@ private:
 
     static const int MAX_PLY = 64;
     Move killerMoves[MAX_PLY][2];
+    int historyTable[2][64][64] = {{{0}}};
 
     int AlphaBeta(Board& board, int depth, int alpha, int beta, int ply);
     int QuiescenceSearch(Board& board, int alpha, int beta, int ply);
@@ -32,6 +33,7 @@ private:
     double timeLimitMs;   
     bool timeIsUp;        
 
+    void ClearHistory();
     void CheckTime();
 
 public:

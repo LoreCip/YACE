@@ -41,6 +41,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
 
     Move bestMoveInThisPosition = 0;
     int originalAlpha = alpha; 
+    int us = ColorInt(board.GetSideToMove());
 
     for (int i = 0; i < nMoves; i++) {
         /* ********** ON DEMAND SELECTION SORT ******************************************/
@@ -52,14 +53,14 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         /********************************************************************************/
         
         Move move = scoredMoves[i].move;
+        int flags = getMoveFlags(move);
+        bool isQuiet = (flags == FlagMap::MOVE || flags == FlagMap::DMOVE || flags == FlagMap::CASTLING);
         
         if (board.MakeMove(move)) {
             legalMovesCount++; 
             
             evaluator->OnMakeMove(board, move);
-
             int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1); 
-            
             evaluator->OnUnmakeMove();
             board.UnmakeMove(move);
             
@@ -67,12 +68,28 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                 stats.betaCutoffs++;
                 if (legalMovesCount == 1) stats.firstMoveCutoffs++;
                 
-                int fflag = getMoveFlags(move);
-                if (fflag == FlagMap::MOVE || fflag == FlagMap::DMOVE || fflag == FlagMap::CASTLING) {
+                if (isQuiet) {
+                    // 1. Aggiorna le Killer Moves
                     if (ply < MAX_PLY) {
                         if (move != killerMoves[ply][0]) {
                             killerMoves[ply][1] = killerMoves[ply][0];
                             killerMoves[ply][0] = move;               
+                        }
+                    }
+
+                    // 2. HISTORY HEURISTIC: BONUS
+                    int from = getMoveFrom(move);
+                    int to = getMoveTo(move);
+                    historyTable[us][from][to] += (depth * depth);
+
+                    // Normalizzazione per evitare overflow e appiattimento dei punteggi
+                    if (historyTable[us][from][to] > 10000) {
+                        for (int c = 0; c < 2; c++) {
+                            for (int f = 0; f < 64; f++) {
+                                for (int t = 0; t < 64; t++) {
+                                    historyTable[c][f][t] /= 2;
+                                }
+                            }
                         }
                     }
                 }
@@ -81,18 +98,30 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                 tt.Record(hashKey, move, depth, beta, BETA);
                 return beta; 
             }
+            
             if (currentScore > alpha) {
                 alpha = currentScore; 
                 bestMoveInThisPosition = move;
+            } else {
+                // HISTORY HEURISTIC: PENALITÀ
+                // Se la mossa silenziosa è stata cercata ma non ha migliorato alpha, perde punti
+                if (isQuiet) {
+                    int from = getMoveFrom(move);
+                    int to = getMoveTo(move);
+                    historyTable[us][from][to] -= depth;
+                    if (historyTable[us][from][to] < 0) {
+                        historyTable[us][from][to] = 0;
+                    }
+                }
             }
         }
     }
     
     if (legalMovesCount == 0) {
-        Color us = board.GetSideToMove();
-        Color them = !us;
+        Color myColor = board.GetSideToMove();
+        Color them = !myColor;
         
-        uint64_t myKingBB = board.GetBitBoard(us, PieceType::KING);
+        uint64_t myKingBB = board.GetBitBoard(myColor, PieceType::KING);
         if (myKingBB == 0ULL) return 0; // Fallback
 
         uint64_t myKing = __builtin_ctzll(myKingBB);
@@ -105,6 +134,10 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     }
 
     // --- 2. RECORD TT ENTRY (EXACT o ALPHA) ---
+    if (bestMoveInThisPosition == 0) {
+        bestMoveInThisPosition = ttMove;
+    }
+    
     TTFlag flag = (alpha <= originalAlpha) ? ALPHA : EXACT;
     tt.Record(hashKey, bestMoveInThisPosition, depth, alpha, flag);
 
@@ -124,13 +157,12 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     }
     
     if (stand_pat >= beta){
-        stats.betaCutoffs++;
         return beta;
     }
     if (alpha < stand_pat) alpha = stand_pat;
 
     MoveList moveList;
-    MoveGen::GenerateAllMoves(board, moveList);
+    MoveGen::GenerateCaptureMoves(board, moveList);
     int nMoves = moveList.count;
 
     struct ScoredMove {
@@ -144,7 +176,6 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], (Move)0, 0); 
     }
 
-    int qLegalMoves = 0;
     for (int i = 0; i < nMoves; i++) {
         /* ********** ON DEMAND SELECTION SORT ******************************************/
         int bestIndex = i;
@@ -162,7 +193,6 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
             flag == FlagMap::PRCAPBISHOP || flag == FlagMap::PRCAPKNIGHT) {
             
             if (board.MakeMove(move)) {
-                qLegalMoves++;
                 evaluator->OnMakeMove(board, move);
 
                 int score = -QuiescenceSearch(board, -beta, -alpha, ply);
@@ -171,8 +201,6 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
                 board.UnmakeMove(move);
 
                 if (score >= beta){
-                    stats.betaCutoffs++;
-                    if (qLegalMoves == 1) stats.firstMoveCutoffs++;
                     return beta;
                 }
                 if (score > alpha) alpha = score;
@@ -184,6 +212,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
 
 Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, InfoReporter callback) {
     stats.ResetForNewMove();
+    ClearHistory();
     startTime = std::chrono::high_resolution_clock::now();
     timeLimitMs = allocatedTimeMs;
     timeIsUp = false;
@@ -268,7 +297,7 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, Inf
 }
 
 int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
-    if (move == ttMove) return 1000000;
+    if (move == ttMove) return 2000000; // Priorità Assoluta alla Transposition Table
 
     int score = 0;
     int flags = getMoveFlags(move);
@@ -277,53 +306,53 @@ int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
 
     // --- Catture (MVV - LVA) ---
     if (flags == FlagMap::CAPTURE || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::ENPASS) {
-        Color us = board.GetSideToMove();
-        Color them = !us;
-
-        PieceType attacker = PieceType::NONE;
-        for (int p = 0; p < 6; p++) {
-            if (getBit(board.GetBitBoard(us, static_cast<PieceType>(p)), from)) {
-                attacker = static_cast<PieceType>(p);
-                break;
-            }
-        }
-
-        attacker = board.GetPieceOnSquare(from);
-        PieceType victim;
-        if (flags == FlagMap::ENPASS) {
-            victim = PieceType::PAWN;
-        } else {
-            victim = board.GetPieceOnSquare(to);
-        }
+        PieceType attacker = board.GetPieceOnSquare(from);
+        PieceType victim = (flags == FlagMap::ENPASS) ? PieceType::PAWN : board.GetPieceOnSquare(to);
         
         if (attacker != PieceType::NONE && victim != PieceType::NONE) {
-            score = 100000 + (LookupTables::pieceValues[PieceInt(victim)] * 10) - LookupTables::pieceValues[PieceInt(attacker)];
+            // Partiamo da 1.000.000 per garantire che siano valutate prima delle mosse silenziose
+            score = 1000000 + (LookupTables::pieceValues[PieceInt(victim)] * 10) - LookupTables::pieceValues[PieceInt(attacker)];
         }
     } 
     // --- Promotions (not captures) ---
     else if (flags == FlagMap::PRQUEEN) {
-        score = 90000; 
+        score = 900000; 
     } 
     else if (flags == FlagMap::PRROOK || flags == FlagMap::PRBISHOP || flags == FlagMap::PRKNIGHT) {
-        score = 80000;
+        score = 800000;
     }
-    // --- Normal moves ---
+    // --- Normal moves (Quiet) ---
     else {
         if (ply < MAX_PLY && move == killerMoves[ply][0]) {
-            score = 90000; 
+            score = 50000; // Killer move primaria
         } 
         else if (ply < MAX_PLY && move == killerMoves[ply][1]) {
-            score = 80000; 
+            score = 40000; // Killer move secondaria
         } 
         else if (flags == FlagMap::CASTLING) {
-            score = 50000; 
+            score = 30000; 
         } 
         else {
-            score = 0;     
+            // NUOVO: Lettura History
+            int us = ColorInt(board.GetSideToMove());
+            score = historyTable[us][from][to];
+            
+            // Cappiamo a 20.000 per assicurarci che non superino MAI le killer/castling/captures
+            if (score > 20000) score = 20000;     
         }
     }
 
     return score;
+}
+
+void Engine::ClearHistory() {
+    for (int c = 0; c < 2; c++) {
+        for (int i = 0; i < 64; i++) {
+            for (int j = 0; j < 64; j++) {
+                historyTable[c][i][j] = 0;
+            }
+        }
+    }
 }
 
 void Engine::CheckTime() {

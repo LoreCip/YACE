@@ -176,6 +176,128 @@ namespace MoveGen {
         }
     }
 
+    int GenerateCaptureMoves(const Board& board, MoveList& moveList) {
+        Color us = board.GetSideToMove();
+        uint64_t enemies = board.GetColorOccupation(!us);
+
+        // Principi di Clean Code: Funzioni corte con singola responsabilità
+        GenerateKnightCaptures(board, moveList, us, enemies);
+        GenerateKingCaptures(board, moveList, us, enemies);
+        GenerateSlidingCaptures(board, moveList, us, PieceType::BISHOP, enemies);
+        GenerateSlidingCaptures(board, moveList, us, PieceType::ROOK, enemies);
+        GenerateSlidingCaptures(board, moveList, us, PieceType::QUEEN, enemies);
+        GeneratePawnCapturesAndPromotions(board, moveList, us, enemies);
+
+        return moveList.count;
+    }
+
+    // Helper interni al namespace (non esportati nell'header per l'incapsulamento)
+    void GenerateKnightCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
+        uint64_t bitboard = board.GetBitBoard(us, PieceType::KNIGHT);
+        while (bitboard != 0ULL) {
+            int from = __builtin_ctzll(bitboard);
+            // Ottimizzazione matematica: filtriamo subito solo le case nemiche via AND bitwise
+            uint64_t attacks = LookupTables::knightAttacks[from] & enemies;
+            
+            while (attacks != 0ULL) {
+                int to = __builtin_ctzll(attacks);
+                moveList.push(createMove(from, to, FlagMap::CAPTURE));
+                attacks = clearBit(attacks, to);
+            }
+            bitboard = clearBit(bitboard, from);
+        }
+    }
+
+    void GenerateKingCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
+        uint64_t bitboard = board.GetBitBoard(us, PieceType::KING);
+        if (bitboard == 0ULL) return;
+        int from = __builtin_ctzll(bitboard);
+        
+        uint64_t attacks = LookupTables::kingAttacks[from] & enemies;
+        while (attacks != 0ULL) {
+            int to = __builtin_ctzll(attacks);
+            moveList.push(createMove(from, to, FlagMap::CAPTURE));
+            attacks = clearBit(attacks, to);
+        }
+        // Nota: L'arroccamento è una mossa silenziosa, viene ignorato qui per design.
+    }
+
+    void GenerateSlidingCaptures(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t enemies) {
+        uint64_t bitboard = board.GetBitBoard(us, piece);
+        uint64_t totalOcc = board.GetTotalOccupation();
+
+        while (bitboard != 0ULL) {
+            int from = __builtin_ctzll(bitboard);
+            uint64_t attacks = 0ULL;
+
+            if (piece == PieceType::BISHOP || piece == PieceType::QUEEN) {
+                attacks |= ComputeRay(9, LookupTables::notColumnH, from, totalOcc);
+                attacks |= ComputeRay(7, LookupTables::notColumnA, from, totalOcc);
+                attacks |= ComputeRay(-9, LookupTables::notColumnA, from, totalOcc);
+                attacks |= ComputeRay(-7, LookupTables::notColumnH, from, totalOcc);
+            }
+            if (piece == PieceType::ROOK || piece == PieceType::QUEEN) {
+                attacks |= ComputeRay(-1, LookupTables::notColumnA, from, totalOcc);
+                attacks |= ComputeRay(1, LookupTables::notColumnH, from, totalOcc);
+                attacks |= ComputeRay(8, LookupTables::nullEdge, from, totalOcc);
+                attacks |= ComputeRay(-8, LookupTables::nullEdge, from, totalOcc);
+            }
+
+            // Applichiamo il filtro sulle mosse cattura
+            attacks &= enemies;
+
+            while (attacks != 0ULL) {
+                int to = __builtin_ctzll(attacks);
+                moveList.push(createMove(from, to, FlagMap::CAPTURE));
+                attacks = clearBit(attacks, to);
+            }
+            bitboard = clearBit(bitboard, from);
+        }
+    }
+
+    void GeneratePawnCapturesAndPromotions(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
+        uint64_t myPawns = board.GetBitBoard(us, PieceType::PAWN);
+        uint64_t emptySquares = board.GetFreeCells();
+        
+        int direction = (us == Color::WHITE) ? 8 : -8;
+        int promoRankStart = (us == Color::WHITE) ? 56 : 0; 
+        int promoRankEnd   = (us == Color::WHITE) ? 63 : 7; 
+
+        while (myPawns != 0ULL) {
+            int from = __builtin_ctzll(myPawns);
+            int toSingle = from + direction;
+            
+            // 1. Spinte Promozionali (Mosse tattiche non-cattura ammesse in Q-Search)
+            if (setBit(0ULL, toSingle) & emptySquares) {
+                if (toSingle >= promoRankStart && toSingle <= promoRankEnd) {
+                    moveList.push(createMove(from, toSingle, FlagMap::PRQUEEN));
+                }
+            }
+
+            // 2. Catture Normali e Catture con Promozione
+            uint64_t targets = LookupTables::pawnAttacks[ColorInt(us)][from] & enemies;
+            while (targets != 0ULL) {
+                int toCapture = __builtin_ctzll(targets);
+                if (toCapture >= promoRankStart && toCapture <= promoRankEnd) {
+                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPQUEEN));
+                } else {
+                    moveList.push(createMove(from, toCapture, FlagMap::CAPTURE));
+                }
+                targets = clearBit(targets, toCapture);
+            }
+
+            // 3. En Passant (È a tutti gli effetti una cattura)
+            int epSquare = board.GetEnPassantSquare();
+            if (epSquare != 64) {
+                uint64_t epBB = 1ULL << epSquare;
+                if (LookupTables::pawnAttacks[ColorInt(us)][from] & epBB) {
+                    moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
+                }
+            }
+            myPawns = clearBit(myPawns, from);
+        }
+    }
+
     uint64_t ComputeRay(int direction, uint64_t edge, int square, uint64_t totalOccupation) {
         uint64_t allMoves = 0ULL;
         uint64_t ray = 1ULL << square;

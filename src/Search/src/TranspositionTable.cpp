@@ -31,11 +31,15 @@ bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int
 
 void TranspositionTable::Record(uint64_t key, Move bestMove, int depth, int score, TTFlag flag) {
     if (!active) return;
-    size_t index = key % numEntries;
+    size_t index = key % numEntries; // (Ricordati di ottimizzare questo modulo in futuro!)
     
     int scoreToSave = score;
-    if (score > MATE_SCORE)  scoreToSave += depth; // Rendi il matto indipendente dalla profondità
+    if (score > MATE_SCORE)  scoreToSave += depth;
     if (score < -MATE_SCORE) scoreToSave -= depth;
+
+    if (bestMove == 0 && table[index].key == key) {
+        bestMove = table[index].bestMove;
+    }
 
     if (table[index].key == 0 || table[index].depth <= depth) {
         table[index] = { key, bestMove, depth, scoreToSave, flag };

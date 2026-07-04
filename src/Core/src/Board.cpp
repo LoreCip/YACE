@@ -339,6 +339,35 @@
         
     }
 
+    void Board::MakeNullMove() {
+        positionHistory[historyPly] = GetHash();
+        
+        history[historyPly].movedPiece = PieceType::NONE;
+        history[historyPly].capturedPiece = PieceType::NONE;
+        history[historyPly].enPassantSquare = enPassantSquare;
+        history[historyPly].castlingRights = castlingRights;
+        history[historyPly].halfMoveClock = halfMoveClock;
+        historyPly++;
+
+        zobristHash ^= LookupTables::sideKey;
+        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        
+        enPassantSquare = 64;
+        sideToMove = !sideToMove;
+        halfMoveClock++; 
+    }
+
+    void Board::UnmakeNullMove() {
+        historyPly--;
+        sideToMove = !sideToMove;
+        
+        enPassantSquare = history[historyPly].enPassantSquare;
+        castlingRights = history[historyPly].castlingRights;
+        halfMoveClock = history[historyPly].halfMoveClock;
+        
+        zobristHash = positionHistory[historyPly]; 
+    }
+
     bool Board::IsRepetition() const {
         uint64_t currentHash = GetHash();
         if (historyPly < 4) return false; 

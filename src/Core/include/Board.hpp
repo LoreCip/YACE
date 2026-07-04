@@ -68,6 +68,9 @@ public:
 
     bool MakeMove(Move move);  
     void UnmakeMove(Move move);
+
+    void MakeNullMove();
+    void UnmakeNullMove();
     
     bool IsSquareAttacked(int square, Color attackingColor) const;
 

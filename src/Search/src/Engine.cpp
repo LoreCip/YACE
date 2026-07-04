@@ -11,9 +11,10 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     if (board.IsRepetition()) return 0;
 
     stats.nodesEvaluated++;
-    if (depth == 0) return QuiescenceSearch(board, alpha, beta, ply);
+    
+    if (depth <= 0) return QuiescenceSearch(board, alpha, beta, ply);
 
-    // --- 1. PROBE TRANSPOSITION TABLE ---
+    // --- 1. TRANSPOSITION TABLE PROBE ---
     uint64_t hashKey = board.GetHash();
     Move ttMove = 0;
     int ttScore = 0;
@@ -22,35 +23,63 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         return ttScore;
     }
 
+    int originalAlpha = alpha;
+    Move bestMoveInThisPosition = 0;
+    
+    // Pre-calcolo dello stato di Scacco (usato da NMP, LMR e test finale)
+    Color us = board.GetSideToMove();
+    uint64_t myKingBB = board.GetBitBoard(us, PieceType::KING);
+    bool inCheck = false;
+    if (myKingBB != 0ULL) {
+        inCheck = board.IsSquareAttacked(__builtin_ctzll(myKingBB), !us);
+    }
+
+    // --- 2. NULL MOVE PRUNING (NMP) ---
+    bool isNullMoveAllowed = (board.GetHistoryPly() > 0 && 
+                              board.GetHistory(board.GetHistoryPly() - 1).movedPiece != PieceType::NONE);
+    
+    if (!inCheck && depth >= 3 && ply > 0 && isNullMoveAllowed) {
+        // Verifica materiale (Anti-Zugzwang)
+        uint64_t nonPawnMaterial = board.GetColorOccupation(us) 
+                                 ^ board.GetBitBoard(us, PieceType::KING) 
+                                 ^ board.GetBitBoard(us, PieceType::PAWN);
+        
+        if (nonPawnMaterial != 0ULL) {
+            board.MakeNullMove();
+            int R = 2; // Taglio di 2 profondità
+            int nullScore = -AlphaBeta(board, depth - 1 - R, -beta, -beta + 1, ply + 1);
+            board.UnmakeNullMove();
+            
+            if (timeIsUp) return 0;
+            if (nullScore >= beta) return beta; 
+        }
+    }
+
+    // --- 3. GENERAZIONE ED ORDINAMENTO MOSSE ---
     MoveList moveList;
     MoveGen::GenerateAllMoves(board, moveList); 
     int nMoves = moveList.count;
     int legalMovesCount = 0; 
 
-    // --- ORDERING WITH TT-MOVE ---
     struct ScoredMove {
         Move move;
         int score;
     };
-
     ScoredMove scoredMoves[256];
     for (int i = 0; i < nMoves; i++) {
         scoredMoves[i].move = moveList.moves[i];
         scoredMoves[i].score = ScoreMove(board, moveList.moves[i], ttMove, ply);
     }
 
-    Move bestMoveInThisPosition = 0;
-    int originalAlpha = alpha; 
-    int us = ColorInt(board.GetSideToMove());
-
+    // --- 4. CICLO PRINCIPALE DELLE MOSSE (PVS + LMR) ---
     for (int i = 0; i < nMoves; i++) {
-        /* ********** ON DEMAND SELECTION SORT ******************************************/
+        
+        // On-Demand Selection Sort
         int bestIndex = i;
         for (int j = i + 1; j < nMoves; j++) {
             if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
         }
         if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
-        /********************************************************************************/
         
         Move move = scoredMoves[i].move;
         int flags = getMoveFlags(move);
@@ -58,32 +87,59 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         
         if (board.MakeMove(move)) {
             legalMovesCount++; 
-            
             evaluator->OnMakeMove(board, move);
-            int currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1); 
+
+            int currentScore;
+            
+            if (legalMovesCount == 1) {
+                // A. Principal Variation: Prima mossa testata a finestra completa
+                currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+            } else {
+                // B. Late Move Reductions (LMR)
+                bool canReduce = isQuiet && !inCheck && depth >= 3 && legalMovesCount >= 4;
+                bool needsFullSearch = true;
+
+                if (canReduce) {
+                    int R = (legalMovesCount > 6 && depth > 3) ? 2 : 1; 
+                    currentScore = -AlphaBeta(board, depth - 1 - R, -alpha - 1, -alpha, ply + 1);
+                    if (currentScore <= alpha) {
+                        needsFullSearch = false; // LMR convalidata, salta il resto
+                    }
+                }
+
+                // C. Principal Variation Search (PVS)
+                if (needsFullSearch) {
+                    // Zero-Window Search a profondità piena
+                    currentScore = -AlphaBeta(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+                    
+                    // Re-Search (Finestra Completa) se la mossa ha superato le aspettative
+                    if (currentScore > alpha && currentScore < beta) {
+                        currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+                    }
+                }
+            }
+
             evaluator->OnUnmakeMove();
             board.UnmakeMove(move);
             
+            // --- 5. BETA CUTOFF (Fail-High) ---
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
                 if (legalMovesCount == 1) stats.firstMoveCutoffs++;
                 
                 if (isQuiet) {
-                    // 1. Aggiorna le Killer Moves
+                    // Killer Moves
                     if (ply < MAX_PLY) {
                         if (move != killerMoves[ply][0]) {
                             killerMoves[ply][1] = killerMoves[ply][0];
                             killerMoves[ply][0] = move;               
                         }
                     }
-
-                    // 2. HISTORY HEURISTIC: BONUS
+                    // History Heuristic (Bonus e Normalizzazione)
                     int from = getMoveFrom(move);
                     int to = getMoveTo(move);
-                    historyTable[us][from][to] += (depth * depth);
-
-                    // Normalizzazione per evitare overflow e appiattimento dei punteggi
-                    if (historyTable[us][from][to] > 10000) {
+                    historyTable[ColorInt(us)][from][to] += (depth * depth);
+                    if (historyTable[ColorInt(us)][from][to] > 10000) {
                         for (int c = 0; c < 2; c++) {
                             for (int f = 0; f < 64; f++) {
                                 for (int t = 0; t < 64; t++) {
@@ -94,48 +150,39 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                     }
                 }
 
-                // --- RECORD BETA CUTOFF ---
+                if (bestMoveInThisPosition == 0) bestMoveInThisPosition = move;
                 tt.Record(hashKey, move, depth, beta, BETA);
                 return beta; 
             }
             
+            // --- 6. AGGIORNAMENTO ALPHA (PV Node) e PENALITÀ HISTORY ---
             if (currentScore > alpha) {
                 alpha = currentScore; 
                 bestMoveInThisPosition = move;
             } else {
-                // HISTORY HEURISTIC: PENALITÀ
-                // Se la mossa silenziosa è stata cercata ma non ha migliorato alpha, perde punti
+                // Penalizza le mosse silenziose esplorate che hanno fallito in basso
                 if (isQuiet) {
                     int from = getMoveFrom(move);
                     int to = getMoveTo(move);
-                    historyTable[us][from][to] -= depth;
-                    if (historyTable[us][from][to] < 0) {
-                        historyTable[us][from][to] = 0;
-                    }
+                    historyTable[ColorInt(us)][from][to] -= depth;
+                    if (historyTable[ColorInt(us)][from][to] < 0) historyTable[ColorInt(us)][from][to] = 0;
                 }
             }
         }
     }
     
+    // --- 7. VERIFICA MATTO / STALLO ---
     if (legalMovesCount == 0) {
-        Color myColor = board.GetSideToMove();
-        Color them = !myColor;
-        
-        uint64_t myKingBB = board.GetBitBoard(myColor, PieceType::KING);
-        if (myKingBB == 0ULL) return 0; // Fallback
-
-        uint64_t myKing = __builtin_ctzll(myKingBB);
-
-        if (board.IsSquareAttacked(myKing, them)) {
-            return -(999999 - depth); // Checkmate
+        if (inCheck) {
+            return -(999999 - ply); // Valuta la profondità del matto
         } else {
-            return 0; // Stalemate
+            return 0; // Stallo
         }
     }
 
-    // --- 2. RECORD TT ENTRY (EXACT o ALPHA) ---
+    // --- 8. SALVATAGGIO TRANSPOSITION TABLE ---
     if (bestMoveInThisPosition == 0) {
-        bestMoveInThisPosition = ttMove;
+        bestMoveInThisPosition = ttMove; // Evita di corrompere la TT
     }
     
     TTFlag flag = (alpha <= originalAlpha) ? ALPHA : EXACT;
@@ -143,7 +190,6 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
 
     return alpha;
 }
-
 int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     if (timeIsUp) return 0;
     CheckTime();
@@ -297,48 +343,43 @@ Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, Inf
 }
 
 int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
-    if (move == ttMove) return 2000000; // Priorità Assoluta alla Transposition Table
+    if (move == ttMove) return 2000000; // Massima priorità alla mossa della TT
 
     int score = 0;
     int flags = getMoveFlags(move);
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
 
-    // --- Catture (MVV - LVA) ---
+    // 1. Catture (MVV-LVA)
     if (flags == FlagMap::CAPTURE || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::ENPASS) {
         PieceType attacker = board.GetPieceOnSquare(from);
         PieceType victim = (flags == FlagMap::ENPASS) ? PieceType::PAWN : board.GetPieceOnSquare(to);
-        
         if (attacker != PieceType::NONE && victim != PieceType::NONE) {
-            // Partiamo da 1.000.000 per garantire che siano valutate prima delle mosse silenziose
             score = 1000000 + (LookupTables::pieceValues[PieceInt(victim)] * 10) - LookupTables::pieceValues[PieceInt(attacker)];
         }
     } 
-    // --- Promotions (not captures) ---
+    // 2. Promozioni Silenziose
     else if (flags == FlagMap::PRQUEEN) {
         score = 900000; 
     } 
     else if (flags == FlagMap::PRROOK || flags == FlagMap::PRBISHOP || flags == FlagMap::PRKNIGHT) {
         score = 800000;
     }
-    // --- Normal moves (Quiet) ---
+    // 3. Mosse Silenziose
     else {
         if (ply < MAX_PLY && move == killerMoves[ply][0]) {
-            score = 50000; // Killer move primaria
+            score = 50000; 
         } 
         else if (ply < MAX_PLY && move == killerMoves[ply][1]) {
-            score = 40000; // Killer move secondaria
+            score = 40000; 
         } 
         else if (flags == FlagMap::CASTLING) {
             score = 30000; 
         } 
         else {
-            // NUOVO: Lettura History
             int us = ColorInt(board.GetSideToMove());
             score = historyTable[us][from][to];
-            
-            // Cappiamo a 20.000 per assicurarci che non superino MAI le killer/castling/captures
-            if (score > 20000) score = 20000;     
+            if (score > 20000) score = 20000; // Limite superiore per la History
         }
     }
 

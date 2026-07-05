@@ -190,6 +190,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
 
     return alpha;
 }
+
 int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     if (timeIsUp) return 0;
     CheckTime();
@@ -206,6 +207,13 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
         return beta;
     }
     if (alpha < stand_pat) alpha = stand_pat;
+
+    /********** DELTA PRUNING ***************/
+    const int DELTA_MARGIN = 90000 + 2000; 
+    if (stand_pat + DELTA_MARGIN < alpha) {
+        return alpha;
+    }
+    /****************************************/
 
     MoveList moveList;
     MoveGen::GenerateCaptureMoves(board, moveList);
@@ -232,25 +240,17 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
         /********************************************************************************/
         
         Move move = scoredMoves[i].move;
-        int flag = getMoveFlags(move);
-        
-        if (flag == FlagMap::CAPTURE || flag == FlagMap::ENPASS || 
-            flag == FlagMap::PRCAPQUEEN || flag == FlagMap::PRCAPROOK || 
-            flag == FlagMap::PRCAPBISHOP || flag == FlagMap::PRCAPKNIGHT) {
+                   
+        if (board.MakeMove(move)) {
+            evaluator->OnMakeMove(board, move);
+
+            int score = -QuiescenceSearch(board, -beta, -alpha, ply);
             
-            if (board.MakeMove(move)) {
-                evaluator->OnMakeMove(board, move);
+            evaluator->OnUnmakeMove();
+            board.UnmakeMove(move);
 
-                int score = -QuiescenceSearch(board, -beta, -alpha, ply);
-                
-                evaluator->OnUnmakeMove();
-                board.UnmakeMove(move);
-
-                if (score >= beta){
-                    return beta;
-                }
-                if (score > alpha) alpha = score;
-            }
+            if (score >= beta) return beta;
+            if (score > alpha) alpha = score;
         }
     }
     return alpha;

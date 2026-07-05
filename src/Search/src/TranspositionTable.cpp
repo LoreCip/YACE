@@ -4,7 +4,7 @@
 bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int& score, Move& bestMove) {
     if (!active) return false;
 
-    size_t index = key % numEntries;
+    size_t index = key & (numEntries - 1);
     TTEntry& entry = table[index];
     if (entry.key == key) {
         bestMove = entry.bestMove;
@@ -31,16 +31,15 @@ bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int
 
 void TranspositionTable::Record(uint64_t key, Move bestMove, int depth, int score, TTFlag flag) {
     if (!active) return;
-    size_t index = key % numEntries; // (Ricordati di ottimizzare questo modulo in futuro!)
+    size_t index = key & (numEntries - 1);
     
     int scoreToSave = score;
     if (score > MATE_SCORE)  scoreToSave += depth;
     if (score < -MATE_SCORE) scoreToSave -= depth;
 
-    if (bestMove == 0 && table[index].key == key) {
-        bestMove = table[index].bestMove;
-    }
+    if (bestMove == 0 && table[index].key == key) bestMove = table[index].bestMove;
 
+    if (table[index].key == 0) occupiedEntries++;
     if (table[index].key == 0 || table[index].depth <= depth) {
         table[index] = { key, bestMove, depth, scoreToSave, flag };
     }
@@ -48,22 +47,13 @@ void TranspositionTable::Record(uint64_t key, Move bestMove, int depth, int scor
 
 
 double TranspositionTable::GetFullnessPercentage() {
-    if (numEntries == 0) return 0.0;
-
-    long long occupiedEntries = 0;
-    
-    for (size_t i = 0; i < numEntries; i++) {
-        if (table[i].key != 0ULL) {
-            occupiedEntries++;
-        }
-    }
-    
+    if (numEntries == 0) return 0.0;  
     return (static_cast<double>(occupiedEntries) / numEntries) * 100.0;
 }
 
 
 Move TranspositionTable::GetStoredMove(uint64_t key) {
-    size_t index = key % numEntries;
+    size_t index = key & (numEntries - 1);
     if (table[index].key == key) {
         return table[index].bestMove;
     }

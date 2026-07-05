@@ -8,7 +8,7 @@ TARGET_FEN  = build/main_fen
 TARGET_NNUE = build/main_nnue
 
 # Compilatore, inclusioni e flag unificati
-CXX      = g++ -D_DEBUG
+CXX      = g++
 INCLUDES = -Isrc/Core/include \
            -Isrc/Evaluation/include \
            -Isrc/Evaluation/include/NNUE \
@@ -16,6 +16,9 @@ INCLUDES = -Isrc/Core/include \
 
 CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -fopenmp -flto $(INCLUDES)
 LDFLAGS  = -lcblas -lblas
+
+profile: CXXFLAGS += -g -fno-omit-frame-pointer
+profile: all
 
 # Cartelle sorgenti radice
 APP_SRC_DIR       = src/App

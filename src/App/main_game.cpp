@@ -68,7 +68,6 @@ int main(int argc, char** argv) {
     }
 
     auto engine = std::make_unique<Engine>(*tt, activeEvaluator);
-    bool enableLogging = true;
     
     auto handlePositionLoaded = [&]() {
         if (activeEvaluator) activeEvaluator->Reset(*board);

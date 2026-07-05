@@ -482,9 +482,69 @@ info string MoveOrder: 87.8% | TTHits: 753391 | QNodes: 11301436
 bestmove e4e5
 
 # on demand selection sort in AlphaBeta and Quiescence + GetPieceOnSquare + Efficient summary bitboard update + Incremental Zobrist + GenerateCaptureMoves in Quiescence + HCE + TTFix + GenerateCaptureMoves Quiescence + Null Pruning + Principal variation search + Late Move reduction + Profiling + Delta Pruning
-...
+move e2e4
+go
+info depth 1 seldepth 1 score cp 75 time 0 nodes 42 nps 1355844 hashfull 0 pv g8f6
+info string MoveOrder: 0.0% | TTHits: 0 | QNodes: 22
+info depth 2 seldepth 2 score cp 25 time 0.0 nodes 192 nps 832462 hashfull 0 pv g8f6
+info string MoveOrder: 78.9% | TTHits: 0 | QNodes: 94
+info depth 3 seldepth 3 score cp 75 time 0.0 nodes 1253 nps 2051898 hashfull 0 pv g8f6
+info string MoveOrder: 85.1% | TTHits: 0 | QNodes: 602
+info depth 4 seldepth 4 score cp 25 time 1.0 nodes 2448 nps 2010025 hashfull 0 pv g8f6
+info string MoveOrder: 89.0% | TTHits: 29 | QNodes: 1207
+info depth 5 seldepth 5 score cp 25 time 3.0 nodes 20427 nps 5669264 hashfull 0 pv g8f6
+info string MoveOrder: 83.5% | TTHits: 241 | QNodes: 9982
+info depth 6 seldepth 6 score cp 5 time 4.0 nodes 27461 nps 6097881 hashfull 0 pv g8f6
+info string MoveOrder: 83.2% | TTHits: 313 | QNodes: 13586
+info depth 7 seldepth 7 score cp 5 time 7.0 nodes 57923 nps 7671689 hashfull 0 pv g8f6
+info string MoveOrder: 83.8% | TTHits: 778 | QNodes: 28563
+info depth 8 seldepth 8 score cp 0 time 11.0 nodes 88471 nps 7867639 hashfull 0 pv g8f6
+info string MoveOrder: 85.2% | TTHits: 1358 | QNodes: 44346
+info depth 9 seldepth 9 score cp 25 time 19.0 nodes 165920 nps 8413976 hashfull 0 pv b8a6
+info string MoveOrder: 83.8% | TTHits: 3182 | QNodes: 84218
+info depth 10 seldepth 10 score cp 15 time 34.0 nodes 308789 nps 8877621 hashfull 0 pv g8f6
+info string MoveOrder: 83.5% | TTHits: 7699 | QNodes: 157140
+info depth 11 seldepth 11 score cp 10 time 65.0 nodes 603850 nps 9180798 hashfull 0 pv g8f6
+info string MoveOrder: 82.6% | TTHits: 13220 | QNodes: 310078
+info depth 12 seldepth 12 score cp 5 time 123.0 nodes 1105213 nps 8961741 hashfull 0 pv g8f6
+info string MoveOrder: 84.3% | TTHits: 25392 | QNodes: 575456
+info depth 13 seldepth 13 score cp 5 time 228.0 nodes 2141464 nps 9367749 hashfull 0 pv g8f6
+info string MoveOrder: 83.9% | TTHits: 54530 | QNodes: 1103866
+info depth 14 seldepth 14 score cp 5 time 533.0 nodes 4879570 nps 9143099 hashfull 0 pv g8f6
+info string MoveOrder: 85.0% | TTHits: 120698 | QNodes: 2575478
+bestmove g8f6
+move b1c3
+go
+info depth 1 seldepth 1 score cp 75 time 0.0 nodes 56 nps 1779585 hashfull 241 pv b8c6
+info string MoveOrder: 0.0% | TTHits: 0 | QNodes: 34
+info depth 2 seldepth 2 score cp 25 time 0.0 nodes 144 nps 1089077 hashfull 241 pv b8c6
+info string MoveOrder: 0.0% | TTHits: 21 | QNodes: 68
+info depth 3 seldepth 3 score cp 25 time 0.0 nodes 325 nps 1089036 hashfull 241 pv b8c6
+info string MoveOrder: 100.0% | TTHits: 42 | QNodes: 139
+info depth 4 seldepth 4 score cp 5 time 0.0 nodes 693 nps 1286363 hashfull 241 pv b8c6
+info string MoveOrder: 100.0% | TTHits: 88 | QNodes: 306
+info depth 5 seldepth 5 score cp 15 time 0.0 nodes 1313 nps 1644508 hashfull 241 pv b8c6
+info string MoveOrder: 98.0% | TTHits: 145 | QNodes: 598
+info depth 6 seldepth 6 score cp 15 time 1.0 nodes 3704 nps 2594219 hashfull 241 pv b8c6
+info string MoveOrder: 94.7% | TTHits: 226 | QNodes: 1765
+info depth 7 seldepth 7 score cp 10 time 2.0 nodes 5899 nps 2331791 hashfull 241 pv b8c6
+info string MoveOrder: 93.6% | TTHits: 443 | QNodes: 3035
+info depth 8 seldepth 8 score cp 5 time 3.0 nodes 10481 nps 2665355 hashfull 241 pv b8c6
+info string MoveOrder: 94.8% | TTHits: 722 | QNodes: 5166
+info depth 9 seldepth 9 score cp 10 time 9.0 nodes 25309 nps 2626457 hashfull 241 pv b8c6
+info string MoveOrder: 95.1% | TTHits: 1200 | QNodes: 13407
+info depth 10 seldepth 10 score cp 5 time 11.0 nodes 40861 nps 3663836 hashfull 241 pv b8c6
+info string MoveOrder: 95.9% | TTHits: 2283 | QNodes: 20795
+info depth 11 seldepth 11 score cp 5 time 13.0 nodes 61137 nps 4544816 hashfull 241 pv b8c6
+info string MoveOrder: 96.2% | TTHits: 4122 | QNodes: 30322
+info depth 12 seldepth 12 score cp 0 time 46.0 nodes 326764 nps 7100389 hashfull 241 pv d7d5
+info string MoveOrder: 88.8% | TTHits: 14932 | QNodes: 169974
+info depth 13 seldepth 13 score cp 0 time 129.0 nodes 1063649 nps 8183221 hashfull 241 pv d7d5
+info string MoveOrder: 84.3% | TTHits: 34813 | QNodes: 575254
+info depth 14 seldepth 14 score cp 10 time 788.0 nodes 6748269 nps 8559286 hashfull 241 pv b8c6
+info string MoveOrder: 86.7% | TTHits: 153188 | QNodes: 3755987
+bestmove b8c6
 ==================================================================
-fen rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4
 fen rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4
 go depth 15 movetime -1
 info depth 1 seldepth 1 score cp 5 time 0 nodes 159 nps 1302189 hashfull 0 pv d1d3
@@ -516,5 +576,103 @@ info string MoveOrder: 87.7% | TTHits: 217059 | QNodes: 3104923
 info depth 14 seldepth 14 score cp 5 time 1283.0 nodes 10807279 nps 8417928 hashfull 0 pv e4e5
 info string MoveOrder: 87.9% | TTHits: 433113 | QNodes: 5906123
 info depth 15 seldepth 15 score cp 10 time 2374.0 nodes 20808740 nps 8762183 hashfull 0 pv e4e5
+info string MoveOrder: 87.8% | TTHits: 753391 | QNodes: 11240109
+bestmove e4e5
+
+# on demand selection sort in AlphaBeta and Quiescence + GetPieceOnSquare + Efficient summary bitboard update + Incremental Zobrist + GenerateCaptureMoves in Quiescence + HCE + TTFix + GenerateCaptureMoves Quiescence + Null Pruning + Principal variation search + Late Move reduction + Profiling + Delta Pruning + Magic bitboards
+move e2e4
+go
+info depth 1 seldepth 1 score cp 75 time 0 nodes 42 nps 4952246 hashfull 0 pv g8f6
+info string MoveOrder: 0.0% | TTHits: 0 | QNodes: 22
+info depth 2 seldepth 2 score cp 25 time 0.0 nodes 192 nps 2738475 hashfull 0 pv g8f6
+info string MoveOrder: 78.9% | TTHits: 0 | QNodes: 94
+info depth 3 seldepth 3 score cp 75 time 0.0 nodes 1253 nps 7609019 hashfull 0 pv g8f6
+info string MoveOrder: 85.1% | TTHits: 0 | QNodes: 602
+info depth 4 seldepth 4 score cp 25 time 0.0 nodes 2448 nps 7404673 hashfull 0 pv g8f6
+info string MoveOrder: 89.0% | TTHits: 29 | QNodes: 1207
+info depth 5 seldepth 5 score cp 25 time 1.0 nodes 20427 nps 11137700 hashfull 0 pv g8f6
+info string MoveOrder: 83.5% | TTHits: 241 | QNodes: 9982
+info depth 6 seldepth 6 score cp 5 time 2.0 nodes 27461 nps 10562800 hashfull 0 pv g8f6
+info string MoveOrder: 83.2% | TTHits: 313 | QNodes: 13586
+info depth 7 seldepth 7 score cp 5 time 5.0 nodes 57923 nps 11283660 hashfull 0 pv g8f6
+info string MoveOrder: 83.8% | TTHits: 778 | QNodes: 28563
+info depth 8 seldepth 8 score cp 0 time 8.0 nodes 88471 nps 10614198 hashfull 0 pv g8f6
+info string MoveOrder: 85.2% | TTHits: 1358 | QNodes: 44346
+info depth 9 seldepth 9 score cp 25 time 15.0 nodes 165920 nps 10833678 hashfull 0 pv b8a6
+info string MoveOrder: 83.8% | TTHits: 3182 | QNodes: 84218
+info depth 10 seldepth 10 score cp 15 time 28.0 nodes 308789 nps 10964076 hashfull 0 pv g8f6
+info string MoveOrder: 83.5% | TTHits: 7699 | QNodes: 157140
+info depth 11 seldepth 11 score cp 10 time 54.0 nodes 603850 nps 11053263 hashfull 0 pv g8f6
+info string MoveOrder: 82.6% | TTHits: 13220 | QNodes: 310078
+info depth 12 seldepth 12 score cp 5 time 103.0 nodes 1105213 nps 10638788 hashfull 0 pv g8f6
+info string MoveOrder: 84.3% | TTHits: 25392 | QNodes: 575456
+info depth 13 seldepth 13 score cp 5 time 195.0 nodes 2141464 nps 10979534 hashfull 0 pv g8f6
+info string MoveOrder: 83.9% | TTHits: 54530 | QNodes: 1103866
+info depth 14 seldepth 14 score cp 5 time 452.0 nodes 4879570 nps 10786765 hashfull 0 pv g8f6
+info string MoveOrder: 85.0% | TTHits: 120698 | QNodes: 2575478
+bestmove g8f6
+move b1c3
+go
+info depth 1 seldepth 1 score cp 75 time 0.0 nodes 56 nps 4856052 hashfull 282 pv b8c6
+info string MoveOrder: 0.0% | TTHits: 0 | QNodes: 34
+info depth 2 seldepth 2 score cp 25 time 0.0 nodes 144 nps 2594968 hashfull 282 pv b8c6
+info string MoveOrder: 0.0% | TTHits: 21 | QNodes: 68
+info depth 3 seldepth 3 score cp 25 time 0.0 nodes 325 nps 3009370 hashfull 282 pv b8c6
+info string MoveOrder: 100.0% | TTHits: 42 | QNodes: 139
+info depth 4 seldepth 4 score cp 5 time 0.0 nodes 693 nps 4102558 hashfull 282 pv b8c6
+info string MoveOrder: 100.0% | TTHits: 88 | QNodes: 306
+info depth 5 seldepth 5 score cp 15 time 0.0 nodes 1311 nps 5248177 hashfull 282 pv b8c6
+info string MoveOrder: 97.0% | TTHits: 144 | QNodes: 595
+info depth 6 seldepth 6 score cp 15 time 0.0 nodes 3643 nps 8314162 hashfull 282 pv b8c6
+info string MoveOrder: 93.4% | TTHits: 223 | QNodes: 1736
+info depth 7 seldepth 7 score cp 10 time 0.0 nodes 5487 nps 8239938 hashfull 282 pv b8c6
+info string MoveOrder: 94.3% | TTHits: 435 | QNodes: 2728
+info depth 8 seldepth 8 score cp 5 time 1.0 nodes 10191 nps 9702775 hashfull 282 pv b8c6
+info string MoveOrder: 95.1% | TTHits: 711 | QNodes: 4918
+info depth 9 seldepth 9 score cp 10 time 3.0 nodes 29362 nps 8789594 hashfull 282 pv b8c6
+info string MoveOrder: 94.1% | TTHits: 1228 | QNodes: 15846
+info depth 10 seldepth 10 score cp 5 time 4.0 nodes 44984 nps 9793900 hashfull 282 pv b8c6
+info string MoveOrder: 94.9% | TTHits: 2299 | QNodes: 23291
+info depth 11 seldepth 11 score cp 5 time 6.0 nodes 65661 nps 9941979 hashfull 282 pv b8c6
+info string MoveOrder: 95.2% | TTHits: 4078 | QNodes: 33088
+info depth 12 seldepth 12 score cp 0 time 27.0 nodes 263658 nps 9495615 hashfull 282 pv d7d5
+info string MoveOrder: 89.2% | TTHits: 11872 | QNodes: 139556
+info depth 13 seldepth 13 score cp 0 time 57.0 nodes 594003 nps 10379150 hashfull 282 pv d7d5
+info string MoveOrder: 87.4% | TTHits: 22877 | QNodes: 309046
+info depth 14 seldepth 14 score cp 10 time 628.0 nodes 6511337 nps 10363055 hashfull 282 pv b8c6
+info string MoveOrder: 87.2% | TTHits: 144314 | QNodes: 3618027
+bestmove b8c6
+==================================================================
+fen rnbqkb1r/ppp2ppp/4pn2/3p4/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 2 4
+go depth 15 movetime -1
+info depth 1 seldepth 1 score cp 5 time 0 nodes 159 nps 5534862 hashfull 0 pv d1d3
+info string MoveOrder: 0.0% | TTHits: 0 | QNodes: 120
+info depth 2 seldepth 2 score cp -5 time 0.0 nodes 1104 nps 5487786 hashfull 0 pv e4e5
+info string MoveOrder: 97.2% | TTHits: 0 | QNodes: 883
+info depth 3 seldepth 3 score cp 25 time 0.0 nodes 4549 nps 10184571 hashfull 0 pv e4d5
+info string MoveOrder: 97.0% | TTHits: 0 | QNodes: 2655
+info depth 4 seldepth 4 score cp -5 time 1.0 nodes 11215 nps 8385335 hashfull 0 pv e4e5
+info string MoveOrder: 83.7% | TTHits: 153 | QNodes: 6894
+info depth 5 seldepth 5 score cp 35 time 1.0 nodes 17626 nps 9597922 hashfull 0 pv e4e5
+info string MoveOrder: 85.1% | TTHits: 550 | QNodes: 10147
+info depth 6 seldepth 6 score cp -15 time 5.0 nodes 48985 nps 8996173 hashfull 0 pv e4e5
+info string MoveOrder: 86.9% | TTHits: 1237 | QNodes: 29148
+info depth 7 seldepth 7 score cp 5 time 10.0 nodes 120952 nps 11533083 hashfull 0 pv e4e5
+info string MoveOrder: 88.4% | TTHits: 3309 | QNodes: 65603
+info depth 8 seldepth 8 score cp -5 time 19.0 nodes 204364 nps 10426346 hashfull 0 pv e4e5
+info string MoveOrder: 88.6% | TTHits: 6328 | QNodes: 113993
+info depth 9 seldepth 9 score cp 5 time 35.0 nodes 422854 nps 11877604 hashfull 0 pv e4e5
+info string MoveOrder: 87.3% | TTHits: 12981 | QNodes: 225384
+info depth 10 seldepth 10 score cp -5 time 76.0 nodes 807274 nps 10611714 hashfull 0 pv e4e5
+info string MoveOrder: 86.8% | TTHits: 29237 | QNodes: 441852
+info depth 11 seldepth 11 score cp 5 time 140.0 nodes 1598318 nps 11369438 hashfull 0 pv e4e5
+info string MoveOrder: 87.7% | TTHits: 61385 | QNodes: 851876
+info depth 12 seldepth 12 score cp 5 time 275.0 nodes 2908641 nps 10546695 hashfull 0 pv e4e5
+info string MoveOrder: 87.3% | TTHits: 119112 | QNodes: 1586151
+info depth 13 seldepth 13 score cp 10 time 523.0 nodes 5767475 nps 11007808 hashfull 0 pv e4e5
+info string MoveOrder: 87.7% | TTHits: 217059 | QNodes: 3104923
+info depth 14 seldepth 14 score cp 5 time 1043.0 nodes 10807279 nps 10357044 hashfull 0 pv e4e5
+info string MoveOrder: 87.9% | TTHits: 433113 | QNodes: 5906123
+info depth 15 seldepth 15 score cp 10 time 1932.0 nodes 20808740 nps 10769656 hashfull 0 pv e4e5
 info string MoveOrder: 87.8% | TTHits: 753391 | QNodes: 11240109
 bestmove e4e5

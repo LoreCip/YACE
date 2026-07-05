@@ -205,8 +205,8 @@
         // --- 6. Move Pieces ---
         PieceType promoPiece = getMovePromotionPiece(flags);
         if (promoPiece != PieceType::NONE) {
-            RemovePiece(us, pieceType, from); // Rimuovi il pedone dalla casa di partenza
-            AddPiece(us, promoPiece, to);     // Aggiungi il nuovo pezzo promosso all'arrivo
+            RemovePiece(us, pieceType, from);
+            AddPiece(us, promoPiece, to);    
         } else {
             MovePiece(us, pieceType, from, to); // Mossa normale
         }
@@ -226,7 +226,7 @@
         sideToMove = them;
 
         if (isCastle && (IsSquareAttacked(from, them) || IsSquareAttacked(intermediateSquare, them))) {
-            UnmakeMove(move);   // ora sicuro: sia re che torre sono stati mossi
+            UnmakeMove(move);
             return false;
         }
 
@@ -242,36 +242,22 @@
     bool Board::IsSquareAttacked(int square, Color attackingColor) const {
         Color us = !attackingColor;
         
-        // 1. Pawns
         uint64_t pawnTriggers = LookupTables::pawnAttacks[ColorInt(us)][square];
         if (pawnTriggers & GetBitBoard(attackingColor, PieceType::PAWN)) return true;
 
-        // 2. Kinghts and King
         uint64_t knightTriggers = LookupTables::knightAttacks[square];
         if (knightTriggers & GetBitBoard(attackingColor, PieceType::KNIGHT)) return true;
 
         uint64_t kingTriggers = LookupTables::kingAttacks[square];
         if (kingTriggers & GetBitBoard(attackingColor, PieceType::KING)) return true;
 
-        // 3. Bishops and Queen
-        uint64_t bishopTriggers = (uint64_t)0;
-        bishopTriggers |= MoveGen::ComputeRay(9, LookupTables::notColumnH, square, totalOccupation);
-        bishopTriggers |= MoveGen::ComputeRay(7, LookupTables::notColumnA, square, totalOccupation);
-        bishopTriggers |= MoveGen::ComputeRay(-9, LookupTables::notColumnA, square, totalOccupation);
-        bishopTriggers |= MoveGen::ComputeRay(-7, LookupTables::notColumnH, square, totalOccupation);
-        
-        uint64_t diagonalThreaths = GetBitBoard(attackingColor, PieceType::BISHOP) | GetBitBoard(attackingColor, PieceType::QUEEN);
-        if (bishopTriggers & diagonalThreaths) return true;
+        uint64_t bishopTriggers = LookupTables::GetBishopAttacks(square, totalOccupation);
+        uint64_t diagonalThreats = GetBitBoard(attackingColor, PieceType::BISHOP) | GetBitBoard(attackingColor, PieceType::QUEEN);
+        if (bishopTriggers & diagonalThreats) return true;
 
-        // 4. Rooks and Queen
-        uint64_t rookTriggers = (uint64_t)0;
-        rookTriggers |= MoveGen::ComputeRay(8, ~0ULL, square, totalOccupation);
-        rookTriggers |= MoveGen::ComputeRay(1, LookupTables::notColumnH, square, totalOccupation);
-        rookTriggers |= MoveGen::ComputeRay(-8, ~0ULL, square, totalOccupation);
-        rookTriggers |= MoveGen::ComputeRay(-1, LookupTables::notColumnA, square, totalOccupation);
-
-        uint64_t orthogonalThreaths = GetBitBoard(attackingColor, PieceType::ROOK) | GetBitBoard(attackingColor, PieceType::QUEEN);
-        if (rookTriggers & orthogonalThreaths) return true;
+        uint64_t rookTriggers = LookupTables::GetRookAttacks(square, totalOccupation);
+        uint64_t orthogonalThreats = GetBitBoard(attackingColor, PieceType::ROOK) | GetBitBoard(attackingColor, PieceType::QUEEN);
+        if (rookTriggers & orthogonalThreats) return true;
 
         return false;
     }
@@ -305,17 +291,12 @@
         if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
 
         // --- 6. Restore Pieces ---
-        // BUG FIX 1: Gestire la de-promozione PRIMA di spostare il pezzo indietro.
         PieceType promoPiece = getMovePromotionPiece(flags);
         if (promoPiece != PieceType::NONE) {
-            // Se era una promozione, la casa 'to' contiene la Regina/Cavallo. La rimuoviamo.
             RemovePiece(us, promoPiece, to);
-            // E ci rimettiamo il Pedone.
             AddPiece(us, PieceType::PAWN, to);
-            // ORA spostiamo il pedone da 'to' a 'from'
             MovePiece(us, PieceType::PAWN, to, from);
         } else {
-            // Mossa normale, spostiamo semplicemente il pezzo indietro
             MovePiece(us, lastState.movedPiece, to, from);
         }
 
@@ -326,7 +307,6 @@
 
         // 7. Castling
         if (lastState.movedPiece == PieceType::KING && std::abs(from - to) == 2) {
-            // In UnmakeMove, dobbiamo muovere la torre dalle case finali a quelle iniziali (l'inverso di MakeMove)
             if (to == 6)  MovePiece(us, PieceType::ROOK, 5, 7);
             else if (to == 2)  MovePiece(us, PieceType::ROOK, 3, 0);
             else if (to == 62) MovePiece(us, PieceType::ROOK, 61, 63);

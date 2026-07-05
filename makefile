@@ -10,6 +10,7 @@ TARGET_NNUE = build/main_nnue
 # Compilatore, inclusioni e flag unificati
 CXX      = g++
 INCLUDES = -Isrc/Core/include \
+		   -Isrc/Core/LookupTables/include \
            -Isrc/Evaluation/include \
            -Isrc/Evaluation/include/NNUE \
            -Isrc/Search/include
@@ -17,12 +18,10 @@ INCLUDES = -Isrc/Core/include \
 CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -fopenmp -flto $(INCLUDES)
 LDFLAGS  = -lcblas -lblas
 
-profile: CXXFLAGS += -g -fno-omit-frame-pointer
-profile: all
-
 # Cartelle sorgenti radice
 APP_SRC_DIR       = src/App
 CORE_SRC_DIR      = src/Core/src
+LOOK_SRC_DIR      = src/Core/LookupTables/src
 EVAL_SRC_DIR      = src/Evaluation/src
 EVAL_NNUE_SRC_DIR = src/Evaluation/src/NNUE
 SEARCH_SRC_DIR    = src/Search/src
@@ -31,6 +30,7 @@ SEARCH_SRC_DIR    = src/Search/src
 OBJ_DIR           = build/objects
 OBJ_APP_DIR       = $(OBJ_DIR)/App
 OBJ_CORE_DIR      = $(OBJ_DIR)/Core
+OBJ_LOOK_DIR      = $(OBJ_CORE_DIR)/LookupTables
 OBJ_EVAL_DIR      = $(OBJ_DIR)/Evaluation
 OBJ_EVAL_NNUE_DIR = $(OBJ_DIR)/Evaluation/NNUE
 OBJ_SEARCH_DIR    = $(OBJ_DIR)/Search
@@ -41,18 +41,20 @@ OBJ_SEARCH_DIR    = $(OBJ_DIR)/Search
 
 # Trova tutti i file sorgente (esclusi i main)
 CORE_SRCS      = $(wildcard $(CORE_SRC_DIR)/*.cpp)
+LOOK_SRCS      = $(wildcard $(LOOK_SRC_DIR)/*.cpp)
 EVAL_SRCS      = $(wildcard $(EVAL_SRC_DIR)/*.cpp)
 EVAL_NNUE_SRCS = $(wildcard $(EVAL_NNUE_SRC_DIR)/*.cpp)
 SEARCH_SRCS    = $(wildcard $(SEARCH_SRC_DIR)/*.cpp)
 
 # Crea i percorsi dei file oggetto corrispondenti
 CORE_OBJS      = $(CORE_SRCS:$(CORE_SRC_DIR)/%.cpp=$(OBJ_CORE_DIR)/%.o)
+LOOK_OBJS      = $(LOOK_SRCS:$(LOOK_SRC_DIR)/%.cpp=$(OBJ_LOOK_DIR)/%.o)
 EVAL_OBJS      = $(EVAL_SRCS:$(EVAL_SRC_DIR)/%.cpp=$(OBJ_EVAL_DIR)/%.o)
 EVAL_NNUE_OBJS = $(EVAL_NNUE_SRCS:$(EVAL_NNUE_SRC_DIR)/%.cpp=$(OBJ_EVAL_NNUE_DIR)/%.o)
 SEARCH_OBJS    = $(SEARCH_SRCS:$(SEARCH_SRC_DIR)/%.cpp=$(OBJ_SEARCH_DIR)/%.o)
 
 # Insieme globale di tutti gli oggetti Core/Libreria del motore
-ALL_CORE_OBJS  = $(CORE_OBJS) $(EVAL_OBJS) $(EVAL_NNUE_OBJS) $(SEARCH_OBJS)
+ALL_CORE_OBJS  = $(CORE_OBJS) $(LOOK_OBJS) $(EVAL_OBJS) $(EVAL_NNUE_OBJS) $(SEARCH_OBJS)
 
 # Oggetti specifici per i punti di ingresso (I vari Main)
 OBJ_MAIN_GAME  = $(OBJ_APP_DIR)/main_game.o
@@ -97,6 +99,12 @@ $(OBJ_APP_DIR)/%.o: $(APP_SRC_DIR)/%.cpp
 $(OBJ_CORE_DIR)/%.o: $(CORE_SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_CORE_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Compilazione Lookup
+$(OBJ_LOOK_DIR)/%.o: $(LOOK_SRC_DIR)/%.cpp
+	@mkdir -p $(OBJ_LOOK_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 
 # Compilazione Evaluation (Classica)
 $(OBJ_EVAL_DIR)/%.o: $(EVAL_SRC_DIR)/%.cpp

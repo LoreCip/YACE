@@ -89,18 +89,13 @@ namespace MoveGen {
             int from = __builtin_ctzll(bitboard);
             uint64_t attacks = 0ULL;
 
-            // Generazione dei raggi combinata
-            if (piece == PieceType::BISHOP || piece == PieceType::QUEEN) {
-                attacks |= ComputeRay(9, LookupTables::notColumnH, from, totalOcc);
-                attacks |= ComputeRay(7, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(-9, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(-7, LookupTables::notColumnH, from, totalOcc);
-            }
-            if (piece == PieceType::ROOK || piece == PieceType::QUEEN) {
-                attacks |= ComputeRay(-1, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(1, LookupTables::notColumnH, from, totalOcc);
-                attacks |= ComputeRay(8, LookupTables::nullEdge, from, totalOcc);
-                attacks |= ComputeRay(-8, LookupTables::nullEdge, from, totalOcc);
+            if (piece == PieceType::BISHOP) {
+                attacks = LookupTables::GetBishopAttacks(from, totalOcc);
+            } else if (piece == PieceType::ROOK) {
+                attacks = LookupTables::GetRookAttacks(from, totalOcc);
+            } else if (piece == PieceType::QUEEN) {
+                attacks = LookupTables::GetRookAttacks(from, totalOcc) | 
+                          LookupTables::GetBishopAttacks(from, totalOcc);
             }
 
             attacks &= (~allies);
@@ -180,7 +175,6 @@ namespace MoveGen {
         Color us = board.GetSideToMove();
         uint64_t enemies = board.GetColorOccupation(!us);
 
-        // Principi di Clean Code: Funzioni corte con singola responsabilità
         GenerateKnightCaptures(board, moveList, us, enemies);
         GenerateKingCaptures(board, moveList, us, enemies);
         GenerateSlidingCaptures(board, moveList, us, PieceType::BISHOP, enemies);
@@ -219,7 +213,6 @@ namespace MoveGen {
             moveList.push(createMove(from, to, FlagMap::CAPTURE));
             attacks = clearBit(attacks, to);
         }
-        // Nota: L'arroccamento è una mossa silenziosa, viene ignorato qui per design.
     }
 
     void GenerateSlidingCaptures(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t enemies) {
@@ -230,20 +223,15 @@ namespace MoveGen {
             int from = __builtin_ctzll(bitboard);
             uint64_t attacks = 0ULL;
 
-            if (piece == PieceType::BISHOP || piece == PieceType::QUEEN) {
-                attacks |= ComputeRay(9, LookupTables::notColumnH, from, totalOcc);
-                attacks |= ComputeRay(7, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(-9, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(-7, LookupTables::notColumnH, from, totalOcc);
-            }
-            if (piece == PieceType::ROOK || piece == PieceType::QUEEN) {
-                attacks |= ComputeRay(-1, LookupTables::notColumnA, from, totalOcc);
-                attacks |= ComputeRay(1, LookupTables::notColumnH, from, totalOcc);
-                attacks |= ComputeRay(8, LookupTables::nullEdge, from, totalOcc);
-                attacks |= ComputeRay(-8, LookupTables::nullEdge, from, totalOcc);
+            if (piece == PieceType::BISHOP) {
+                attacks = LookupTables::GetBishopAttacks(from, totalOcc);
+            } else if (piece == PieceType::ROOK) {
+                attacks = LookupTables::GetRookAttacks(from, totalOcc);
+            } else if (piece == PieceType::QUEEN) {
+                attacks = LookupTables::GetRookAttacks(from, totalOcc) | 
+                          LookupTables::GetBishopAttacks(from, totalOcc);
             }
 
-            // Applichiamo il filtro sulle mosse cattura
             attacks &= enemies;
 
             while (attacks != 0ULL) {
@@ -267,14 +255,12 @@ namespace MoveGen {
             int from = __builtin_ctzll(myPawns);
             int toSingle = from + direction;
             
-            // 1. Spinte Promozionali (Mosse tattiche non-cattura ammesse in Q-Search)
             if (setBit(0ULL, toSingle) & emptySquares) {
                 if (toSingle >= promoRankStart && toSingle <= promoRankEnd) {
                     moveList.push(createMove(from, toSingle, FlagMap::PRQUEEN));
                 }
             }
 
-            // 2. Catture Normali e Catture con Promozione
             uint64_t targets = LookupTables::pawnAttacks[ColorInt(us)][from] & enemies;
             while (targets != 0ULL) {
                 int toCapture = __builtin_ctzll(targets);
@@ -286,7 +272,6 @@ namespace MoveGen {
                 targets = clearBit(targets, toCapture);
             }
 
-            // 3. En Passant (È a tutti gli effetti una cattura)
             int epSquare = board.GetEnPassantSquare();
             if (epSquare != 64) {
                 uint64_t epBB = 1ULL << epSquare;
@@ -297,19 +282,4 @@ namespace MoveGen {
             myPawns = clearBit(myPawns, from);
         }
     }
-
-    uint64_t ComputeRay(int direction, uint64_t edge, int square, uint64_t totalOccupation) {
-        uint64_t allMoves = 0ULL;
-        uint64_t ray = 1ULL << square;
-        while (true) {
-            ray &= edge; 
-            if (ray == 0ULL) break;
-            ray = direction > 0 ? ray << direction : ray >> (-direction);
-            if (ray == 0ULL) break;
-            allMoves |= ray;
-            if (ray & totalOccupation) break;
-        }
-        return allMoves;
-    }
-
 } // namespace MoveGen

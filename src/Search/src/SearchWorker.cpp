@@ -1,24 +1,108 @@
-#include "Engine.hpp"
+#include "SearchWorker.hpp"
+#include "MoveGenerator.hpp"
 #include "LookupTables.hpp"
-#include "Types.hpp"
 #include <algorithm>
+#include <chrono>
 
-int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
-    if (timeIsUp) return 0;
-    CheckTime();
+void SearchWorker::Search(int maxDepth, InfoReporter callback) {
+    stats.ResetForNewMove();
+    ClearHistory();
+    bestRootMove = 0;
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    
+    MoveList moveList;
+    MoveGen::GenerateAllMoves(board, moveList);    
+    int nMoves = moveList.count;
+    if (nMoves == 0) return; // Ritorno void
+    
+    Move mossaMiglioreAssoluta = 0;
+    for (int i = 0; i < nMoves; i++) {
+        if (board.MakeMove(moveList.moves[i])) {
+            mossaMiglioreAssoluta = moveList.moves[i];
+            board.UnmakeMove(moveList.moves[i]);
+            break; 
+        }
+    }
+    if (mossaMiglioreAssoluta == 0) return; // Ritorno void
+
+    // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
+    for (int d = 1; d <= maxDepth; d++) {
+        if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
+
+        stats.maxDepthReached = d;
+        int alpha = -999999;
+        int beta  = 999999;
+        Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
+
+        struct ScoredMove {
+            Move move;
+            int score;
+        };
+        ScoredMove scoredMoves[256];
+        for (int i = 0; i < nMoves; i++) {
+            scoredMoves[i].move = moveList.moves[i];
+            // RIMOSSO: board non è più un parametro
+            scoredMoves[i].score = ScoreMove(moveList.moves[i], mossaMiglioreAssoluta, 0); 
+        }
+
+        std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
+            return a.score > b.score;
+        });
+
+        for (int i = 0; i < nMoves; i++) {
+            Move move = scoredMoves[i].move; 
+            
+            if (board.MakeMove(move)) {
+                evaluator->OnMakeMove(board, move); // L'evaluator DEVE essere privato del thread
+
+                int score = -AlphaBeta(d - 1, -beta, -alpha, 1);
+                
+                evaluator->OnUnmakeMove();
+                board.UnmakeMove(move);
+                
+                if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
+
+                if (score > alpha) {
+                    alpha = score;
+                    bestMoveCurrentDepth = move;
+                }
+            }
+        }
+        
+        if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
+        
+        mossaMiglioreAssoluta = bestMoveCurrentDepth;
+        bestRootMove = mossaMiglioreAssoluta;
+
+        auto now = std::chrono::high_resolution_clock::now();
+        stats.lastMoveTimeMs = std::chrono::duration<double, std::milli>(now - startTime).count();
+
+        if (isMainThread && callback) {
+            stats.hashFullness = tt.GetFullnessPercentage();
+            callback(d, alpha, stats, bestMoveCurrentDepth);
+        }
+    }
+    
+    stats.movesPlayed++;
+    stats.totalNodesSession += (stats.nodesEvaluated + stats.qNodesEvaluated);
+}
+
+int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
+    if (globalTimeIsUp.load(std::memory_order_relaxed)) return 0;
 
     if (board.GetHalfMoveClock() >= 100) return 0;
     if (board.IsRepetition()) return 0;
 
     stats.nodesEvaluated++;
     
-    if (depth <= 0) return QuiescenceSearch(board, alpha, beta, ply);
+    if (depth <= 0) return QuiescenceSearch(alpha, beta, ply);
 
     // --- 1. TRANSPOSITION TABLE PROBE ---
     uint64_t hashKey = board.GetHash();
     Move ttMove = 0;
     int ttScore = 0;
-    if (tt.Probe(hashKey, depth, alpha, beta, ttScore, ttMove)) {
+    if (tt.Probe(hashKey, depth, alpha, beta, ttScore, ttMove, ply)) {
         stats.ttHits++;
         return ttScore;
     }
@@ -47,10 +131,10 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
         if (nonPawnMaterial != 0ULL) {
             board.MakeNullMove();
             int R = 2; // Taglio di 2 profondità
-            int nullScore = -AlphaBeta(board, depth - 1 - R, -beta, -beta + 1, ply + 1);
+            int nullScore = -AlphaBeta(depth - 1 - R, -beta, -beta + 1, ply + 1);
             board.UnmakeNullMove();
             
-            if (timeIsUp) return 0;
+            if (globalTimeIsUp.load(std::memory_order_relaxed)) return 0;
             if (nullScore >= beta) return beta; 
         }
     }
@@ -68,7 +152,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     ScoredMove scoredMoves[256];
     for (int i = 0; i < nMoves; i++) {
         scoredMoves[i].move = moveList.moves[i];
-        scoredMoves[i].score = ScoreMove(board, moveList.moves[i], ttMove, ply);
+        scoredMoves[i].score = ScoreMove(moveList.moves[i], ttMove, ply);
     }
 
     // --- 4. CICLO PRINCIPALE DELLE MOSSE (PVS + LMR) ---
@@ -93,7 +177,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
             
             if (legalMovesCount == 1) {
                 // A. Principal Variation: Prima mossa testata a finestra completa
-                currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+                currentScore = -AlphaBeta(depth - 1, -beta, -alpha, ply + 1);
             } else {
                 // B. Late Move Reductions (LMR)
                 bool canReduce = isQuiet && !inCheck && depth >= 3 && legalMovesCount >= 4;
@@ -101,7 +185,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
 
                 if (canReduce) {
                     int R = (legalMovesCount > 6 && depth > 3) ? 2 : 1; 
-                    currentScore = -AlphaBeta(board, depth - 1 - R, -alpha - 1, -alpha, ply + 1);
+                    currentScore = -AlphaBeta(depth - 1 - R, -alpha - 1, -alpha, ply + 1);
                     if (currentScore <= alpha) {
                         needsFullSearch = false; // LMR convalidata, salta il resto
                     }
@@ -110,11 +194,11 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                 // C. Principal Variation Search (PVS)
                 if (needsFullSearch) {
                     // Zero-Window Search a profondità piena
-                    currentScore = -AlphaBeta(board, depth - 1, -alpha - 1, -alpha, ply + 1);
+                    currentScore = -AlphaBeta(depth - 1, -alpha - 1, -alpha, ply + 1);
                     
                     // Re-Search (Finestra Completa) se la mossa ha superato le aspettative
                     if (currentScore > alpha && currentScore < beta) {
-                        currentScore = -AlphaBeta(board, depth - 1, -beta, -alpha, ply + 1);
+                        currentScore = -AlphaBeta(depth - 1, -beta, -alpha, ply + 1);
                     }
                 }
             }
@@ -151,7 +235,7 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
                 }
 
                 if (bestMoveInThisPosition == 0) bestMoveInThisPosition = move;
-                tt.Record(hashKey, move, depth, beta, BETA);
+                tt.Record(hashKey, move, depth, beta, BETA, ply);
                 return beta; 
             }
             
@@ -186,14 +270,13 @@ int Engine::AlphaBeta(Board& board, int depth, int alpha, int beta, int ply) {
     }
     
     TTFlag flag = (alpha <= originalAlpha) ? ALPHA : EXACT;
-    tt.Record(hashKey, bestMoveInThisPosition, depth, alpha, flag);
+    tt.Record(hashKey, bestMoveInThisPosition, depth, alpha, flag, ply);
 
     return alpha;
 }
 
-int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
-    if (timeIsUp) return 0;
-    CheckTime();
+int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
+    if (globalTimeIsUp.load(std::memory_order_relaxed)) return 0;
 
     stats.qNodesEvaluated++;
     if (ply > stats.selDepthReached) stats.selDepthReached = ply;
@@ -227,7 +310,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     ScoredMove scoredMoves[256];
     for (int i = 0; i < nMoves; i++) {
         scoredMoves[i].move = moveList.moves[i];
-        scoredMoves[i].score = ScoreMove(board, moveList.moves[i], (Move)0, 0); 
+        scoredMoves[i].score = ScoreMove(moveList.moves[i], (Move)0, 0); 
     }
 
     for (int i = 0; i < nMoves; i++) {
@@ -244,7 +327,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
         if (board.MakeMove(move)) {
             evaluator->OnMakeMove(board, move);
 
-            int score = -QuiescenceSearch(board, -beta, -alpha, ply);
+            int score = -QuiescenceSearch(-beta, -alpha, ply);
             
             evaluator->OnUnmakeMove();
             board.UnmakeMove(move);
@@ -256,93 +339,7 @@ int Engine::QuiescenceSearch(Board& board, int alpha, int beta, int ply) {
     return alpha;
 }
 
-Move Engine::GetBestMove(Board& board, int maxDepth, double allocatedTimeMs, InfoReporter callback) {
-    stats.ResetForNewMove();
-    ClearHistory();
-    startTime = std::chrono::high_resolution_clock::now();
-    timeLimitMs = allocatedTimeMs;
-    timeIsUp = false;
-    
-    MoveList moveList;
-    MoveGen::GenerateAllMoves(board, moveList);    
-    int nMoves = moveList.count;
-    if (nMoves == 0) return 0;
-    
-    Move mossaMiglioreAssoluta = 0;
-    for (int i = 0; i < nMoves; i++) {
-        if (board.MakeMove(moveList.moves[i])) {
-            mossaMiglioreAssoluta = moveList.moves[i];
-            board.UnmakeMove(moveList.moves[i]);
-            break; 
-        }
-    }
-    if (mossaMiglioreAssoluta == 0) return 0; 
-
-    // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
-    for (int d = 1; d <= maxDepth; d++) {
-        stats.maxDepthReached = d;
-        int alpha = -999999;
-        int beta  = 999999;
-        Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
-
-        struct ScoredMove {
-            Move move;
-            int score;
-        };
-        ScoredMove scoredMoves[256];
-        for (int i = 0; i < nMoves; i++) {
-            scoredMoves[i].move = moveList.moves[i];
-            scoredMoves[i].score = ScoreMove(board, moveList.moves[i], mossaMiglioreAssoluta, 0); 
-        }
-
-        std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
-            return a.score > b.score;
-        });
-
-    
-        for (int i = 0; i < nMoves; i++) {
-            Move move = scoredMoves[i].move; 
-            
-            if (board.MakeMove(move)) {
-                evaluator->OnMakeMove(board, move);
-
-                int score = -AlphaBeta(board, d - 1, -beta, -alpha, 1);
-                
-                evaluator->OnUnmakeMove();
-                board.UnmakeMove(move);
-                
-                if (timeIsUp) break;
-
-                if (score > alpha) {
-                    alpha = score;
-                    bestMoveCurrentDepth = move;
-                }
-            }
-        }
-        
-        if (timeIsUp) break;
-        auto now = std::chrono::high_resolution_clock::now();
-        stats.lastMoveTimeMs = std::chrono::duration<double, std::milli>(now - startTime).count();
-        if (callback) callback(d, alpha, stats, bestMoveCurrentDepth);
-        mossaMiglioreAssoluta = bestMoveCurrentDepth;
-    }
-    
-    auto endTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = endTime - startTime;
-
-    stats.lastMoveTimeMs = elapsed.count();
-    stats.totalTimeMs += stats.lastMoveTimeMs;
-    stats.movesPlayed++;
-    stats.totalNodesSession += (stats.nodesEvaluated + stats.qNodesEvaluated);
-    if (stats.lastMoveTimeMs < stats.minTimeMs) stats.minTimeMs = stats.lastMoveTimeMs;
-    if (stats.lastMoveTimeMs > stats.maxTimeMs) stats.maxTimeMs = stats.lastMoveTimeMs;
-    
-    stats.hashFullness = tt.GetFullnessPercentage();
-    
-    return mossaMiglioreAssoluta;
-}
-
-int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
+int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
     if (move == ttMove) return 2000000; // Massima priorità alla mossa della TT
 
     int score = 0;
@@ -386,23 +383,12 @@ int Engine::ScoreMove(Board& board, Move move, Move ttMove, int ply) {
     return score;
 }
 
-void Engine::ClearHistory() {
+void SearchWorker::ClearHistory() {
     for (int c = 0; c < 2; c++) {
         for (int i = 0; i < 64; i++) {
             for (int j = 0; j < 64; j++) {
                 historyTable[c][i][j] = 0;
             }
         }
-    }
-}
-
-void Engine::CheckTime() {
-    if ((stats.nodesEvaluated & 2047) != 0) return;
-
-    auto now = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed = now - startTime;
-
-    if (elapsed.count() >= timeLimitMs) {
-        timeIsUp = true;
     }
 }

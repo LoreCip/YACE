@@ -15,7 +15,7 @@ INCLUDES = -Isrc/Core/include \
            -Isrc/Evaluation/include/NNUE \
            -Isrc/Search/include
 
-CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -fopenmp -flto $(INCLUDES)
+CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -flto -fopenmp $(INCLUDES)
 LDFLAGS  = -lcblas -lblas
 
 # Cartelle sorgenti radice

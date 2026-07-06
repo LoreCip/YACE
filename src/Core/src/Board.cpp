@@ -67,9 +67,6 @@
             }
             colorOccupation[c] = 0ULL;
         }
-        for(int i = 0; i < 64; i++) {
-            board[i].piece = PieceType::NONE;
-        }
         
         historyPly = 0;
         halfMoveClock = 0;

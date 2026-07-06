@@ -2,13 +2,14 @@
 #include <string>
 #include <fstream>
 #include <memory>
+#include <functional>
+#include <thread>
 
 #include "LookupTables.hpp"
 #include "Board.hpp"
-#include "TranspositionTable.hpp"
 #include "ClassicalEvaluator.hpp"
 #include "NnueEvaluator.hpp"
-#include "Engine.hpp"
+#include "SearchManager.hpp"
 #include "MoveGenerator.hpp"
 #include "Uci.hpp"
 
@@ -18,6 +19,10 @@ int main(int argc, char** argv) {
     std::string weightsPath = "/home/lorenzo/Scrivania/Projects/YACE/parameters/weights/nnue_weights_v1.bin";
     std::string evalsPath = "/home/lorenzo/Scrivania/Projects/YACE/parameters/evals.txt";
     int ttSize = 64;
+    
+    int numThreads = 1; 
+    unsigned int hardware_threads = std::thread::hardware_concurrency();
+    if (hardware_threads > 0) numThreads = hardware_threads / 2;
 
     // IO parser
     for (int i = 1; i < argc; ++i) {
@@ -26,7 +31,7 @@ int main(int argc, char** argv) {
         if (arg == "-h" || arg == "--help") {
             std::cout << "YACE - Yet Another Chess Engine \n";
             std::cout << "Usage: \n";
-            std::cout << argv[0] << " [-e hce|nnue] [-p pst_path] [-w weights_path] [-t tt_size_mb]\n";
+            std::cout << argv[0] << " [-e hce|nnue] [-p pst_path] [-w weights_path] [-t tt_size_mb] [-c threads]\n";
             return 0;
         } else if (arg == "-e" && i + 1 < argc) {
             evalType = argv[++i];
@@ -36,45 +41,57 @@ int main(int argc, char** argv) {
             weightsPath = argv[++i];
         } else if (arg == "-t" && i + 1 < argc) {
             ttSize = std::stoi(argv[++i]);
+        } else if (arg == "-c" && i + 1 < argc) {
+            numThreads = std::stoi(argv[++i]);
         }
     }
 
     std::cout << std::unitbuf;
 
     auto board = std::make_unique<Board>();
-    auto tt = std::make_unique<TranspositionTable>(ttSize);
-    auto hce = std::make_unique<ClassicalEvaluator>();
-    auto nnue = std::make_unique<NnueEvaluator>();
-    IEvaluator* activeEvaluator = nullptr;
-
-
+    
     UCI::Initialize();
     LookupTables::init(evalsPath);
     board->InitializeBoard();
 
+    std::unique_ptr<IEvaluator> rootEvaluator;
+    bool useNnue = (evalType == "nnue");
 
-    if (evalType == "nnue") {
-        if (nnue->Initialize(weightsPath)) {
+    if (useNnue) {
+        auto tempNnue = std::make_unique<NnueEvaluator>();
+        if (tempNnue->Initialize(weightsPath)) {
             UCI::ReportDebugString("NNUE caricata con successo.");
-            nnue->Reset(*board);
-            activeEvaluator = nnue.get();
+            rootEvaluator = std::move(tempNnue);
         } else {
-            UCI::ReportDebugString("NNUE non trovata. Fallback alla Valutazione Classica (HCE).");
-            activeEvaluator = hce.get();
+            UCI::ReportDebugString("NNUE non trovata.");
+            return 1;
         }
     } else {
-        UCI::ReportDebugString("Valutazione Classica (HCE) forzata da riga di comando.");
-        activeEvaluator = hce.get();
+        UCI::ReportDebugString("Valutazione Classica (HCE).");
+        rootEvaluator = std::make_unique<ClassicalEvaluator>();
     }
 
-    auto engine = std::make_unique<Engine>(*tt, activeEvaluator);
+    rootEvaluator->Reset(*board);
+
+    auto evalFactory = [&]() -> std::unique_ptr<IEvaluator> {
+        if (useNnue) {
+            auto nnue = std::make_unique<NnueEvaluator>();
+            nnue->Initialize(weightsPath); // Carica i pesi per la rete del thread locale
+            return nnue;
+        }
+        return std::make_unique<ClassicalEvaluator>();
+    };
+
+    UCI::ReportDebugString("Avvio motore con " + std::to_string(numThreads) + " threads e " + std::to_string(ttSize) + "MB di TT.");
+    SearchManager searchManager(ttSize, numThreads, evalFactory);
     
+    // --- Callbacks UCI ---
     auto handlePositionLoaded = [&]() {
-        if (activeEvaluator) activeEvaluator->Reset(*board);
+        rootEvaluator->Reset(*board);
     };
 
     auto handleMoveMade = [&](Move move) {
-        if (activeEvaluator) activeEvaluator->OnMakeMove(*board, move);
+        rootEvaluator->OnMakeMove(*board, move);
     };
 
     auto handleGoCommand = [&](int targetDepth, double allocatedTimeMs, UCI::LoggerCallback uciLogger) -> Move {
@@ -92,7 +109,7 @@ int main(int argc, char** argv) {
             );
         };
 
-        Move best = engine->GetBestMove(*board, targetDepth, allocatedTimeMs, engineReporter);
+        Move best = searchManager.Search(*board, targetDepth, allocatedTimeMs, engineReporter);
         return best;
     };
 

@@ -17,11 +17,6 @@ struct UndoState {
     uint8_t halfMoveClock;   
 };
 
-struct SquareInfo {
-    PieceType piece;
-    Color color;
-};
-
 class Board {
 private:
     uint64_t sides[NUM_COLORS][NUM_PIECES] = {{(uint64_t)0}};
@@ -39,8 +34,6 @@ private:
     int historyPly = 0;
     uint64_t zobristHash = 0;
 
-    SquareInfo board[64];
-
     inline void MovePiece(Color color, PieceType piece, int from, int to) {
         RemovePiece(color, piece, from);
         AddPiece(color, piece, to);
@@ -48,7 +41,7 @@ private:
     inline void RemovePiece(int color, PieceType piece, int square) {
         int p = PieceInt(piece);
         sides[color][p] = clearBit(sides[color][p], square);
-        board[square].piece = PieceType::NONE;
+        // board[square].piece = PieceType::NONE;
 
         colorOccupation[color] = clearBit(colorOccupation[color], square);
         zobristHash ^= LookupTables::pieceKeys[color][p][square];
@@ -113,11 +106,15 @@ public:
         return halfMoveClock;
     }
     inline PieceType GetPieceOnSquare(int sq) const {
-        return board[sq].piece;
+        uint64_t mask = (1ULL << sq);
+        
+        for (int p = 0; p < NUM_PIECES; ++p) {
+            if (sides[0][p] & mask) return static_cast<PieceType>(p); // Colore WHITE
+            if (sides[1][p] & mask) return static_cast<PieceType>(p); // Colore BLACK
+        }
+        return PieceType::NONE;
     }
-    inline Color GetPieceColor(int sq) const {
-       return board[sq].color;
-    }
+
     uint64_t GetHash() const {
         return zobristHash;
     }
@@ -129,11 +126,7 @@ public:
     inline void AddPiece(int color, PieceType piece, int square) {        
         int p = PieceInt(piece);
         sides[color][p] = setBit(sides[color][p], square);
-        board[square].piece = piece;
-        board[square].color = static_cast<Color>(color);
-        colorOccupation[color] =
-    
-        setBit(colorOccupation[color], square);
+        colorOccupation[color] = setBit(colorOccupation[color], square);
         zobristHash ^= LookupTables::pieceKeys[color][p][square];
     }
     inline void AddPiece(Color color, PieceType piece, int square) {

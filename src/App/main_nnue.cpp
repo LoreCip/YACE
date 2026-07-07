@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <cmath>
 #include <cassert>
@@ -126,8 +127,8 @@ void TestForwardPass() {
     std::memset(testNet.L2, 0, sizeof(testNet.L2));
     testNet.L2Bias = 50.0; 
 
-    double smt[M] = {0};
-    double nsmt[M] = {0};
+    int16_t smt[M] = {0};
+    int16_t nsmt[M] = {0};
 
     // Forward pass
     int score = testNet.EvaluateNnue(smt, nsmt);

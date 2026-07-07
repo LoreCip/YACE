@@ -1,41 +1,17 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from tqdm import tqdm
-import numpy as np
 import os
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+
+import numpy as np
+
+from tqdm import tqdm
+
+from NNUE import FakeQuantizeSTE, HalfKP_NNUE_QAT
+
 torch.set_float32_matmul_precision('high')
-
-class HalfKP_NNUE(nn.Module):
-    def __init__(self, acc_size=256, layer_1=32):
-        super(HalfKP_NNUE, self).__init__()
-        
-        self.accumulator = nn.Embedding(40961, acc_size, padding_idx=40960)
-        self.accumulator_bias = nn.Parameter(torch.zeros(acc_size)) 
-        
-        self.layer1 = nn.Linear(acc_size * 2, layer_1)
-        
-        self.output_layer = nn.Linear(layer_1, 1)
-
-    def clipped_relu(self, x):
-        return torch.clamp(x, 0.0, 1.0)
-
-    def forward(self, us_indices, them_indices):
-        acc_us = self.accumulator(us_indices).sum(dim=1) + self.accumulator_bias
-        acc_them = self.accumulator(them_indices).sum(dim=1) + self.accumulator_bias
-        
-        # L0: Attivazione Clipped ReLU (0.0 -> 1.0)
-        acc_us = self.clipped_relu(acc_us)
-        acc_them = self.clipped_relu(acc_them)        
-        x = torch.cat([acc_us, acc_them], dim=1)
-        
-        # L1: Attivazione Clipped ReLU (0.0 -> 1.0)
-        x = self.clipped_relu(self.layer1(x))
-        
-        # L2: Output
-        x = self.output_layer(x)
-        return torch.sigmoid(x)
 
 def train_nnue(
         bin_path, 
@@ -59,7 +35,7 @@ def train_nnue(
     num_batches = num_positions // batch_size
     print(f"Dataset caricato con successo: {num_positions:,} posizioni.")
     
-    model = HalfKP_NNUE().to(device)
+    model = HalfKP_NNUE_QAT().to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     criterion = nn.MSELoss()
     
@@ -150,7 +126,7 @@ def train_nnue(
 if __name__ == "__main__":
     train_nnue(
         bin_path="/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin", 
-        num_epochs=15, 
+        num_epochs=40, 
         batch_size=16384, 
         learning_rate=0.001,
         resume_from=None 

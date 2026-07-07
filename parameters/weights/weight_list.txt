@@ -1,2 +1,0 @@
-halfkp_epoch15_v1:
-    Clipped reLU

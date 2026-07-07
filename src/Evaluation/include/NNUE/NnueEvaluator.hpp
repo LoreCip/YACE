@@ -10,7 +10,7 @@
 
 
 struct NnueState {
-    double accumulator[2][ACC_SIZE];
+    int16_t accumulator[2][ACC_SIZE];
     bool computed[2];
 };
 
@@ -34,7 +34,7 @@ public:
     bool Initialize(const std::string& weightsPath);
     
     // Inizializza lo stack per una nuova posizione/partita
-    void Reset(const Board& board); 
+    void Reset(const Board& board) override; 
 
     // --- Implementazione dell'interfaccia IEvaluator ---
     int Evaluate(const Board& board) override;

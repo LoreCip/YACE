@@ -1,78 +1,84 @@
 import torch
+import struct
 import numpy as np
 import os
 
-def export_to_raw_binary(checkpoint_path, output_bin_path):
-    if not os.path.exists(checkpoint_path):
-        print(f"Errore: Il file di origine '{checkpoint_path}' non esiste.")
-        return
+def export_to_cpp_binary(pth_path, base_path, bin_path):
+    print(f"Caricamento pesi da: {pth_path}")
+    
+    checkpoint = torch.load(pth_path, map_location='cpu', weights_only=False)
+    state_dict = checkpoint.get("model_state_dict", checkpoint)
+    clean_state_dict = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
 
-    print(f"Caricamento del checkpoint: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    # --- SCALE (Devono combaciare con quelle usate nella classe QAT) ---
+    SCALE_W_ACC = 255.0
+    SCALE_ACT   = 127.0
+    SCALE_W_L1  = 64.0
+    SCALE_W_L2  = 64.0
+    SCALE_W_OUT = 127.0
 
-    # Estrazione dello state_dict
-    if isinstance(checkpoint, dict) and "model_state_dict" in checkpoint:
-        state_dict = checkpoint["model_state_dict"]
-        print(f"-> Checkpoint completo rilevato (Epoca {checkpoint.get('epoch', 'N/D')}).")
-    else:
-        state_dict = checkpoint
-        print("-> File di soli pesi rilevato.")
+    print("Estrazione e quantizzazione dei tensori...")
 
-    # Pulizia dai prefissi di torch.compile
-    clean_state_dict = {}
-    for key, value in state_dict.items():
-        clean_key = key.replace("_orig_mod.", "")
-        clean_state_dict[clean_key] = value
+    # 1. Accumulatore (L0) - int16_t
+    # shape: (40961, 256)
+    l0_weight_float = clean_state_dict['accumulator.weight'][:40960, :].numpy()
+    l0_bias_float   = clean_state_dict['accumulator_bias'].numpy()
+    
+    L0      = np.clip(np.round(l0_weight_float * SCALE_W_ACC), -32768, 32767).astype(np.int16)
+    L0Bias  = np.clip(np.round(l0_bias_float * SCALE_W_ACC), -32768, 32767).astype(np.int16)
 
-    try:
-        # 1. L0 Bias (Accumulator Bias) -> [256]
-        l0_bias = clean_state_dict["accumulator_bias"].numpy().astype(np.float64)
+    # 2. Layer 1 (L1) - pesi int8_t, bias int32_t
+    l1_weight_float = clean_state_dict['layer1.weight'].numpy()
+    l1_bias_float   = clean_state_dict['layer1.bias'].numpy()
+    
+    L1      = np.clip(np.round(l1_weight_float * SCALE_W_L1), -128, 127).astype(np.int8)
+    L1Bias  = np.round(l1_bias_float * (SCALE_W_ACC * SCALE_W_L1)).astype(np.int32)
+
+    # 3. Layer 2 (L2) - pesi int8_t, bias int32_t
+    l2_weight_float = clean_state_dict['layer2.weight'].numpy()
+    l2_bias_float   = clean_state_dict['layer2.bias'].numpy()
+    
+    L2      = np.clip(np.round(l2_weight_float * SCALE_W_L2), -128, 127).astype(np.int8)
+    L2Bias  = np.round(l2_bias_float * (SCALE_ACT * SCALE_W_L2)).astype(np.int32)
+
+    # 4. Layer Output (L3) - pesi int16_t, bias int32_t (CORRETTO: usa le variabili l3_)
+    l3_weight_float = clean_state_dict['output_layer.weight'].numpy().flatten()
+    l3_bias_float   = clean_state_dict['output_layer.bias'].numpy()
+    
+    L3      = np.clip(np.round(l3_weight_float * SCALE_W_OUT), -32768, 32767).astype(np.int16)
+    L3Bias  = np.round(l3_bias_float * (SCALE_ACT * SCALE_W_OUT)).astype(np.int32)
+    
+    print(f"Scrittura del file binario: {bin_path}")
+    
+    with open(bin_path, 'wb') as f:
         
-        # 2. L0 Weights (Accumulator/Embedding) -> [40960, 256]
-        # Prendiamo solo i primi 40960 elementi, escludendo l'indice di padding
-        l0_weights = clean_state_dict["accumulator.weight"][:40960, :].numpy().astype(np.float64)
+        # 1. L0Bias (256 * int16 = 512 bytes)
+        f.write(L0Bias.tobytes())
         
-        # 3. L1 Bias -> [32]
-        l1_bias = clean_state_dict["layer1.bias"].numpy().astype(np.float64)
+        # 2. L0 Pesi (40960 * 256 * int16 = 20,971,520 bytes)
+        f.write(L0.tobytes())
         
-        # 4. L1 Weights -> [32, 512]
-        l1_weights = clean_state_dict["layer1.weight"].numpy().astype(np.float64)
+        # 3. L1Bias (32 * int32 = 128 bytes)
+        f.write(L1Bias.tobytes())
         
-        # 5. L2 Bias -> [1] (Scalare)
-        l2_bias = clean_state_dict["output_layer.bias"].numpy().astype(np.float64)
+        # 4. L1 Pesi (32 * 512 * int8 = 16,384 bytes)
+        f.write(L1.tobytes())
         
-        # 6. L2 Weights -> [32]
-        # PyTorch lo salva come [1, 32], lo appiattiamo a 1D
-        l2_weights = clean_state_dict["output_layer.weight"].flatten().numpy().astype(np.float64)
+        # 5. L2Bias (32 * int32 = 128 bytes)
+        f.write(L2Bias.tobytes())
+        
+        # 6. L2 Pesi (32 * 32 * int8 = 1024 bytes)
+        f.write(L2.tobytes())
 
-        # --- SCRITTURA DEL FILE BINARIO ---
-        print(f"\nScrittura del file binario crudo in corso...")
-        with open(output_bin_path, 'wb') as f:
-            f.write(l0_bias.tobytes())
-            f.write(l0_weights.tobytes())
-            f.write(l1_bias.tobytes())
-            f.write(l1_weights.tobytes())
-            f.write(l2_bias.tobytes())
-            f.write(l2_weights.tobytes())
+        # 7. L3Bias (1 * int32 = 4 bytes)
+        f.write(L3Bias.tobytes())
 
-        # Verifica finale delle dimensioni
-        expected_bytes = (256 + (40960 * 256) + 32 + (32 * 512) + 1 + 32) * 8
-        actual_bytes = os.path.getsize(output_bin_path)
-
-        print("\nEsportazione completata con successo!")
-        print(f"Dimensioni attese: {expected_bytes / (1024*1024):.2f} MB")
-        print(f"Dimensioni reali:  {actual_bytes / (1024*1024):.2f} MB")
-        
-        if expected_bytes == actual_bytes:
-            print("-> I byte scritti corrispondono alle specifiche del C++.")
-        else:
-            print("-> ATTENZIONE: Disallineamento nelle dimensioni del file generato!")
-
-    except KeyError as e:
-        print(f"\nErrore: Non riesco a trovare il tensore {e} nel checkpoint.")
-        print("I tensori disponibili sono:", list(clean_state_dict.keys()))
+        # 8. L3 Pesi (32 * int16 = 64 bytes)
+        f.write(L3.tobytes())
 
 if __name__ == "__main__":
-    CHECKPOINT_COMPLETO = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/training/weights/halfkp_epoch15_v1.pth"
-    OUTPUT_BINARIO = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/training/weights/nnue_weights_v1.bin" 
-    export_to_raw_binary(CHECKPOINT_COMPLETO, OUTPUT_BINARIO)
+    # Inserisci i tuoi percorsi
+    PTH_FILE = "./checkpoints/halfkp_epoch_35_final.pth"
+    BASE_PATH = "../../parameters/weights/"
+    BIN_FILE = BASE_PATH + "nnue_weights_v3.bin"
+    export_to_cpp_binary(PTH_FILE, BASE_PATH, BIN_FILE)

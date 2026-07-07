@@ -678,7 +678,7 @@ info string MoveOrder: 87.8% | TTHits: 753391 | QNodes: 11240109
 bestmove e4e5
 
 
-# on demand selection sort in AlphaBeta and Quiescence + Efficient summary bitboard update + Incremental Zobrist + GenerateCaptureMoves in Quiescence + HCE + TTFix + GenerateCaptureMoves Quiescence + Null Pruning + Principal variation search + Late Move reduction + Profiling + Delta Pruning + Magic bitboards + 
+# on demand selection sort in AlphaBeta and Quiescence + Efficient summary bitboard update + Incremental Zobrist + GenerateCaptureMoves in Quiescence + HCE + TTFix + GenerateCaptureMoves Quiescence + Null Pruning + Principal variation search + Late Move reduction + Profiling + Delta Pruning + Magic bitboards + Lazy SMP
 move e2e4
 go
 info depth 1 seldepth 1 score cp 75 time 0 nodes 42 nps 2099580 hashfull 0 pv g8f6

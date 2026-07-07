@@ -45,25 +45,49 @@ BINARY FILE MAP (RAW SEQUENTIAL BYTES)
         Data: 32 doubles (256 bytes)
 */
 
+#pragma once
+
+#include <string>
+#include <cstdint>
+
 class NnueNetwork {
-private:
-    void ActivationFunction(double* arr, int len);
-    void DenseLayerLinear(const double* input, const double* weights, const double* bias, double* output, int rows, int cols);
-    double OutputLayerDotProduct(const double* input, const double* weights, double bias, int len);
-
 public:
-    double L0[NUM_FEATURES][M] = {{0}};
-    double L0Bias[M] = {0};
-    double L1[K][2*M] = {{0}};
-    double L1Bias[K] = {0};
-    double L2[K] = {0};
-    double L2Bias = 0;
+    static constexpr int M = 256;
+    static constexpr int K = 32;
+    static constexpr int NUM_FEATURES = 40960;
 
-    double inputBuffer[2*M] = {0};
-    double outputBuffer[K] = {0};
+    // --- Parametri di Quantizzazione (QAT) ---
+    static constexpr int QA_BOUND = 127;  // Limite massimo per la Clipped ReLU (es. int8 max)
+    static constexpr int SHIFT_L1 = 6;    // Bit-shift per de-quantizzare L1 (2^6 = 64)
+    static constexpr int SHIFT_OUT = 14;  // Bit-shift per de-quantizzare l'Output Finale
 
+    // --- Pesi Quantizzati ---
+    int16_t L0[NUM_FEATURES][M];
+    int16_t L0Bias[M];
+    int8_t L1[K][2 * M];
+    int32_t L1Bias[K];     
+    int8_t L2[K][K];
+    int32_t L2Bias[K];
+    int16_t L3[K];
+    int32_t L3Bias;
+
+    // --- Buffer di memoria interni ---
+    int8_t inputBuffer[2 * M];
+    int8_t outputBuffer[K];
+
+    // --- Metodi e Helper (Struttura Originale) ---
     bool InitializeFromFile(std::string path);
-    int EvaluateNnue(double* smt, double* nsmt);
+    int EvaluateNnue(int16_t* smt, int16_t* nsmt);
+
+private:
+    void DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols);    
+    int32_t OutputLayerDotProduct(const int8_t* input, const int16_t* weights, int32_t bias, int len);
+    
+    void ActivationFunction(const int16_t* in, int8_t* out, int len);
+    void ActivationFunction(const int32_t* in, int8_t* out, int len); // Overload per il Layer 1
+
 };
 
 #endif
+
+

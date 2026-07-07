@@ -1,6 +1,7 @@
 #include "NnueEvaluator.hpp"
 #include "NnueConstants.hpp"
 #include "Types.hpp"
+#include "Move.hpp"
 
 NnueEvaluator::NnueEvaluator() : eager(true), currentPly(0) {
     // Inizializzazione pulita
@@ -30,7 +31,7 @@ int NnueEvaluator::Evaluate(const Board& board) {
             RefreshAccumulator(board, ColorInt(Color::BLACK));
     }
     
-    double *smt, *nsmt;
+    int16_t *smt, *nsmt;
     if (board.GetSideToMove() == ColorInt(Color::WHITE)) {
         smt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
         nsmt = nnueStack[currentPly].accumulator[ColorInt(Color::BLACK)];
@@ -82,7 +83,7 @@ void NnueEvaluator::OnUnmakeMove() {
 }
 
 void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
-    double* acc = nnueStack[currentPly].accumulator[perspective];
+    int16_t* acc = nnueStack[currentPly].accumulator[perspective]; // <-- MODIFICATO QUI
 
     for (int i = 0; i < M; i++) {
         acc[i] = network.L0Bias[i]; 
@@ -130,7 +131,7 @@ int NnueEvaluator::MakeFeatureIndex(int square, PieceType pieceType, int pieceCo
 }
 
 void NnueEvaluator::IncrementalUpdate(const Board& board, Move move, int perspective) {
-    double* acc = nnueStack[currentPly].accumulator[perspective];
+    int16_t* acc = nnueStack[currentPly].accumulator[perspective]; // <-- MODIFICATO QUI
 
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
@@ -161,11 +162,7 @@ void NnueEvaluator::IncrementalUpdate(const Board& board, Move move, int perspec
     }
 
     // Identifica la promozione
-    PieceType promoPiece = PieceType::NONE;
-    if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) promoPiece = PieceType::QUEEN;
-    else if (flags == FlagMap::PRROOK || flags == FlagMap::PRCAPROOK) promoPiece = PieceType::ROOK;
-    else if (flags == FlagMap::PRBISHOP || flags == FlagMap::PRCAPBISHOP) promoPiece = PieceType::BISHOP;
-    else if (flags == FlagMap::PRKNIGHT || flags == FlagMap::PRCAPKNIGHT) promoPiece = PieceType::KNIGHT;
+    PieceType promoPiece = getMovePromotionPiece(flags);
     
     if (promoPiece != PieceType::NONE) {
         addedFeatures[addedCount++] = MakeFeatureIndex(to, promoPiece, ColorInt(us), king_sq, perspective);

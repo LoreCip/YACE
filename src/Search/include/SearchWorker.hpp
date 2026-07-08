@@ -34,6 +34,9 @@ private:
     int ScoreMove(Move move, Move ttMove, int ply);
     void ClearHistory();
 
+    bool SEE(Move move, int threshold = 0);
+    uint64_t GetLeastValuableAttacker(int square, Color color, uint64_t occupancy, PieceType& outPiece);
+
 public:
     Move bestRootMove = 0;
 

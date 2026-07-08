@@ -7,8 +7,8 @@
 // indicizzate tramite un hash moltiplicativo dei blocchi presenti sulla riga/colonna/diagonale.
 namespace MagicBitboards {
 
-    extern uint64_t RookMagics[64];
-    extern uint64_t BishopMagics[64];
+    extern const uint64_t RookMagics[64];
+    extern const uint64_t BishopMagics[64];
     extern uint64_t RookMasks[64];
     extern uint64_t BishopMasks[64];
     extern uint64_t RookAttacks[64][4096];

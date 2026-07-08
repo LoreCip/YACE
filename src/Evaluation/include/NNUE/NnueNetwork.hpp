@@ -59,6 +59,7 @@ public:
     // --- Parametri di Quantizzazione (QAT) ---
     static constexpr int QA_BOUND = 127;  // Limite massimo per la Clipped ReLU (es. int8 max)
     static constexpr int SHIFT_L1 = 6;    // Bit-shift per de-quantizzare L1 (2^6 = 64)
+    static constexpr int SHIFT_L2 = 6;    // Bit-shift per de-quantizzare L2 (2^6 = 64)
     static constexpr int SHIFT_OUT = 14;  // Bit-shift per de-quantizzare l'Output Finale
 
     // --- Pesi Quantizzati ---
@@ -80,7 +81,7 @@ public:
     int EvaluateNnue(int16_t* smt, int16_t* nsmt);
 
 private:
-    void DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols);    
+    void DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols, int shift);    
     int32_t OutputLayerDotProduct(const int8_t* input, const int16_t* weights, int32_t bias, int len);
     
     void ActivationFunction(const int16_t* in, int8_t* out, int len);

@@ -1,5 +1,5 @@
 #include "LookupTables.hpp"
-
+#include <iostream>
 namespace LookupTables {
 
     const uint64_t (&knightAttacks)[64]  = AttackTables::knightAttacks;

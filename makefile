@@ -5,7 +5,6 @@
 # Nomi degli eseguibili finali (tutti posizionati nella cartella build globale)
 TARGET_GAME = build/main_game
 TARGET_FEN  = build/main_fen
-TARGET_NNUE = build/main_nnue
 
 # Compilatore, inclusioni e flag unificati
 CXX      = g++
@@ -15,7 +14,7 @@ INCLUDES = -Isrc/Core/include \
            -Isrc/Evaluation/include/NNUE \
            -Isrc/Search/include
 
-CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -flto -fopenmp $(INCLUDES)
+CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -flto -march=native -fopenmp $(INCLUDES)
 LDFLAGS  = -lcblas -lblas
 
 # Cartelle sorgenti radice
@@ -79,12 +78,6 @@ $(TARGET_FEN): $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN)
 	@mkdir -p build
 	$(CXX) $(CXXFLAGS) $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN) -o $(TARGET_FEN) $(LDFLAGS)
 	@echo "[SUCCESS] Build completata: $(TARGET_FEN)"
-
-# Build di main_nnue
-$(TARGET_NNUE): $(ALL_CORE_OBJS) $(OBJ_MAIN_NNUE)
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(ALL_CORE_OBJS) $(OBJ_MAIN_NNUE) -o $(TARGET_NNUE) $(LDFLAGS)
-	@echo "[SUCCESS] Build completata: $(TARGET_NNUE)"
 
 # ------------------------------------------------------------------------------
 # 3. REGOLE GENERICHE PER LA COMPILAZIONE DEI FILE OGGETTO

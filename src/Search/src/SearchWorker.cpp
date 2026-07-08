@@ -323,6 +323,10 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
         /********************************************************************************/
         
         Move move = scoredMoves[i].move;
+
+        if (!SEE(move, 0)) {
+            continue; 
+        }
                    
         if (board.MakeMove(move)) {
             evaluator->OnMakeMove(board, move);
@@ -381,6 +385,127 @@ int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
     }
 
     return score;
+}
+
+bool SearchWorker::SEE(Move move, int threshold) {
+    int from = getMoveFrom(move);
+    int to = getMoveTo(move);
+    int flags = getMoveFlags(move);
+
+    PieceType movingPiece = board.GetPieceOnSquare(from);
+    PieceType capturedPiece = board.GetPieceOnSquare(to);
+
+    // Gestione En Passant
+    if (flags == FlagMap::ENPASS) {
+        capturedPiece = PieceType::PAWN;
+    }
+
+    int gain[32]; // Massimo 32 catture possibili su una singola casa
+    int d = 0;
+
+    // Il primo guadagno è semplicemente il pezzo catturato
+    gain[0] = LookupTables::pieceValues[PieceInt(capturedPiece)];
+
+    // Bonus in caso di promozione (la nuova regina - il pedone perso)
+    if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {
+        gain[0] += LookupTables::pieceValues[PieceInt(PieceType::QUEEN)] - LookupTables::pieceValues[PieceInt(PieceType::PAWN)];
+    }
+
+    // Setup della scacchiera "virtuale" per simulare le catture a raggi X
+    uint64_t occupancy = board.GetColorOccupation(Color::WHITE) | board.GetColorOccupation(Color::BLACK);
+    occupancy ^= (1ULL << from); // Rimuoviamo il pezzo che ha fatto la prima cattura
+    
+    if (flags == FlagMap::ENPASS) {
+        // Rimuove il pedone mangiato via en-passant (calcola la riga corretta in base al colore)
+        int epOffset = (board.GetSideToMove() == Color::WHITE) ? -8 : 8; 
+        occupancy ^= (1ULL << (to + epOffset));
+    }
+
+    Color nextColor = !board.GetSideToMove(); // Tocca a chi subisce la prima mossa
+    PieceType attackerPiece = movingPiece;
+
+    // Loop per trovare tutti gli attaccanti successivi (LVA)
+    while (true) {
+        d++;
+        // Il guadagno dal punto di vista di chi cattura = (Pezzo usato dall'avversario) - (Guadagno avversario)
+        gain[d] = LookupTables::pieceValues[PieceInt(attackerPiece)] - gain[d - 1];
+
+        // Troviamo il prossimo pezzo più debole che può ricatturare
+        uint64_t nextAttackerBB = GetLeastValuableAttacker(to, nextColor, occupancy, attackerPiece);
+
+        if (nextAttackerBB == 0ULL) {
+            break; // Nessun altro attaccante, la sequenza è finita
+        }
+
+        // Rimuoviamo il nuovo attaccante per svelare eventuali Alfieri o Torri dietro di lui
+        occupancy ^= nextAttackerBB;
+        nextColor = !nextColor; // Cambio turno
+    }
+
+    // Valutazione Minimax all'indietro:
+    // Nessun giocatore farà una cattura se il guadagno risultante è peggiore del non farla (0).
+    while (--d > 0) {
+        gain[d - 1] = -std::max(-gain[d - 1], gain[d]);
+    }
+
+    // La sequenza iniziale è vantaggiosa o uguale alla soglia?
+    return gain[0] >= threshold;
+}
+
+uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t occupancy, PieceType& outPiece) {
+    uint64_t attackers = 0;
+    int colorIdx = (color == Color::WHITE) ? 0 : 1; 
+    int enemyIdx = colorIdx ^ 1; // L'indice dell'avversario per l'array dei pedoni
+
+    // 1. Pedoni
+    uint64_t pawns = board.GetBitBoard(color, PieceType::PAWN) & occupancy;
+    if (pawns) {
+        // Usiamo l'array precalcolato dal punto di vista dell'avversario
+        if ((attackers = LookupTables::pawnAttacks[enemyIdx][sq] & pawns)) {
+            outPiece = PieceType::PAWN;
+            return attackers & -attackers; 
+        }
+    }
+
+    // 2. Cavalli
+    uint64_t knights = board.GetBitBoard(color, PieceType::KNIGHT) & occupancy;
+    if ((attackers = LookupTables::knightAttacks[sq] & knights)) {
+        outPiece = PieceType::KNIGHT;
+        return attackers & -attackers;
+    }
+
+    // 3. Alfieri
+    uint64_t bishops = board.GetBitBoard(color, PieceType::BISHOP) & occupancy;
+    uint64_t bishopAttacks = LookupTables::GetBishopAttacks(sq, occupancy);
+    if ((attackers = bishopAttacks & bishops)) {
+        outPiece = PieceType::BISHOP;
+        return attackers & -attackers;
+    }
+
+    // 4. Torri
+    uint64_t rooks = board.GetBitBoard(color, PieceType::ROOK) & occupancy;
+    uint64_t rookAttacks = LookupTables::GetRookAttacks(sq, occupancy);
+    if ((attackers = rookAttacks & rooks)) {
+        outPiece = PieceType::ROOK;
+        return attackers & -attackers;
+    }
+
+    // 5. Regine
+    uint64_t queens = board.GetBitBoard(color, PieceType::QUEEN) & occupancy;
+    if ((attackers = (bishopAttacks | rookAttacks) & queens)) {
+        outPiece = PieceType::QUEEN;
+        return attackers & -attackers;
+    }
+
+    // 6. Re
+    uint64_t kings = board.GetBitBoard(color, PieceType::KING) & occupancy;
+    if ((attackers = LookupTables::kingAttacks[sq] & kings)) {
+        outPiece = PieceType::KING;
+        return attackers & -attackers;
+    }
+
+    outPiece = PieceType::NONE;
+    return 0ULL;
 }
 
 void SearchWorker::ClearHistory() {

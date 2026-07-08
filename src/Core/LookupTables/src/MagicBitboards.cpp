@@ -9,8 +9,14 @@ namespace MagicBitboards {
     uint64_t BishopMasks[64]        = {0};
     uint64_t RookAttacks[64][4096]  = {{0}};
     uint64_t BishopAttacks[64][512] = {{0}};
-    uint64_t RookMagics[64]         = {0};
-    uint64_t BishopMagics[64]       = {0};
+    const uint64_t RookMagics[64] = {
+        #include "RookMagic.inc"
+    };
+
+    const uint64_t BishopMagics[64] = {
+        #include "BishopMagic.inc"
+    };
+
 
     /*****************************************************************************************/
     /*                 BUILD MAGIC BITBOARDS                                                 */
@@ -96,68 +102,6 @@ namespace MagicBitboards {
         return MagicLookup<512>(square, occupancy, BishopMasks, BishopMagics, BishopAttacks);
     }
 
-    uint64_t random_uint64() {
-        static uint64_t seed = 1070372ULL;
-        seed ^= seed >> 12;
-        seed ^= seed << 25;
-        seed ^= seed >> 27;
-        return seed * 2685821657736338717ULL;
-    }
-
-    uint64_t random_uint64_fewbits() {
-        return random_uint64() & random_uint64() & random_uint64();
-    }
-
-    uint64_t FindMagic(int square, int bits, bool isRook) {
-        uint64_t mask = isRook ? MaskRookAttacks(square) : MaskBishopAttacks(square);
-        int variations = 1 << bits;
-
-        uint64_t occupancies[4096];
-        uint64_t attacks[4096];
-        uint64_t usedAttacks[4096];
-
-        // 1. Precalcola tutte le occupazioni e i veri attacchi
-        for (int i = 0; i < variations; i++) {
-            occupancies[i] = SetOccupancy(i, bits, mask);
-            attacks[i] = 0ULL;
-            if (isRook) {
-                attacks[i] |= ComputeRay(8, square, occupancies[i]);
-                attacks[i] |= ComputeRay(-8, square, occupancies[i]);
-                attacks[i] |= ComputeRay(1, square, occupancies[i]);
-                attacks[i] |= ComputeRay(-1, square, occupancies[i]);
-            } else {
-                attacks[i] |= ComputeRay(9, square, occupancies[i]);
-                attacks[i] |= ComputeRay(-9, square, occupancies[i]);
-                attacks[i] |= ComputeRay(7, square, occupancies[i]);
-                attacks[i] |= ComputeRay(-7, square, occupancies[i]);
-            }
-        }
-
-        // 2. Prova milioni di numeri casuali finché non trovi quello che non genera collisioni
-        for (int k = 0; k < 100000000; k++) {
-            uint64_t magic = random_uint64_fewbits();
-            if (__builtin_popcountll((mask * magic) & 0xFF00000000000000ULL) < 6) continue;
-
-            for (int i = 0; i < 4096; i++) usedAttacks[i] = 0ULL;
-            bool fail = false;
-
-            for (int i = 0; i < variations; i++) {
-                // NOTA: (64 - bits) sostituisce completamente le vecchie tabelle RookShifts!
-                uint64_t magicIndex = (occupancies[i] * magic) >> (64 - bits);
-
-                if (usedAttacks[magicIndex] == 0ULL) {
-                    usedAttacks[magicIndex] = attacks[i];
-                } else if (usedAttacks[magicIndex] != attacks[i]) {
-                    fail = true; // Collisione trovata, il numero si scarta!
-                    break;
-                }
-            }
-            if (!fail) return magic; // TROVATO!
-        }
-        std::cout << "Magia fallita sulla casa " << square << "\n";
-        return 0ULL;
-    }
-
     void InitMagicBitboards() {
         for (int square = 0; square < 64; square++) {
             RookMasks[square] = MaskRookAttacks(square);
@@ -165,9 +109,6 @@ namespace MagicBitboards {
 
             int rookBits = __builtin_popcountll(RookMasks[square]);
             int bishopBits = __builtin_popcountll(BishopMasks[square]);
-
-            RookMagics[square] = FindMagic(square, rookBits, true);
-            BishopMagics[square] = FindMagic(square, bishopBits, false);
 
             int rookOccupancyVariations = 1 << rookBits;
             int bishopOccupancyVariations = 1 << bishopBits;

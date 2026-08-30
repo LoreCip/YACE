@@ -1,0 +1,1200 @@
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "rnbqkbnr/pp2p1pp/2p5/3p1P2/8/N7/PPPPPP1P/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 g6 5. fxg6 dxe4 6. Qh5 Qd5 7. g7+ Qxh5 8. gxh8=Q Nf6 9. d4 Bg4 10. Nc4 Nbd7 11. h3 O-O-O 12. hxg4 Qxh1 13. Nh3 Qf3 14. Ng5 Qh1 15. Nf7 Nxg4 16. Be3 Re8 17. Qg8 Ndf6 18. Qg5 Kb8 19. Bf4+ Ka8 20. Qa5 Nd5 21. Bg3 e3 22. Nxe3 Ngxe3 23. fxe3 Nxe3 24. Kf2 Nxc2 25. Rc1 Nxd4 26. Qe5 Qf3+ 27. Kg1 Nf5 28. Bf2 Bg7 29. Qc5 Nd4 30. Rc3 b6 31. Qc4 Qf6 32. Rd3 b5 33. Qc3 e5 34. Nxe5 Qg5+ 35. Kh1 Bxe5 36. Bxd4 Kb7 37. Bxe5 Qxe5 38. Rd7+ Kb6 39. Qxe5 Rxe5 40. Rxh7 a5 41. Kg2 Rd5 42. Rf7 Rd8 43. Rf2 Rd1 44. Be2 Rb1 45. Bf3 Ra1 46. b3 Rc1 47. Rf1 Rc5 48. Kg3 Rc3 49. Ra1 c5 50. Kf4 c4 51. Re1 Rd3 52. bxc4 Rd4+ 53. Ke5 Rxc4 54. Bd5 Rc3 55. Kd4 Rc2 56. Re6+ Kc7 57. Rf6 b4 58. Bb3 Re2 59. Kc5 Re5+ 60. Bd5 Kc8 61. Rf8+ Kc7 62. Rf7+ Kd8 63. Kd6 Re1 64. Rd7+ Ke8 65. Ra7 Kf8 66. Kc5 Re3 67. Rf7+ Ke8 68. Ra7 Rd3 69. Rh7 Rd1 70. Ra7 Rf1 71. Be4 Rg1 72. Bc6+ Kd8 73. Bd5 a4 74. Rxa4 Ke8 75. Ra7 Re1 76. Kxb4 Kf8 77. a4 Re5 78. Bc6 Re2 79. a5 Rd2 80. Kb3 Rd4 81. Kb2 Rg4 82. a6 Rb4+ 83. Kc3 Rb6 84. Ba4 Rb8 85. Rb7 Rd8 86. Bb5 Ra8 87. a7 Rxa7 88. Rxa7 Kg8 89. Ba4 Kh8 90. Bc6 Kg8 91. Ba4 Kh8 92. Bc6 Kg8 93. Ba4 Kh8 94. Bc6 Kg8 95. Ba4 Kh8 96. Bc6 Kg8 97. Ba4 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqk1nr/pp1pppbp/2p5/6B1/2PP4/8/PP2PPPP/RN1QKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nf3 d6 5. e3 a6 6. Bh4 Nh6 7. Bg3 Bg4 8. h3 Bh5 9. Be2 Nd7 10. O-O O-O 11. Bh2 Rc8 12. Kh1 c5 13. Rg1 Kh8 14. Nc3 Bxf3 15. Bxf3 cxd4 16. exd4 Rxc4 17. Bxb7 Rxd4 18. Qc1 Nc5 19. Bf3 Nd3 20. Qc2 d5 21. Rad1 Nb4 22. Qa4 Nd3 23. Qc2 Nb4 24. Qc1 Nd3 25. Qc2 Nb4 26. Qb1 e6 27. Be2 Nc6 28. Rxd4 Nxd4 29. b4 Qf6 30. Bxa6 Nf3 31. Bd6 Nxg1 32. Nd1 Rd8 33. b5 Nxh3 34. Bg3 Ng5 35. Qb4 Ne4 36. Bc7 Rf8 37. Qxf8+ Bxf8 38. b6 Nxf2+ 39. Kg1 Nxd1 40. Bg3 Bc5+ 41. Kh2 Ng4+ 42. Kh1 Qh6+ 43. Bh4 Qxh4# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/p1pp1p1p/1p2p3/6p1/3P4/N6P/PPP1PPP1/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 Bxa3 5. bxa3 Bb7 6. Bd3 Qe7 7. h4 gxh4 8. Nf3 f6 9. Nxh4 d6 10. Qh5+ Qf7 11. Ng6 f5 12. Nxh8 Qxh5 13. Rxh5 Nd7 14. Rg5 Kf8 15. exf5 Re8 16. fxe6 Rxe6+ 17. Be3 Ne7 18. O-O-O Be4 19. Bxe4 Rxe4 20. Rh1 h5 21. Rgxh5 Ke8 22. R5h4 Rxh4 23. Rxh4 Nf8 24. Bg5 Ng8 25. d5 Nd7 26. c4 a6 27. Re4+ Ne5 28. f4 Ne7 29. fxe5 Kf8 30. exd6 Ng6 31. Bh6+ Kg8 32. c5 Nf4 33. Kc2 cxd6 34. Rxf4 dxc5 35. Nf7 c4 36. Ng5 Kh8 37. Rf8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rn1qkbnr/pbppppp1/1p5p/8/4P2P/2N5/PPPP1PP1/R1BQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. d4 e6 5. Be3 Bb4 6. e5 Ne7 7. Qg4 c5 8. Qxg7 Rg8 9. Qxh6 cxd4 10. Bxd4 Nbc6 11. Nf3 Nxd4 12. Nxd4 Qc7 13. Rh3 Qxe5+ 14. Ne2 Bxg2 15. Bxg2 Rxg2 16. Rd1 Nf5 17. Qf4 Rg1+ 18. Kd2 Qxf4+ 19. Nxf4 Rxd1+ 20. Kxd1 O-O-O 21. h5 Bf8 22. Nce2 Bg7 23. Nd3 Rh8 24. a4 Kd8 25. Nec1 Ke7 26. Ne2 Bh6 27. Ne5 Ke8 28. Ng4 Bg7 29. c3 Kd8 30. b4 Ke8 31. Kc2 Ke7 32. Nc1 Rg8 33. Ne2 Bxc3 34. Kxc3 Rxg4 35. f3 Rg7 36. Nd4 Nxd4 37. Kxd4 Kf6 38. Kc4 a6 39. h6 Rh7 40. Kd4 d6 41. Rh1 Kg5 42. Rc1 Rxh6 43. Rc6 Rh4+ 44. Kc3 a5 45. b5 d5 46. Rxb6 Kf4 47. Kb3 Kxf3 48. Ra6 Ke2 49. Rxa5 Rh1 50. Kb4 d4 51. Ra8 d3 52. a5 d2 53. Rd8 f5 54. b6 f4 55. a6 Rb1+ 56. Ka5 f3 57. Rxd2+ Kxd2 58. a7 Ra1+ 59. Kb4 f2 60. b7 f1=Q 61. b8=Q Qf6 62. Qh2+ Ke3 63. Qc2 Qd4+ 64. Kb5 Qd7+ 65. Kb4 Qb7+ 66. Kc3 Ra3+ 67. Kc4 Qc7+ 68. Kb5 Qxc2 69. a8=N Rb3+ 70. Ka5 Qa2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkbnr/1p1pppp1/p1p5/7p/2P5/1P6/PB1PPPPP/RN1QKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e3 d5 5. d4 Bf5 6. Bd3 g6 7. Bxf5 gxf5 8. h4 e6 9. Nd2 Bd6 10. Ngf3 Qe7 11. Qc2 Nh6 12. Rc1 Nd7 13. Kf1 Nf6 14. Bc3 Bc7 15. cxd5 exd5 16. Ne5 Ne4 17. Nxe4 Bxe5 18. Nc5 Bd6 19. Rh3 a5 20. Kg1 Kf8 21. Bb2 Kg7 22. Re1 Rhg8 23. Kh1 Rab8 24. Rg1 Ra8 25. Rc1 Kh8 26. Kg1 b6 27. Qc3 Rg6 28. g3 Kh7 29. Nd3 Rag8 30. Ne5 R6g7 31. Qxc6 f6 32. Nf3 Bxg3 33. Ne1 Qe4 34. Rxg3 Rxg3+ 35. fxg3 Qxe3+ 36. Kf1 Rxg3 37. Qd7+ Kg6 38. Qe8+ Qxe8 39. Rc2 Rg1+ 40. Kxg1 Qxe1+ 41. Kg2 Qe4+ 42. Kf1 Qxc2 43. Ba1 Ng4 44. Ke1 Qf2+ 45. Kd1 Ne3+ 46. Kc1 b5 47. Kb1 Qc2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/p1pppp1p/p4np1/8/8/4PN2/PPPP1PPP/RNBQK2R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. d4 d6 5. O-O Bg7 6. e4 Nxe4 7. Qd3 Bf5 8. Nh4 e6 9. Nxf5 gxf5 10. Nd2 Nc6 11. Re1 d5 12. c4 Bxd4 13. cxd5 Bxf2+ 14. Kh1 Bxe1 15. Qb3 Bxd2 16. dxc6 Rb8 17. Qc2 Rb5 18. Qxe4 fxe4 19. Bxd2 Qxd2 20. b4 O-O 21. a4 Qc3 22. g4 Qf3+ 23. Kg1 Rd5 24. Re1 Rd2 25. Rxe4 Qg2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rn1qkbnr/1bpppppp/pp6/8/3PP2P/8/PPP2PP1/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nc3 h6 5. Be3 b5 6. d5 e6 7. a4 Nf6 8. axb5 axb5 9. Rxa8 Bxa8 10. Qa1 Bb7 11. Bxb5 Bb4 12. Qa7 c6 13. Qxb7 Qa5 14. Qxb8+ Qd8 15. Qxd8+ Kxd8 16. dxc6 Nxe4 17. Bb6+ Ke8 18. cxd7+ Ke7 19. Kf1 Bxc3 20. bxc3 Nxc3 21. Bc6 e5 22. Rh3 Nd1 23. Rd3 Nb2 24. Bc5+ Ke6 25. d8=Q Rxd8 26. Rxd8 g5 27. Nf3 Kf6 28. h5 Ke6 29. Kg1 e4 30. Re8+ Kf5 31. Bd7+ Kf6 32. Bd4# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/p1pp2pp/1p2pp2/8/4PP2/1P6/P1PP2PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nf3 d5 5. Bb5+ c6 6. Bd3 Nd7 7. Nc3 Nc5 8. Qe2 Nh6 9. a4 a5 10. exd5 Nxd3+ 11. cxd3 cxd5 12. Nd4 Qd7 13. O-O Bc5 14. Qh5+ Qf7 15. Qxf7+ Kxf7 16. Ne2 g5 17. Ba3 gxf4 18. Bxc5 bxc5 19. Nb5 e5 20. Rac1 Bg4 21. Kf2 Rag8 22. Rfe1 Nf5 23. g3 Bxe2 24. Rxe2 fxg3+ 25. Kg1 gxh2+ 26. Kxh2 Rg5 27. Rxc5 Rhg8 28. Rc7+ Ne7 29. Re3 Rg2+ 30. Kh3 Rg1 31. Re2 R1g5 32. Re4 dxe4 33. Kh4 Rg1 34. Nd6+ Kf8 35. dxe4 Rh1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rn1qkbnr/pbppppp1/1p5p/8/8/3PPN2/PPP2PPP/RNBQKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. d4 e6 5. c4 d5 6. cxd5 Qxd5 7. Bd2 Be7 8. Nc3 Qd8 9. e4 a6 10. Rc1 c5 11. d5 b5 12. dxe6 Nf6 13. exf7+ Kd7 14. e5 Kc7 15. Na4 Nd5 16. Ba5+ Kd7 17. Bxd8 Kxd8 18. Nb6 c4 19. Nxd5 Nc6 20. Bxc4 Nxe5 21. Nxe5 Rc8 22. O-O Bd6 23. Qd4 Bc5 24. Qg4 Rc7 25. Ne3 Bxg2 26. Rcd1+ Bd5 27. Rxd5+ Ke7 28. Nf5+ Kf6 29. Qg6# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/pp2ppp1/2p4p/3p4/P4P2/7N/1PPPP1PP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c3 Bxh3 5. gxh3 e5 6. d4 Qh4+ 7. Kd2 Qxf4+ 8. e3 Qf2+ 9. Qe2 Qf5 10. e4 dxe4 11. Ke1 Nd7 12. Bg2 Ngf6 13. Rf1 Qe6 14. Bxe4 exd4 15. Bg2 dxc3 16. Nxc3 Ne5 17. Bf4 Nd3+ 18. Kd1 Nxf4 19. Qxe6+ Nxe6 20. Kc2 O-O-O 21. Ne4 Nd5 22. Rxf7 Ne3+ 23. Kb1 Nxg2 24. Ng3 Ng5 25. Ra3 Bxa3 26. Rxg7 Bf8 27. Rg6 Rd6 28. Nh5 Rxg6 29. a5 Nxh3 30. Ka2 Ne1 31. Kb3 Rg5 32. Ng7 Bxg7 33. Ka3 Kd7 34. Ka4 Rg4+ 35. b4 Nc2 36. Kb3 Rxb4+ 37. Kxc2 Rb2+ 38. Kd3 Ke8 39. Kc4 Kf7 40. a6 bxa6 41. Kd3 Re8 42. Kc4 Re3 43. Kc5 Ke6 44. Kc4 Rc3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnb1kbnr/pp1ppp1p/2p3p1/q5N1/4P3/8/PPPP1PPP/RNBQKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. h4 f6 5. Nf3 d5 6. Nc3 h5 7. exd5 cxd5 8. d4 Nc6 9. Bd3 Bf5 10. Bxf5 gxf5 11. Qe2 Nd8 12. O-O Kf7 13. b4 Qa6 14. Qxa6 bxa6 15. Nxd5 Rb8 16. Re1 Rb7 17. Bd2 Rd7 18. c4 e6 19. Nf4 Rc7 20. Rac1 Ne7 21. d5 exd5 22. Nxd5 Rb7 23. Nxf6 Bh6 24. Bxh6 Kxf6 25. Bg5+ Kf7 26. b5 Ne6 27. bxa6 Rb6 28. Ne5+ Kg7 29. Bxe7 Rxa6 30. Rcd1 Rxa2 31. Rd6 Nc5 32. Bf6+ Kh7 33. Bxh8 Ra3 34. Bf6 Rd3 35. Nxd3 f4 36. Nxf4 Ne4 37. Rxe4 Kg8 38. Re7 Kf8 39. Rd8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/ppp1p1p1/5p2/3p3p/4PP2/2P5/PP1P2PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. exd5 Qxd5 5. d4 Bf5 6. Nf3 e6 7. Be2 Nc6 8. Nh4 Bg4 9. O-O Nge7 10. Bxg4 hxg4 11. Qxg4 O-O-O 12. Be3 Nf5 13. Nxf5 exf5 14. Qg3 Qb5 15. b4 Qe2 16. Rf2 Qd1+ 17. Rf1 Qd3 18. a4 Rxh2 19. b5 Rh1+ 20. Kxh1 Qxf1+ 21. Bg1 Nxd4 22. cxd4 Bc5 23. dxc5 Rh8+ 24. Qh3 Rxh3+ 25. gxh3 Qxh3+ 26. Bh2 Qb3 27. Kg2 Qb2+ 28. Nd2 Qxa1 29. Nf1 Qxa4 30. c6 Qxb5 31. Bg3 Qxc6+ 32. Kf2 a5 33. Bh2 Qh1 34. Ng3 Qxh2+ 35. Kf3 g6 36. Ke3 Qxg3+ 37. Kd4 Qb3 38. Kc5 b6+ 39. Kd4 c5# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/1pppppp1/5n1p/p7/3P1B2/8/PPP1PPPP/RN1QKBNR w KQkq - 2 4"]
+[SetUp "1"]
+
+4. e3 d6 5. h3 a4 6. Nf3 c6 7. Bh2 Qa5+ 8. Nfd2 Bf5 9. a3 Qb6 10. Nc4 Qd8 11. Bd3 Bxd3 12. Qxd3 e6 13. e4 Nxe4 14. Qxe4 d5 15. Qe2 dxc4 16. O-O b5 17. Nc3 Bd6 18. Bxd6 Qxd6 19. Ne4 Qf4 20. g3 Qc7 21. Qg4 Kf8 22. Rae1 Nd7 23. Qh5 Kg8 24. Re3 Re8 25. h4 Re7 26. Rfe1 Qd8 27. Qf3 Nb6 28. Nc5 Qd6 29. Re5 Nd7 30. Nxd7 Qc7 31. Nc5 Qb6 32. Nxe6 fxe6 33. Rxe6 Rxe6 34. Rxe6 Qxd4 35. Re8+ Kh7 36. Qf5+ g6 37. Re7+ Qg7 38. Rxg7+ Kxg7 39. Qe5+ Kg8 40. Qe6+ Kf8 41. Qf6+ Kg8 42. Qxg6+ Kf8 43. Qf6+ Kg8 44. Qg6+ Kf8 45. Kg2 Rg8 46. Qf6+ Ke8 47. Kg1 Rg4 48. Qe6+ Kd8 49. Qxg4 Kc7 50. h5 Kb6 51. Qe6 c3 52. bxc3 Kb7 53. Qe5 b4 54. cxb4 Ka8 55. Qc7 c5 56. b5 c4 57. b6 c3 58. Qc8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkbnr/2p1pppp/p7/1p1p4/3PP1P1/8/PPP2P1P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Bg2 Bb7 5. Ne2 e6 6. a4 dxe4 7. Ng3 Nc6 8. O-O Nxd4 9. axb5 h5 10. Nxe4 hxg4 11. Bg5 Be7 12. Bxe7 Nxe7 13. bxa6 Bxe4 14. Bxe4 Qd6 15. h4 Rxh4 16. Re1 Rd8 17. Ra4 Qh2+ 18. Kf1 g3 19. fxg3 Qxg3 20. Qxd4 Rf4+ 21. Ke2 Rxd4 22. Rxd4 c5 23. Nd2 Rf2+ 24. Kd1 Qc7 25. Rd3 Qa5 26. Kc1 Qa1+ 27. Nb1 Qa5 28. Rh1 Nf5 29. Ra3 Qc7 30. Nc3 Qf4+ 31. Kb1 Rf1+ 32. Ka2 Qc1 33. Rxf1 Qxf1 34. Bd3 Qc1 35. a7 Ke7 36. Bxf5 exf5 37. a8=Q Kf6 38. Qg2 g5 39. Qc6+ Kg7 40. Ra6 Qh1 41. Qxh1 Kf8 42. Qc6 c4 43. Qh6+ Ke7 44. Qc6 Kf8 45. Nd5 f4 46. Ra8+ Kg7 47. Qd6 c3 48. Qf6+ Kh7 49. Rh8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp2pp1/4p2p/3p4/4P3/P1N5/1PPP1PPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 dxe4 5. Nxe4 Nd7 6. Nf3 Ndf6 7. Nc3 Bd6 8. Bd3 b6 9. Ne5 Bb7 10. Qe2 c6 11. Bf4 Rc8 12. Qf3 Qc7 13. Rf1 c5 14. Qe2 cxd4 15. Nb5 Bxe5 16. Nxc7+ Bxc7 17. Bxc7 Ne7 18. Be5 Ng6 19. Bxg6 Rc5 20. Bxd4 Rd5 21. Bxf6 O-O 22. Be4 b5 23. Bxd5 Bxd5 24. Qg4 g6 25. Be5 Bc4 26. Qf4 f6 27. Qg4 Kg7 28. Bd6 Rh8 29. O-O-O Bxf1 30. Qxe6 Rh7 31. Qe7+ Kh8 32. Qf8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbq1bnr/pppkpppp/8/8/4p3/7N/PPPP1PPP/RNBQKBR1 w Q - 0 4"]
+[SetUp "1"]
+
+4. d3 Ke8 5. Nc3 Nc6 6. Be3 exd3 7. Bxd3 Nf6 8. Be2 Bf5 9. g4 Bg6 10. g5 Ne4 11. Nb5 e6 12. Qxd8+ Rxd8 13. c3 a6 14. Nd4 Nxd4 15. Bxd4 Rxd4 16. cxd4 Bb4+ 17. Kf1 h6 18. Rc1 hxg5 19. Nxg5 Nd2+ 20. Kg2 Bd6 21. Rge1 f6 22. Nxe6 Be4+ 23. f3 Rxh2+ 24. Kg1 Bxf3 25. Nf4 Bxe2 26. Kxh2 Bxf4+ 27. Kh3 Ne4 28. Rc4 Bd3 29. b3 Kf7 30. Rcc1 g5 31. Kg2 g4 32. Rcd1 Bc2 33. Rc1 Bd3 34. d5 Bxc1 35. Rxc1 f5 36. Rxc7+ Kf6 37. Rc8 Bb1 38. Rb8 Nd6 39. Kg3 Ke5 40. Kh4 Bxa2 41. Rg8 Bxb3 42. Rf8 Bxd5 43. Ra8 Ne4 44. Re8+ Kf6 45. Rf8+ Bf7 46. Rd8 g3 47. Kh3 Bc4 48. Rc8 Bf1+ 49. Kh4 a5 50. Rc7 g2 51. Rh7 g1=Q 52. Rh6+ Ke5 53. Ra6 Qh2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppp2ppp/4pn2/3p4/5P1P/2N5/PPPPP1P1/R1BQKBNR w KQkq - 2 4"]
+[SetUp "1"]
+
+4. e3 a6 5. g4 h5 6. g5 Ng4 7. Qf3 c5 8. Qg2 Nc6 9. Nf3 g6 10. d4 Qb6 11. Na4 Qb4+ 12. Nc3 Bg7 13. a3 Qb6 14. Ne2 Ne7 15. dxc5 Qxc5 16. Ned4 Qb6 17. a4 O-O 18. a5 Qa7 19. c3 Nf5 20. Bd3 Bd7 21. Nxf5 exf5 22. Qe2 Bb5 23. Bxb5 axb5 24. Kf1 Rae8 25. Kg2 b4 26. cxb4 Nxe3+ 27. Bxe3 Rxe3 28. Qd2 Re4 29. Rhf1 Rfe8 30. Rae1 Rd8 31. Rf2 Qa6 32. Rfe2 Qe6 33. b5 Qd6 34. b6 Rxf4 35. Re8+ Bf8 36. Qxf4 Qxf4 37. Rxd8 Qg4+ 38. Kf2 Kg7 39. Rxd5 Bb4 40. Re3 Qc4 41. Ree5 Qc1 42. Rd7 Qxb2+ 43. Re2 Bc5+ 44. Kf1 Qb3 45. Kg2 Qb5 46. Red2 Be3 47. R2d3 Qa4 48. Kf1 Bc5 49. Kg2 Be3 50. Kf1 f4 51. Kg2 Qxa5 52. Nd4 Qa2+ 53. Kf3 Bg1 54. Ke4 Kg8 55. Rd1 Qh2 56. Rd8+ Kh7 57. Rd7 Bxd4 58. R1xd4 Kg8 59. R4d6 Qxh4 60. Rf6 Qe1+ 61. Kf3 Qg3+ 62. Ke4 Qe3+ 63. Kd5 Qd2+ 64. Ke4 Qe3+ 65. Kd5 Qd3+ 66. Ke5 Qxd7 67. Ke4 Qb5 68. Rd6 Qxg5 69. Rd5 Qg3 70. Rd8+ Kg7 71. Rd6 Qe3+ 72. Kd5 Qb3+ 73. Kc5 Qc3+ 74. Kd5 Qe3 75. Kc4 f3 76. Rd7 f2 77. Kb4 Qf4+ 78. Kc3 f1=Q 79. Rc7 Qe3+ 80. Kb2 Qxb6+ 81. Kc3 Qxc7+ 82. Kb2 Qfc1+ 83. Ka2 Q7c4# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppppp1pp/5n2/8/5N2/4P3/PPPP1PPP/RNBQKB1R w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nc3 e6 5. Qf3 d5 6. Nh5 Nc6 7. d4 Nxh5 8. Qxh5+ g6 9. Qd1 Bg7 10. Be2 O-O 11. Qd2 e5 12. dxe5 Be6 13. Qd1 Nxe5 14. f4 Qh4+ 15. Kf1 Rad8 16. g3 Qh3+ 17. Kf2 d4 18. Ne4 dxe3+ 19. Bxe3 Rxd1 20. Ng5 Rxa1 21. Rxa1 Qxh2+ 22. Ke1 Qxg3+ 23. Bf2 Qxf4 24. Ne4 Qxe4 25. b3 Nc4 26. b4 Bg4 27. c3 Qxe2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp3pp/3p1p2/4p3/3P4/P4P2/1PP1P1PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 Nd7 5. f4 f5 6. exf5 exd4 7. Qh5+ Ke7 8. Qe2+ Ne5 9. Nf3 Qe8 10. fxe5 Kd8 11. e6 Be7 12. Nxd4 c5 13. Nf3 b5 14. Qxb5 Qh5 15. Bd2 Bh4+ 16. Kd1 Nh6 17. Qc6 Ng4 18. Kc1 Bg3 19. Ba6 Rb8 20. Bxc8 Ne5 21. Nxe5 Ke7 22. f6+ gxf6 23. Qd7+ Kf8 24. e7+ Kg8 25. e8=Q+ Qxe8 26. Qxe8+ Kg7 27. Qf7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkbnr/1ppp1ppp/2n1p3/p7/4PP2/2N5/PPPP2PP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e5 d5 5. d4 Bd7 6. Be2 a4 7. a3 Nge7 8. Bb5 h5 9. Rb1 Nf5 10. Nce2 Nxe5 11. Bxa4 Bxa4 12. fxe5 Qh4+ 13. Kf1 Bb5 14. b3 Nxd4 15. Be3 Nf5 16. Bf2 Qe4 17. a4 Ba6 18. h4 Bb4 19. Rc1 O-O-O 20. c3 Ba3 21. b4 d4 22. Rh3 dxc3 23. Qc2 Qxc2 24. Rxc2 Rd1+ 25. Be1 Bxb4 26. Rhxc3 Bxc3 27. Nh3 Bxe1 28. g4 Ne3+ 29. Kg1 Bg3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/pp1p1pp1/4p3/2p4p/3P4/5P1N/PPP1P1PP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d5 d6 5. e4 Be7 6. Bb5+ Nd7 7. dxe6 Qa5+ 8. Nc3 fxe6 9. Ng5 a6 10. Ba4 Rb8 11. Nxe6 c4 12. Qd4 Nf6 13. Qxc4 b5 14. Qc7 Qb6 15. Bb3 Nc5 16. Qxb6 Rxb6 17. Nxc5 dxc5 18. Be3 Be6 19. O-O Rc6 20. a4 Bxb3 21. axb5 Rc8 22. cxb3 O-O 23. bxa6 Rb8 24. e5 Nd7 25. a7 Rbc8 26. Nd5 Kf7 27. Ra6 Nxe5 28. Nxe7 Kxe7 29. Rfa1 Kf7 30. a8=Q Rxa8 31. Rxa8 Rxa8 32. Rd1 Ra5 33. Bf4 Nc6 34. Rd7+ Kg8 35. Be3 Ra2 36. Bxc5 Rxb2 37. Rc7 Nd8 38. Rc8 Rb1+ 39. Kf2 Rb2+ 40. Kg3 Kf7 41. Rxd8 Rxb3 42. Rd7+ Kg8 43. Bd4 Rd3 44. Rxg7+ Kh8 45. Bf6 Ra3 46. Ra7+ Kg8 47. Rg7+ Kf8 48. Be7+ Kxg7 49. Bxa3 Kg6 50. Kf4 Kf7 51. Kf5 Kg8 52. Kg6 h4 53. Be7 Kh8 54. Bxh4 Kg8 55. Be7 Kh8 56. f4 Kg8 57. g4 Kh8 58. h3 Kg8 59. f5 Kh8 60. f6 Kg8 61. f7+ Kh8 62. f8=R# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqk1nr/pp1pppbp/8/2p3P1/2P5/8/PP1PP1PP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. d3 h6 5. Nf3 hxg5 6. g3 g4 7. Nfd2 f5 8. Nc3 Nh6 9. a3 Nc6 10. Bg2 Nf7 11. h3 Qc7 12. Nf1 Be5 13. hxg4 Bxg3+ 14. Kd2 Rxh1 15. Bxh1 fxg4 16. e3 Nh6 17. Nxg3 Qxg3 18. Be4 Nf7 19. Kc2 Qh3 20. Qe2 Nfe5 21. Qf2 g3 22. Qe2 d6 23. Bd2 Qg4 24. Rh1 Qxe2 25. Nxe2 Bg4 26. Rh8+ Kd7 27. Rxa8 Bxe2 28. Rg8 Bg4 29. Be1 g2 30. Bf2 b6 31. Kc3 Be6 32. Rf8 Nd8 33. Rh8 Ndf7 34. Rf8 Bh3 35. Rg8 Be6 36. Rg7 Ng4 37. Bg1 Nf6 38. Bxg2 Nh6 39. b3 Nf5 40. Rg5 Nh7 41. Rg6 Nf8 42. Rg4 Nxe3 43. Rf4 Nd1+ 44. Kd2 Ng6 45. Rf1 Bg4 46. Bh1 Nb2 47. Bh2 e6 48. a4 Ne7 49. Bg1 Ke8 50. Bh2 Kd7 51. Rg1 Bh5 52. Rg7 e5 53. Be4 Ke6 54. Rh7 Bg4 55. Bg3 Nf5 56. Bh2 Ne7 57. Bg3 Nf5 58. Be1 Nd4 59. Bh4 Nf3+ 60. Kc1 Nxh4 61. Rxh4 Nxd3+ 62. Bxd3 Bf3 63. Rh8 e4 64. Bf1 Ke5 65. Kd2 Kd4 66. Rf8 e3+ 67. Ke1 Be4 68. Rf7 Bc2 69. Rxa7 Bxb3 70. Ra8 Ba2 71. Rd8 Bb3 72. Be2 Bxa4 73. Kf1 Ke5 74. Bd3 Bd1 75. Bg6 Bb3 76. Bf7 Bd1 77. Bg8 Bg4 78. Rb8 Bf5 79. Ke1 Kd4 80. Bf7 b5 81. Rxb5 Bd3 82. Rb6 Bxc4 83. Bxc4 Kxc4 84. Rxd6 Kb5 85. Kf1 c4 86. Rd7 Kc6 87. Rd1 c3 88. Ke2 Kc5 89. Rd7 c2 90. Rc7+ Kd4 91. Rc8 c1=Q 92. Rxc1 Kd5 93. Rf1 Kd4 94. Rc1 Kd5 95. Rd1+ Ke4 96. Rd7 Ke5 97. Rd1 Ke4 98. Rd7 Kf5 99. Rd4 Ke6 100. Kxe3 Kf5 101. Ke2 Ke5 102. Ke3 Kf5 103. Kf3 Ke5 104. Rd2 Kf5 105. Rd4 Ke5 106. Ke3 Kf5 107. Re4 Kg5 108. Kf3 Kf5 109. Re2 Kg5 110. Re5+ Kh4 111. Rb5 Kh3 112. Rf5 Kh2 113. Rd5 Kh3 114. Rc5 Kh4 115. Rf5 Kh3 116. Rh5# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rn1qkbnr/1bpppppp/p7/1p6/3P4/5N2/PPP1PPPP/RNBQKBR1 w Qkq - 1 4"]
+[SetUp "1"]
+
+4. a4 b4 5. Nbd2 d6 6. e4 g6 7. c3 Nd7 8. Bc4 e6 9. cxb4 Be7 10. Rh1 d5 11. Bd3 Bxb4 12. e5 a5 13. h4 h5 14. Rh3 Ba6 15. Bxa6 Rxa6 16. Kf1 c5 17. dxc5 Ne7 18. Nb3 Nxc5 19. Nxc5 Bxc5 20. Kg1 O-O 21. Bh6 Rc6 22. Rc1 Re8 23. Qd3 Qc7 24. Qd2 Rc8 25. Rb1 Bb6 26. Qf4 Nf5 27. Kf1 Rc4 28. Qg5 Qc5 29. Qd2 Nxh6 30. Kg1 Ng4 31. Rf1 Rc2 32. Qe1 Qb4 33. Qxb4 axb4 34. a5 Bxf2+ 35. Kh1 Rc1 36. Nh2 Ne3 37. Rxe3 Bxe3 38. g3 R1c2 39. g4 Rxb2 40. gxh5 gxh5 41. Rf3 b3 42. a6 Rcc2 43. Nf1 Bd4 44. Rg3+ Kf8 45. Rg5 Rc1 46. Rg1 Ke7 47. a7 Bxa7 48. Rg2 Rxf1+ 49. Kh2 Rxg2+ 50. Kh3 Ra2 51. Kg3 Bc5 52. Kh3 Rf3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppppp2p/5p1p/8/3P4/5N2/PPP1PPPP/RN1QKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nbd2 Bg7 5. e4 O-O 6. g3 d6 7. Bc4+ e6 8. c3 Nc6 9. O-O d5 10. Bb3 a5 11. exd5 exd5 12. Nh4 Bh3 13. Re1 Kh8 14. Qf3 f5 15. Qd3 Qd7 16. a3 f4 17. Ndf3 a4 18. Bc2 Bf6 19. Kh1 fxg3 20. hxg3 Bxh4 21. Nxh4 Rxf2 22. Rad1 Qg7 23. Bb1 Rg8 24. Kg1 Rxb2 25. Re3 Nd8 26. Rde1 Ne6 27. Kh1 Qd7 28. R3e2 Rxe2 29. Qxe2 Qd6 30. Qd3 Ng5 31. Qe3 Bd7 32. Bf5 Ne4 33. Bxe4 Re8 34. Ng6+ hxg6 35. Qxh6+ Kg8 36. Kg2 Rxe4 37. Rh1 Qf6 38. Rh5 Re2+ 39. Kh1 Qf1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "rnbqkbnr/pp2ppp1/2p4p/3p4/8/2PP1N2/PP2PPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 dxe4 5. dxe4 Qc7 6. h3 Nd7 7. Bc4 a5 8. Be3 Ngf6 9. Nbd2 a4 10. e5 Nxe5 11. Nxe5 Qxe5 12. Qe2 a3 13. Rd1 b5 14. O-O bxc4 15. Nxc4 Ba6 16. Rfe1 Bxc4 17. Qxc4 Qb5 18. Qf4 Qb7 19. Bd4 e6 20. Bxf6 gxf6 21. Qxf6 Rh7 22. Rxe6+ fxe6 23. Qxe6+ Re7 24. Qg6+ Rf7 25. bxa3 Rxa3 26. Qe4+ Be7 27. Rb1 Qa8 28. Qe5 Ra5 29. Rb8+ Kd7 30. Qd4+ Bd6 31. Qg4+ Ke7 32. Rxa8 Rxa8 33. Qc4 Rf6 34. g3 Rb8 35. Qe4+ Kf7 36. Qxc6 Re8 37. Kg2 Re5 38. Qc4+ Kf8 39. Qc8+ Re8 40. Qc4 Re5 41. Qc8+ Ke7 42. Qb7+ Kf8 43. a4 Kg8 44. h4 Ref5 45. f4 Ra5 46. Qc8+ Bf8 47. Qd8 Raa6 48. Qd5+ Kh7 49. a5 Ra7 50. Kh3 Rff7 51. h5 Kh8 52. Qd8 Ra6 53. Qd5 Rfa7 54. Qe5+ Bg7 55. Qe8+ Kh7 56. Qe4+ Kh8 57. Qe8+ Kh7 58. Qe4+ Kh8 59. Qe8+ Kh7 60. Qe4+ Kh8 61. Qe8+ Kh7 62. Qe4+ Kg8 63. Qc4+ Kh7 64. Qd3+ Kg8 65. Qc4+ Kh7 66. Qe4+ 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppp1p1pp/5n2/3p1p2/3P4/5P1N/PPP1P1PP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e3 Nc6 5. Be2 e5 6. O-O a6 7. a4 Bd6 8. c4 Be7 9. Kh1 exd4 10. exd4 dxc4 11. Nd2 Qxd4 12. Bxc4 Bd7 13. Ng5 O-O-O 14. Nf7 Bb4 15. Nxh8 Rxh8 16. Bb3 Na5 17. Bf7 Rd8 18. Nb3 Nxb3 19. Bxb3 Qe5 20. Bg5 f4 21. Bh4 Bc6 22. Bxf6 Qxf6 23. Qe2 Bd2 24. Rab1 Kb8 25. Bc2 Qd4 26. Rfd1 Qe3 27. Qxe3 fxe3 28. Kg1 e2 29. Re1 Bxe1 30. Rxe1 Rd2 31. Bf5 g6 32. Be6 Bxa4 33. g4 Rxb2 34. Bg8 Bd1 35. h4 a5 36. g5 a4 37. h5 Rb5 38. Bxh7 a3 39. Rxe2 Bxe2 40. h6 a2 41. Kh2 a1=Q 42. Bg8 Qe1 43. Kh3 Rxg5 44. Bb3 Qh1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp1pp2/3p3p/6p1/3P4/2N5/PPPQPPPP/R1B1KBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. h4 Bg7 5. hxg5 Nc6 6. Nf3 Bd7 7. e4 e6 8. d5 Nce7 9. dxe6 Bxe6 10. Qd3 Qd7 11. Be3 O-O-O 12. Bxa7 Nc6 13. Be3 d5 14. exd5 Qe8 15. Qc4 Bxc3+ 16. Qxc3 Bxd5 17. O-O-O f6 18. Bb5 Nge7 19. gxh6 Qg8 20. Qxf6 Rf8 21. Qg5 Qe6 22. h7 Rxf3 23. gxf3 Bc4 24. Rh6 Nb4 25. Rxe6 Nxa2+ 26. Kd2 Bxb5 27. Qxb5 Nc6 28. Qf5 Na5 29. Re8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkb1r/ppp2ppp/3p1n2/4p3/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 Be7 5. Nc3 e4 6. a3 d5 7. Nge2 h5 8. f3 a5 9. fxe4 Nxe4 10. Bd2 Bd6 11. Nxe4 dxe4 12. Bc3 Bg4 13. d5 Qh4+ 14. Kd2 Nd7 15. Kc1 O-O 16. Kb1 a4 17. Qd2 Nb6 18. Nf4 Bxf4 19. exf4 c5 20. d6 e3 21. Qxe3 Nd5 22. Qxc5 Nxc3+ 23. bxc3 Rfd8 24. Bd3 Rd7 25. h3 b6 26. Qd4 Be6 27. Bb5 Rdd8 28. Rf1 Qg3 29. Kc1 Bd7 30. Be2 Ra5 31. Kb2 Qxg2 32. Rg1 Rd5 33. Rxg2 Rxd4 34. cxd4 Bc6 35. Rg5 Rxd6 36. Rd1 Bd7 37. Bxh5 f6 38. Rg3 Rd5 39. Bg4 f5 40. Bf3 Ra5 41. Bh5 Be6 42. Rdg1 Ra7 43. Re1 Bf7 44. Bf3 Rd7 45. d5 Bxd5 46. Rd1 Be6 47. Kc1 Rxd1+ 48. Bxd1 Bc4 49. Bh5 Kf8 50. Bg6 Ke7 51. Rg5 b5 52. Bxf5 b4 53. Bd3 Bxd3 54. Re5+ Kf8 55. axb4 Bf1 56. Rf5+ Kg8 57. Rd5 Kf7 58. Rg5 Bxh3 59. Rc5 Bd7 60. b5 a3 61. Re5 g5 62. b6 gxf4 63. b7 f3 64. Re4 Bf5 65. Rf4 a2 66. Kb2 Ke6 67. Kxa2 Bxc2 68. Rxf3 Be4 69. b8=Q Bxf3 70. Ka3 Kf5 71. Qc8+ Ke4 72. Qc3 Kf4 73. Qf6+ Kg3 74. Qh6 Kg2 75. Qf6 Kg3 76. Qe5+ Kf2 77. Qc5+ Kf1 78. Qe5 Kf2 79. Qf4 Kg2 80. Kb3 Bb7 81. Qe3 Bf3 82. Kc3 Ba8 83. Kb3 Bd5+ 84. Kc2 Bf3 85. Kd2 Kg3 86. Qg5+ Kf2 87. Qh4+ Kg2 88. Ke3 Bd1 89. Qg5+ Kh3 90. Kf2 Bg4 91. Qf6 Bh5 92. Qg5 Bg4 93. Qf6 Bd7 94. Qg5 Bg4 95. Qh6+ Bh5 96. Qg7 Bg4 97. Qh7+ Bh5 98. Qg8 Bg4 99. Qh7+ Bh5 100. Qg7 Bg4 101. Qg5 Bc8 102. Qg3# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "rnbqkbnr/ppp1pppp/8/3p4/4PP1P/8/PPPP2P1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e5 Nc6 5. d4 a5 6. h5 Nh6 7. c3 Bg4 8. Be2 Qd7 9. Bxg4 Qxg4 10. Qxg4 Nxg4 11. Ne2 Kd7 12. f5 e6 13. fxe6+ fxe6 14. Rh4 Nh6 15. Bxh6 gxh6 16. a4 Rg8 17. g3 Ne7 18. Rf4 Re8 19. g4 c5 20. Nd2 cxd4 21. Nxd4 Rb8 22. N2f3 Nc6 23. O-O-O Re8 24. c4 Bc5 25. cxd5 Nxd4 26. dxe6+ Ke7 27. Nxd4 Rc8 28. Rf7+ Ke8 29. Nb5 Bd6+ 30. Kb1 Bxe5 31. Rd5 Bg3 32. Rxb7 Rd8 33. Rxd8+ Kxd8 34. Rd7+ Ke8 35. Rxh7 Rxg4 36. Nc3 Rh4 37. Nd5 Be5 38. Ra7 Rh1+ 39. Ka2 Ra1+ 40. Kxa1 Bc7 41. Rxc7 Kf8 42. Rc8+ Kg7 43. Rc4 Kg8 44. Rc8+ Kg7 45. Rc4 Kh8 46. Rd4 Kg8 47. Rf4 Kh8 48. Rd4 Kg7 49. Rf4 Kg8 50. Rf7 Kh8 51. Rf4 Kg7 52. e7 Kh8 53. Rd4 Kg8 54. e8=Q+ Kg7 55. b3 Kh7 56. Rf4 Kg7 57. Qe3 Kh7 58. Qe1 Kg7 59. Qe3 Kh7 60. Rf3 Kh8 61. Rf1 Kh7 62. Rf3 Kh8 63. Qc5 Kg7 64. Qxa5 Kh7 65. Rf4 Kg7 66. Rf6 Kh7 67. Rf3 Kh8 68. Rf4 Kg8 69. Nc3 Kh8 70. Rf7 Kg8 71. Rf2 Kh7 72. Rf5 Kg8 73. Rf7 Kxf7 74. Qe5 Kf8 75. Ne2 Kf7 76. Nc1 Kg8 77. Qa5 Kh8 78. Qc7 Kg8 79. Qb6 Kh8 80. Qa6 Kg8 81. Qxh6 Kf7 82. Na2 Ke8 83. Qh7 Kd8 84. Qa7 Kc8 85. Qb6 Kd7 86. Qd8+ Ke6 87. Qf8 Kd5 88. Qf6 Ke4 89. Qf8 Kd3 90. Qf6 Kc2 91. Nc1 Kd2 92. Qb6 Kc2 93. Qh6 Kc3 94. Qb6 Kc2 95. Qh6 Kc3 96. Qb6 Kd2 97. Qf6 Kd1 98. Qf4 Kc2 99. Qh6 Kd1 100. a5 Kc2 101. Qf6 Kxc1 102. Qd6 Kc2 103. h6 Kxb3 104. Qd4 Ka3 105. Qf4 Kb3 106. Kb1 Ka3 107. Qf6 Kb4 108. Qe6 Kb5 109. Ka1 Kb4 110. Kb1 Kc5 111. Qd7 Kc4 112. Ka1 Kc5 113. Qe8 Kd5 114. Qg6 Kd4 115. Qg8 Ke5 116. Qg6 Kf4 117. Kb1 Ke5 118. Ka1 Kd4 119. a6 Ke3 120. Qg8 Ke2 121. Qe6+ Kd2 122. Kb1 Kc3 123. Qe8 Kd4 124. Qc6 Ke5 125. Qg6 Kd4 126. Qe8 Kd5 127. Qc8 Ke4 128. Qg8 Kf3 129. Qe6 Kg2 130. Qe8 Kg1 131. Qh8 Kh1 132. Qg8 Kh2 133. Qh8 Kg2 134. Qf8 Kg1 135. Qd6 Kh1 136. Qd7 Kg2 137. Ka1 Kf2 138. Kb1 Kg2 139. Ka1 Kf2 140. Qd8 Kg3 141. Qf6 Kh2 142. Qg5 Kh1 143. Qd8 Kg1 144. Qg8+ Kf2 145. Kb1 Ke1 146. Qg6 Kd2 147. Qe8 Kc3 148. h7 Kc4 149. h8=Q Kc5 150. Qd8 Kc6 151. Qde8+ Kb6 152. Ka2 Ka5 153. Qeg8 Kb6 154. Qe8 Kc5 155. Qeg8 Kc6 156. Ka1 Kc7 157. Qe8 Kb6 158. Qeg8 Kc6 159. Kb1 Kc7 160. Qe8 Kb6 161. Qeg8 Kb5 162. Qc8 Ka4 163. Qce8+ Kb4 164. Qd8 Kc4 165. Qdf8 Kb3 166. Qe8 Ka3 167. Qh4 Kb3 168. Qhh8 Kc4 169. Qd8 Kb4 170. Qde8 Kb3 171. Qh4 Kc3 172. Qg6 Kd2 173. Ka1 Kc3 174. Kb1 Kb3 175. Qh8 Kc4 176. Ka1 Kb3 177. Qgg8+ Kb4 178. Qd8 Kb5 179. Qdg8 Kb6 180. Qc8 Ka5 181. Kb1 Ka4 182. Qe5 Kb4 183. Qg7 Kb5 184. Qgf8 Ka4 185. Qfc5 Kb3 186. Q5c7 Ka4 187. Qe7 Ka5 188. Qee8 Kb4 189. Qe1+ Kb5 190. Qce6 Kc5 191. Qe8 Kd5 192. Q8e6+ Kd4 193. Qc8 Kd5 194. Qee8 Kd4 195. Ka1 Kd3 196. Qe5 Kd2 197. Qeh8 Kd3 198. Kb1 Ke3 199. a7 Kf2 200. a8=Q Kf1 201. Qcb7 Ke1 202. Qac8 Ke2 203. Qca8 Ke3 204. Qag8 Kf4 205. Qd8 Kg3 206. Qdg8+ Kf2 207. Qc4 Ke1 208. Qbb8 Kf2 209. Qa8 Kg1 210. Qab8 Kf2 211. Qa8 Kg1 212. Qab8 Kg2 213. Qa1 Kg1 214. Qab2 Kh1 215. Qe8 Kg1 216. Qcc6 Kf1 217. Qcc8 Kg1 218. Qc4 Kh1 219. Qee2 Kg1 220. Qee5 Kh1 221. Qee2 Kg1 222. Qee5 Kh1 223. Qee2 Kg1 224. Qee5 Kh1 225. Qee2 Kg1 226. Qee5 Kh1 227. Qee2 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "r1bqkbnr/pppp1pp1/n3p3/7p/5P2/4PN2/PPPP2PP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. a3 Nc5 5. d4 Ne4 6. Nbd2 d5 7. Be2 Ngf6 8. Ne5 c6 9. O-O h4 10. Qe1 h3 11. Nxe4 Nxe4 12. g4 Bd6 13. Nd3 f5 14. Nf2 g5 15. Bd2 Nxd2 16. Qxd2 gxf4 17. exf4 Qh4 18. Rae1 Bd7 19. Kh1 O-O-O 20. Qe3 Rdg8 21. c3 fxg4 22. Rg1 Qf6 23. Nd3 Rh4 24. Ne5 Bxe5 25. fxe5 Qg6 26. Rg3 Qc2 27. Qc1 Qe4+ 28. Kg1 Qh7 29. Rf1 Be8 30. Rf6 a5 31. Rxe6 a4 32. Bd3 Qh5 33. Qf1 Qg5 34. Rd6 Kb8 35. Qf6 Qc1+ 36. Kf2 Qxb2+ 37. Be2 Rgh8 38. Qd8+ Ka7 39. Qa5+ Kb8 40. Rd8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkb1r/pppppppp/5n2/8/P4P2/3P4/1PP1P1PP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. e4 e6 5. Nf3 c5 6. e5 Ng4 7. Nc3 Nc6 8. h3 Nh6 9. g4 d6 10. Bg2 d5 11. O-O Be7 12. a5 Nxa5 13. f5 exf5 14. Rxa5 fxg4 15. hxg4 d4 16. Nd5 Qxd5 17. Bxh6 gxh6 18. Ng5 Qxe5 19. Nxf7 Qe3+ 20. Kh1 O-O 21. Re1 Qf2 22. Nxh6+ Kh8 23. Rxe7 Qh4+ 24. Kg1 Qxe7 25. Qc1 Bd7 26. g5 Rae8 27. Rxa7 Qe2 28. Qa1 Qf2+ 29. Kh1 Rf4 30. Ng4 Rxg4 31. Qg1 Qh4+ 32. Qh2 Re1+ 33. Bf1 Bc6# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkb1r/ppppp1pp/7n/5p2/4PP2/P7/1PPP2PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e5 c5 5. Ne2 d6 6. c3 g6 7. h3 dxe5 8. d3 Nc6 9. fxe5 Nxe5 10. d4 Nc6 11. Be3 Bg7 12. dxc5 Qxd1+ 13. Kxd1 O-O 14. Nd2 e5 15. g3 f4 16. gxf4 Nf5 17. Bf2 Bh6 18. Kc2 exf4 19. Nd4 Ne3+ 20. Kb3 Nxd4+ 21. cxd4 Be6+ 22. Bc4 Nxc4 23. Nxc4 Bd5 24. Kc3 Bxh1 25. Rxh1 f3 26. b4 Rae8 27. Rf1 Bf4 28. d5 b5 29. cxb6 axb6 30. a4 Rf5 31. d6 Rc8 32. Rd1 b5 33. axb5 Rd8 34. b6 Kf7 35. h4 Ke6 36. Kb3 Bxd6 37. Nxd6 Rxd6 38. Rc1 Rf7 39. Rc2 Rd1 40. Ka4 Kd5 41. Ka5 Rf1 42. Rc7 Ra1+ 43. Kb5 Rxc7 44. bxc7 Ra8 45. Kb6 Rf8 46. Bg3 h6 47. b5 g5 48. hxg5 hxg5 49. Kb7 Kc5 50. b6 g4 51. c8=R+ Rxc8 52. Bf2+ Kb5 53. Kxc8 g3 54. b7 gxf2 55. b8=Q+ Kc4 56. Qf4+ Kd3 57. Qxf3+ Kd2 58. Qxf2+ Kc3 59. Qf3+ Kd2 60. Kc7 Kc2 61. Kb7 Kd2 62. Qf2+ Kd3 63. Kc6 Kc3 64. Qe3+ Kb2 65. Qd3 Ka1 66. Qe2 Kb1 67. Kc5 Ka1 68. Qf2 Kb1 69. Qg2 Kc1 70. Kb4 Kb1 71. Qd2 Ka1 72. Qe1+ Ka2 73. Qf2+ Ka1 74. Ka5 Kb1 75. Kb4 Ka1 76. Qd2 Kb1 77. Qe2 Ka1 78. Qd2 Kb1 79. Qe2 Ka1 80. Kc4 Kb1 81. Kb3 Kc1 82. Qe1# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "r1bqkbnr/ppp1p1pp/2n2p2/3p4/3P4/4P3/PPP1QPPP/RNB1KBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Bd2 a6 5. c4 Bf5 6. cxd5 Qxd5 7. Nc3 Qd6 8. Nf3 Nb4 9. e4 Bg4 10. Be3 e5 11. dxe5 fxe5 12. Rd1 Bxf3 13. gxf3 Qe6 14. h4 Nf6 15. Bh3 Qe7 16. f4 Rd8 17. O-O Nc6 18. fxe5 Qxe5 19. Nd5 Bb4 20. Bf4 Nd4 21. Qd3 Qxd5 22. exd5 Bc3 23. Qe3+ Kf8 24. bxc3 Nb5 25. c4 Rg8 26. cxb5 h6 27. Rfe1 Re8 28. Qc5+ Kf7 29. a4 axb5 30. a5 Kg6 31. Rxe8 Kh7 32. Rxg8 g5 33. Qf8 b4 34. Rg7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkbnr/pppppp2/n6p/6p1/3P4/5PP1/PPP1P2P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. h4 gxh4 5. Nc3 c5 6. e4 Bg7 7. dxc5 Nxc5 8. Nge2 d6 9. Bd2 b5 10. b4 Na4 11. Rxh4 a6 12. Nxa4 bxa4 13. Rb1 Bd7 14. c4 Rc8 15. Be3 Bf6 16. Rh1 Rxc4 17. Nf4 Rc3 18. Qd2 Be5 19. Nd5 Bxg3+ 20. Ke2 Ra3 21. Kd1 Nf6 22. Nxf6+ exf6 23. Rg1 Rg8 24. Rc1 f5 25. exf5 Qe7 26. Rc3 Rxc3 27. Qxc3 Qh4 28. Bd3 Ke7 29. Bf2 Qf4 30. Be4 Rc8 31. f6+ Ke6 32. Bxg3 Qxe4 33. b5 Qb1+ 34. Kd2 Qxa2+ 35. Qc2 Rxc2+ 36. Ke1 Qa1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "r1bqkbnr/pppp1p1p/2n3p1/4P3/8/8/PPP1PPPP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nc3 a6 5. Nf3 h6 6. e4 Nge7 7. Nd5 Ng8 8. Bf4 Bc5 9. e6 fxe6 10. Nxc7+ Kf7 11. Nxa8 d5 12. Nc7 Qf6 13. Bd2 dxe4 14. Bc3 Qf5 15. Bxh8 Bb6 16. Nd4 Qc5 17. Na8 Ba5+ 18. c3 e5 19. Nb3 Qa3 20. Bc4+ Kf8 21. O-O Bh3 22. Qd5 Na7 23. Qf7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1/2-1/2"]
+[FEN "rnbqkb1r/1pppp1pp/7n/p4pB1/3P4/5N2/PPP1PPPP/RN1QKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Qd3 Nf7 5. e4 Nxg5 6. Nxg5 e5 7. Qd2 h6 8. Nh3 exd4 9. Qxd4 Nc6 10. Qd3 fxe4 11. Qxe4+ Qe7 12. Qe3 d5 13. Nc3 d4 14. Qxe7+ Bxe7 15. Nb5 O-O 16. Bc4+ Kh8 17. Nxc7 Bxh3 18. gxh3 Bb4+ 19. Kd1 Rac8 20. Nd5 Ne5 21. Bb5 Rc5 22. Nxb4 Rxb5 23. Nd3 Nxd3 24. cxd3 Rxf2 25. b3 Kh7 26. Rc1 Rxa2 27. Rg1 Rxb3 28. Rg3 Rxh2 29. h4 Rh1+ 30. Kd2 Rb2+ 31. Rc2 Rh2+ 32. Rg2 Rxg2+ 33. Ke1 Rbxc2 34. Kf1 Kg8 35. h5 b6 36. Ke1 b5 37. Kf1 Kf7 38. Ke1 Kg8 39. Kf1 Kf7 40. Ke1 Kg8 41. Kf1 Kf7 42. Ke1 Kg8 43. Kf1 Kf7 44. Ke1 Kg8 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rn1qkbnr/1bpppppp/1p6/p7/4PP2/8/PPPP2PP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nc3 h5 5. d4 Nf6 6. e5 Ne4 7. Nxe4 Bxe4 8. Nf3 e6 9. c3 c5 10. Ng5 Bc6 11. f5 cxd4 12. Bd3 dxc3 13. bxc3 Be7 14. fxe6 dxe6 15. Nxe6 Qd7 16. Nxg7+ Kf8 17. Nf5 Bc5 18. Qe2 Qe6 19. Bf4 h4 20. O-O-O Nd7 21. Rhe1 Ba4 22. Rd2 Re8 23. Qg4 Qg6 24. Qxg6 fxg6 25. Nd4 g5 26. Bxg5 Nxe5 27. Rf2+ Nf7 28. Ref1 Bc6 29. Rxf7+ Kg8 30. Nxc6 h3 31. g4 Rh4 32. Bxh4 Re5 33. Bh7+ Kh8 34. Bf6# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppp2ppp/4pn2/3p4/7P/N4N2/PPPPPPP1/R1BQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e3 Ne4 5. d3 Nf6 6. Be2 Nc6 7. d4 h6 8. Nb1 Bd6 9. Nbd2 e5 10. Nf1 e4 11. Ng1 a5 12. a4 Ne7 13. c3 O-O 14. Nh3 Bd7 15. Nf4 Qc8 16. b3 Ng6 17. h5 Nxf4 18. exf4 c6 19. g3 Re8 20. Ne3 b5 21. Ba3 b4 22. Bb2 Kh7 23. Kf1 Bh3+ 24. Ke1 bxc3 25. Bxc3 c5 26. Rc1 cxd4 27. g4 dxc3 28. Nxd5 Nxd5 29. Qxd5 Bxf4 30. Bc4 Bxc1 31. Qxf7 Qxg4 32. Qg6+ Kh8 33. f3 Qxf3 34. Rh2 Rad8 35. Be2 Bd2+ 36. Kd1 c2+ 37. Kxc2 Qc3+ 38. Kb1 Qxb3+ 39. Ka1 Bc3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/ppp1pp1p/3p1np1/8/3P4/4PQ2/PPP2PPP/RNB1KBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 Nc6 5. d5 Nb4 6. Qb3 a5 7. a3 Na6 8. Bb5+ Bd7 9. Bxd7+ Nxd7 10. Qc3 Nf6 11. Be3 Qc8 12. Nf3 c6 13. dxc6 Bg7 14. Nbd2 O-O 15. Qb3 bxc6 16. O-O Rb8 17. Qa4 Rxb2 18. Bd4 Rb7 19. Rab1 c5 20. Bxf6 Rxb1 21. Rxb1 exf6 22. h3 Nc7 23. Nc4 Rd8 24. Qxa5 d5 25. Nb6 Qe6 26. Nxd5 Qxe4 27. Nxc7 Bf8 28. Re1 Qxc2 29. Ne8 Rb8 30. Nxf6+ Kh8 31. Qc7 Rb2 32. Ne4 Qb3 33. Qe5+ Kg8 34. Nf6+ Kg7 35. Nd7+ Kh6 36. Nh2 Qe6 37. Ng4+ Qxg4 38. Nf6 Qf5 39. Qxb2 g5 40. Ng4+ Kh5 41. Ne5 Qf6 42. Qe2+ g4 43. Qxg4+ Kh6 44. Nxf7+ Qxf7 45. h4 Qf6 46. g3 Be7 47. Re6 Qg6 48. Qf4+ Bg5 49. Rxg6+ hxg6 50. Qxg5+ Kh7 51. Qxc5 Kg7 52. Qe7+ Kh8 53. a4 Kg8 54. Kf1 Kh8 55. Ke2 g5 56. hxg5 Kg8 57. g6 Kh8 58. Qf8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkbnr/1ppp1p1p/6p1/p3p3/2PP4/5P2/PP2P1PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. dxe5 Bg7 5. e4 d6 6. h4 Bxe5 7. Ne2 a4 8. a3 Nc6 9. Nbc3 Be6 10. Nf4 Nf6 11. Be3 Nh5 12. Nxh5 gxh5 13. Rc1 Rg8 14. f4 Rg3 15. Qd2 Bxc3 16. bxc3 Qf6 17. Qf2 Qg7 18. Rc2 Na5 19. Bd4 Qg8 20. Bf6 Rg6 21. e5 Bf5 22. Re2 Kd7 23. c5 Bd3 24. Rb2 Bxf1 25. Rxf1 Nc4 26. Re2 Nxa3 27. Qf3 Ra7 28. f5 Rg3 29. e6+ fxe6 30. fxe6+ Kc8 31. Qf5 Nc2+ 32. Qxc2 a3 33. e7 Qe8 34. cxd6 Ra5 35. Kf2 Rg4 36. Kg1 a2 37. d7+ Qxd7 38. e8=Q+ Qxe8 39. Rxe8+ Kd7 40. Qxh7+ Kc6 41. Re7 Kb6 42. Kh2 Rc4 43. Ra1 Ra3 44. Qf7 Rca4 45. Rxc7 Ka7 46. Rxb7+ Ka8 47. Re7 Rxh4+ 48. Bxh4 Rb3 49. Qf8+ Rb8 50. Rf1 Rxf8 51. Rxf8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp2ppp/8/3p4/3Pp3/8/PPP1PPPP/RNBQKBNR w kq - 0 4"]
+[SetUp "1"]
+
+4. c4 dxc4 5. e3 Be6 6. Nh3 f5 7. Nd2 Qd7 8. Nf4 Bd6 9. Nxe6 c3 10. Qb3 Ke7 11. bxc3 Qxe6 12. Qxb7 Nf6 13. Qxa8 Nfd7 14. Qxa7 Nb6 15. Ba3 N8d7 16. Bxd6+ cxd6 17. Rb1 Rb8 18. Bb5 Qh6 19. Bxd7 Nxd7 20. Rxb8 Qg6 21. Qc7 Qxg2 22. Rb7 Kf8 23. Qxd7 Qxh1+ 24. Nf1 g6 25. Qd8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqk1nr/ppp1ppbp/3p2p1/8/P2PP3/8/1PP2PPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. h3 c5 5. c3 Nf6 6. Nd2 cxd4 7. cxd4 O-O 8. Ngf3 Nc6 9. Bd3 Nh5 10. O-O Nf4 11. Bc2 Bxh3 12. Nb3 Nxg2 13. Kh1 Nb4 14. Kh2 Qd7 15. Ng5 Nf4 16. Bxf4 Bxf1 17. e5 dxe5 18. Bg3 Nxc2 19. Qxc2 Rfc8 20. Qd2 h6 21. Qe3 exd4 22. Qd2 Bc4 23. Nh3 Bxb3 24. Re1 Rc2 25. Qd1 Rxf2+ 26. Nxf2 Bxd1 27. Nxd1 Qg4 28. Rxe7 Qf3 29. Nf2 Bf8 30. Re5 Bd6 31. Ng4 Qxg4 32. Re3 dxe3 33. Bxd6 Rc8 34. Bc7 Rxc7 35. b4 Rc2+ 36. Kh1 Qd1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "r1bqkbnr/1ppp1ppp/2n1p3/p7/3PP3/2N5/PPP2PPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d5 Nce7 5. Nf3 exd5 6. exd5 Ng6 7. Qe2+ Be7 8. Bg5 d6 9. h4 h6 10. Bxe7 N6xe7 11. O-O-O Bd7 12. Ne4 b5 13. Nd4 h5 14. Nc6 Nxc6 15. Nxd6+ Kf8 16. dxc6 Bg4 17. Nxf7 Qxd1+ 18. Qxd1 a4 19. f3 Kxf7 20. fxg4 Nf6 21. g5 Rad8 22. Qf3 Rhe8 23. Bxb5 Rd5 24. Bc4 Kf8 25. gxf6 Rd4 26. fxg7+ Kxg7 27. Qf7+ Kh6 28. Qf6+ Kh7 29. Qf7+ Kh6 30. Rf1 Rf4 31. Qxf4+ Kg7 32. Qf7+ Kh8 33. Qxe8+ Kh7 34. Qg8+ Kh6 35. Qg5+ Kh7 36. Qxh5+ Kg7 37. Rf8 Kxf8 38. Qe2 a3 39. bxa3 Kg7 40. Kb1 Kh7 41. Qh5+ Kg7 42. Qf5 Kh6 43. Qb5 Kh7 44. Ka1 Kh8 45. Qa5 Kh7 46. Qe5 Kh6 47. Qa5 Kh7 48. Qe5 Kh6 49. Qa5 Kg7 50. Qc5 Kg6 51. Qb5 Kh6 52. Qa5 Kg6 53. Qa7 Kh7 54. Qa4 Kg7 55. Qa7 Kg6 56. Qxc7 Kf5 57. Bb5 Kg6 58. Be2 Kf5 59. Bc4 Ke4 60. Qd6 Kf5 61. Kb1 Ke4 62. Ka1 Ke3 63. Qd7 Kf2 64. Qe7 Kg1 65. Qd6 Kf2 66. Qe7 Kg1 67. Qd6 Kf2 68. Qe7 Kg1 69. Qd6 Kh1 70. Qh6 Kxg2 71. Qf4 Kh1 72. Qh6 Kg2 73. Qf4 Kh1 74. Qh6 Kg2 75. Qf4 Kh1 76. Qh6 Kg2 77. Qf4 Kh1 78. Qh6 Kg2 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkbnr/p2ppp1p/1p4p1/2p4P/2P5/8/PP1PPPP1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. hxg6 fxg6 5. Nc3 Nc6 6. e3 Bg7 7. d3 Bxc3+ 8. bxc3 Nf6 9. Nh3 d6 10. Rb1 Bxh3 11. gxh3 Qd7 12. Bg2 O-O 13. O-O Kh8 14. Rb2 Rg8 15. Kh2 g5 16. Bxc6 Qxc6 17. Rg1 Rg6 18. e4 Rag8 19. f3 Qc7 20. f4 gxf4 21. Rxg6 hxg6 22. Bxf4 Nh5 23. Qg4 e5 24. Be3 Qg7 25. Bg5 Qf7 26. Be3 Qf1 27. Rf2 Qe1 28. Qg5 Rb8 29. Qh6+ Kg8 30. Rg2 Kf7 31. Bf2 Qd1 32. Qxg6+ Ke7 33. Qh7+ Ke6 34. Qf5+ Ke7 35. Qh7+ Kd8 36. Rg8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbr1/ppp1pppp/5n2/3p4/8/1PP2N2/P2PPPPP/RNBQKB1R w KQq - 0 4"]
+[SetUp "1"]
+
+4. e3 g5 5. d4 Nbd7 6. Be2 g4 7. Nfd2 e5 8. c4 c6 9. Bb2 Bd6 10. cxd5 Nxd5 11. Nc3 Rg6 12. Nde4 Nxc3 13. Bxc3 Bc7 14. dxe5 Bxe5 15. Bxe5 Nxe5 16. O-O Qxd1 17. Rfxd1 Ke7 18. Rac1 b6 19. Bc4 a5 20. Ng3 a4 21. Bd3 Nxd3 22. Rxd3 c5 23. Rcd1 b5 24. Rd5 Rc6 25. Ne4 axb3 26. axb3 c4 27. bxc4 bxc4 28. Nc3 Rca6 29. Rc5 Ra1 30. Rc7+ Kf6 31. f3 Kg7 32. Rxa1 Rxa1+ 33. Kf2 Ba6 34. fxg4 h6 35. Ne4 Ra4 36. Nd6 Kf6 37. Kf3 Ke5 38. Nxf7+ Kd5 39. e4+ Ke6 40. Kf4 Ra3 41. Nxh6 Ra2 42. Nf5 Ra5 43. Re7+ Kf6 44. g5+ Kg6 45. Rg7+ Kh5 46. g4# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkbnr/1ppppppp/p7/8/3nPP2/2N5/PPPP2PP/R1BQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. h4 e5 5. d3 d6 6. f5 h5 7. Nf3 Nf6 8. Bg5 c6 9. Nxd4 exd4 10. Nb1 Qc7 11. Be2 d5 12. Bf3 Bc5 13. Qd2 dxe4 14. dxe4 a5 15. c3 Qg3+ 16. Kd1 Ng4 17. cxd4 Nf2+ 18. Kc2 Bb4 19. Bf4 Bxd2 20. Bxg3 Nxh1 21. Bc7 Bh6 22. Na3 Kd7 23. Bh2 Nf2 24. Bg3 Ng4 25. Nc4 Ra6 26. Kc3 Rd8 27. Re1 f6 28. e5 b5 29. Bxg4 hxg4 30. exf6 gxf6 31. Nd6 Ra8 32. Kc2 Bf8 33. Re6 Bxd6 34. Bxd6 Re8 35. Rxf6 Re2+ 36. Kb3 Rxg2 37. h5 Ba6 38. Bf4 Rf2 39. Be5 Bc8 40. Rg6 Ke7 41. d5 Rf3+ 42. Bc3 Bxf5 43. Rxc6 b4 44. h6 bxc3 45. Rxc3 Rxc3+ 46. Kxc3 g3 47. Kd2 g2 48. d6+ Kd7 49. a3 g1=Q 50. b3 Rc8 51. a4 Rc2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/2pp1ppp/pp2p3/8/1P2P3/2N5/P1PP1PPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. a3 c5 5. bxc5 bxc5 6. Rb1 Nc6 7. g3 Qc7 8. Bg2 Be7 9. Nf3 Nf6 10. O-O O-O 11. d3 Ra7 12. Bf4 d6 13. Re1 Nh5 14. Be3 Qa5 15. Bd2 Rb7 16. Rxb7 Bxb7 17. Nd5 Qa4 18. Nxe7+ Nxe7 19. Qb1 Bc6 20. e5 h6 21. exd6 Nc8 22. Qb8 Nf6 23. Bf4 g5 24. Be5 Nd7 25. Qb2 f6 26. Bc3 Bd5 27. Nd2 Bxg2 28. Kxg2 Kf7 29. Ne4 Qc6 30. Bxf6 Rg8 31. Be5 Na7 32. c4 Qa8 33. Bc3 Rg6 34. Rb1 Nb5 35. cxb5 Rg8 36. bxa6 Rd8 37. Qb7 Kg6 38. g4 e5 39. Ba5 Rh8 40. Qxd7 Re8 41. Rb7 c4 42. Qf5# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/pp1ppppp/8/2p5/4P3/P2P4/1PP2PPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nc3 Nc6 5. Nf3 e5 6. g3 d6 7. Bg2 Be7 8. Nd5 Nf6 9. a4 O-O 10. c3 h6 11. Rb1 Be6 12. Nh4 Qd7 13. Ra1 Rac8 14. O-O Rb8 15. Kh1 Rfe8 16. f4 Bg4 17. Bf3 Bh3 18. Nxf6+ Bxf6 19. Ng2 exf4 20. gxf4 Kh8 21. Rg1 Re7 22. Ne3 Ree8 23. Qe2 g6 24. Qf2 Bg7 25. f5 Ne5 26. d4 Nd3 27. Qg3 cxd4 28. Nd1 Bxf5 29. exf5 Qxf5 30. Bg2 Nxc1 31. Rxc1 Be5 32. Qh4 Kg7 33. cxd4 Bf6 34. Qh3 Qxh3 35. Bxh3 Bxd4 36. Bd7 Re7 37. Rg4 Re1+ 38. Kg2 Be3 39. Ra1 Bc5 40. Rg3 Rd8 41. Bh3 h5 42. b4 Bd4 43. Rb1 Re2+ 44. Kf3 Rxh2 45. Ne3 h4 46. Nf5+ Kf6 47. Nxd4 hxg3 48. Bg2 Rh4 49. Nb5 a6 50. Nc3 Rd4 51. Ne2 Rd3+ 52. Ke4 Ra3 53. Rb2 Rh8 54. Nd4 Rh4+ 55. Kd5 Rc3 56. Rd2 Ke7 57. Re2+ Kd7 58. Rd2 a5 59. Ne2 Re3 60. Nd4 Rc3 61. Nf3 Rxb4 62. Nd4 Re3 63. Re2 Rxd4+ 64. Kxd4 Rxe2 65. Bf1 g2 66. Bxe2 g1=Q+ 67. Kc3 Qe1+ 68. Kb3 Qxe2 69. Kc3 Ke7 70. Kb3 Kf8 71. Ka3 Qd2 72. Kb3 Qc1 73. Ka2 f5 74. Kb3 Kg7 75. Ka2 Kh6 76. Kb3 Kh7 77. Ka2 Kh6 78. Kb3 Kh7 79. Ka2 Kh6 80. Kb3 Kh7 81. Ka2 Kh6 82. Kb3 Kh7 83. Ka2 f4 84. Kb3 f3 85. Ka2 f2 86. Kb3 f1=Q 87. Ka2 Qfc4# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/p1pp1ppp/1p2pn2/8/3P4/1P2P3/P1P2PPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c4 Bb4+ 5. Bd2 Qe7 6. Nf3 Bb7 7. Bd3 a5 8. O-O Bxd2 9. Nfxd2 d6 10. Nc3 Nc6 11. a3 O-O 12. Kh1 Rad8 13. f4 d5 14. Qe2 Nb8 15. cxd5 exd5 16. Nf3 Rc8 17. Ne5 g6 18. Qf2 Nfd7 19. Qg3 Nxe5 20. fxe5 f6 21. exf6 Rxf6 22. Rxf6 Qxf6 23. Rf1 Qd6 24. Qh4 Rf8 25. Rxf8+ Qxf8 26. e4 Nc6 27. Nxd5 Nxd4 28. Nf6+ Kf7 29. Bc4+ Bd5 30. Bxd5+ Ne6 31. e5 Qh8 32. Qh3 Kf8 33. Qxe6 Qg8 34. Qxg8+ Ke7 35. Qe8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/1pp1pp1p/p5p1/3p4/3P4/2P4N/PP2PPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. g3 Nf6 5. Bg2 Bg7 6. O-O O-O 7. Bg5 Ne4 8. Be3 Nc6 9. Nf4 Nf6 10. Na3 g5 11. Nh3 h6 12. f4 Ng4 13. Nc2 Bf5 14. Bc1 gxf4 15. e4 dxe4 16. Nxf4 Kh8 17. Bd2 Nxd4 18. cxd4 Bxd4+ 19. Nxd4 Qxd4+ 20. Kh1 Nf2+ 21. Rxf2 Qxf2 22. Rc1 Rac8 23. a3 Kh7 24. Qc2 Rfd8 25. Qb3 Qxd2 26. Rf1 e6 27. Nh5 Kh8 28. h4 e3 29. Rxf5 Qd1+ 30. Kh2 Qxb3 31. Rxf7 e2 32. Nf4 e1=Q 33. Bf3 Qxb2+ 34. Ng2 Kg8 35. Re7 Qbf2 36. a4 Qxg3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/pp3ppp/2pp4/4p3/4P1P1/3P4/PPP2P1P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Qe2 Ne7 5. h4 Na6 6. h5 d5 7. Bh3 Nc5 8. Nd2 Qc7 9. Ngf3 Ne6 10. exd5 Nxd5 11. Nc4 Nef4 12. Qe4 Nxh3 13. Rxh3 Be7 14. Bd2 f6 15. O-O-O Qd7 16. Nfxe5 Qe6 17. h6 g6 18. Nxg6 Qxg4 19. Nd6+ Kd8 20. Nxh8 Bxd6 21. Nf7+ Kc7 22. Rh4 Qf5 23. c4 Be5 24. Nxe5 a5 25. Nf7 Be6 26. Qxf5 Bxf5 27. cxd5 Bg6 28. Bf4+ Kd7 29. Nd6 cxd5 30. Kd2 b5 31. Nxb5 Rg8 32. Rc1 d4 33. Nxd4 Rf8 34. Ke1 Rc8 35. Ke2 Rd8 36. Kf1 Ke8 37. Ne6 Bxd3+ 38. Kg2 Rd7 39. Nc5 Rd4 40. Nxd3 f5 41. Ne5 Rb4 42. Bg5 Rb8 43. Rhc4 f4 44. Rc8+ Rxc8 45. Rxc8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/p1ppp1pp/5n2/1p3B2/8/4P3/PPPP1PPP/RNBQK1NR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Nh3 Bb7 5. f3 e6 6. Bd3 a6 7. a4 b4 8. O-O Bd6 9. Be2 O-O 10. f4 Qe8 11. d3 Qg6 12. Ng5 Nc6 13. d4 Ne7 14. Bf3 Bxf3 15. Nxf3 Kh8 16. Nbd2 Ned5 17. a5 Nxe3 18. Nh4 Qh6 19. Nc4 Nxd1 20. g3 Qh5 21. c3 bxc3 22. b4 Qe2 23. Ne5 Bxe5 24. fxe5 Ng4 25. Ng6+ hxg6 26. Rf3 Rxf3 27. h4 Qf1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkbnr/ppp1pp2/6pp/3p4/4PP2/6P1/PPPP3P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e5 h5 5. Nf3 Bf5 6. d4 c6 7. c4 dxc4 8. Bxc4 Nd7 9. Qe2 Bg7 10. Nc3 Nh6 11. Bb3 e6 12. Bd2 a5 13. Rd1 Bh3 14. Ne4 O-O 15. Bc4 Nf5 16. Bc3 Qe7 17. Kf2 Bg4 18. h3 Bxf3 19. Qxf3 Rfd8 20. g4 Nh6 21. Rdg1 c5 22. dxc5 b5 23. Bxb5 Nxc5 24. Nf6+ Bxf6 25. exf6 Ne4+ 26. Qxe4 Qc5+ 27. Kg2 Qxb5 28. Kf2 Rab8 29. gxh5 Qxh5 30. h4 Qc5+ 31. Ke2 Qh5+ 32. Qf3 Qb5+ 33. Kf2 Rd3 34. Qe4 Nf5 35. Rxg6+ fxg6 36. Qxe6+ Kh7 37. Qf7+ Kh6 38. h5 Qb6+ 39. Bd4 Qxd4+ 40. Kf1 Ng3+ 41. Kg2 Rxb2+ 42. Kh3 Nf5+ 43. Kg4 Rg2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkb1r/ppp1pppp/8/3p4/4P1nP/7N/PPPP1PP1/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Be2 Nh6 5. d3 Nc6 6. exd5 Qxd5 7. Nf4 Qd8 8. Nc3 Nf5 9. Nh5 g6 10. Ng3 Nxg3 11. fxg3 Bg7 12. O-O Nd4 13. Be3 Be6 14. Qd2 Nxe2+ 15. Qxe2 Qd7 16. Qd2 O-O 17. Bh6 Qd4+ 18. Rf2 Rfd8 19. Rc1 Bxh6 20. Qxh6 a5 21. Ne4 Qxb2 22. c3 Qa3 23. Rb1 Rd5 24. g4 Rxd3 25. Ng5 Qxc3 26. Qxh7+ Kf8 27. Rxf7+ Ke8 28. Rxe7+ Kd8 29. Nxe6+ Kc8 30. Rxc7+ Qxc7 31. Qxc7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "rnbqk2r/ppppppbp/5np1/8/8/P3PN2/1PPP1PPP/RNBQKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. d4 b6 5. h4 Bb7 6. Nc3 h5 7. Ng5 d5 8. Rb1 O-O 9. Be2 c5 10. g4 hxg4 11. Bxg4 Nxg4 12. Qxg4 Qd7 13. Qg3 cxd4 14. h5 dxc3 15. hxg6 Qf5 16. gxf7+ Rxf7 17. Rg1 Qg6 18. Nxf7 Qxg3 19. Nh6+ Bxh6 20. Rxg3+ Kf8 21. bxc3 Ke8 22. Rb4 Nd7 23. Rh4 Bf8 24. Rh8 Ba6 25. Rgg8 Rc8 26. Bd2 Bb5 27. f3 Bc4 28. Kf2 Kf7 29. Rg5 Rc6 30. e4 Re6 31. Rh4 dxe4 32. fxe4 Rc6 33. Ke1 Be6 34. e5 Ke8 35. Rh8 a5 36. Rg3 Bf5 37. Rg5 Bxc2 38. Bf4 Bb3 39. Kd2 Rh6 40. Rh5 Rxh5 41. Rxh5 Bg7 42. Ke3 Nc5 43. Rh2 Ba4 44. Rh7 Kf7 45. Bh6 Kg6 46. Rxg7+ Kxh6 47. Rxe7 Kg5 48. Kd4 Bd7 49. Kd5 Bf5 50. c4 Be4+ 51. Kd6 Bd3 52. e6 Bg6 53. Rc7 Kf6 54. e7 Ne4+ 55. Kd7 Nc5+ 56. Kd6 Ne6 57. Rc8 Ng7 58. Rf8+ Bf7 59. Rb8 Bxc4 60. e8=N+ Nxe8+ 61. Rxe8 b5 62. Re4 Kf5 63. Rh4 Kg5 64. Re4 Kf5 65. Rd4 Bb3 66. Rd3 Ba2 67. Rd2 Bf7 68. Rf2+ Kg6 69. Rg2+ Kf6 70. Rf2+ Kg6 71. Ke7 Bc4 72. Rc2 Kg5 73. Kd6 Bf1 74. Ke5 Kg6 75. Rc6+ Kh5 76. Kf4 a4 77. Ra6 Bd3 78. Rd6 Bc2 79. Rd5+ Kh6 80. Ke5 Kg5 81. Kd4+ Kf4 82. Rxb5 Bb3 83. Re5 Bc2 84. Re2 Bd1 85. Rg2 Bb3 86. Rd2 Kf3 87. Rh2 Kg3 88. Rb2 Kf4 89. Rf2+ Kg5 90. Kc5 Kg4 91. Rf6 Kh4 92. Rg6 Bc2 93. Rg1 Kh5 94. Kb4 Kh6 95. Rg4 Kh5 96. Rg1 Bf5 97. Kc5 Bd7 98. Kd6 Be8 99. Ke7 Bb5 100. Kf6 Bc6 101. Rc1 Bd5 102. Rc5 Kh4 103. Rxd5 Kg4 104. Rf5 Kh4 105. Kg6 Kg4 106. Kf6 Kg3 107. Kg5 Kh3 108. Rf7 Kg3 109. Rf6 Kh3 110. Rf7 Kg3 111. Rh7 Kf2 112. Re7 Kf3 113. Rd7 Ke4 114. Kf6 Ke3 115. Kg5 Ke4 116. Rd5 Kxd5 117. Kf4 Ke6 118. Ke4 Kd6 119. Kd4 Ke7 120. Kc5 Kf8 121. Kb4 Ke7 122. Kb5 Kd7 123. Kxa4 Kd8 124. Kb3 Kd7 125. Kb4 Kd8 126. Kc5 Kd7 127. Kb6 Kc8 128. Kb5 Kc7 129. Ka5 Kc6 130. Kb4 Kc7 131. Kc5 Kb7 132. Kb5 Kc8 133. Kb6 Kb8 134. a4 Ka8 135. Kb5 Ka7 136. Kc4 Kb8 137. Kc3 Ka8 138. Kd2 Kb7 139. Kc2 Kc6 140. Kb2 Kc5 141. Kb3 Kc6 142. Kb4 Kb6 143. Kc3 Kc7 144. Kc2 Kd7 145. Kc3 Kc6 146. Kd4 Kb7 147. Ke3 Kb6 148. Kf2 Kc7 149. a5 Kd6 150. a6 Kc7 151. Ke3 Kc6 152. Kd4 Kb6 153. Ke5 Kxa6 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqk1nr/pppp1pp1/7p/4N3/1b6/8/P1PPPPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. a3 Be7 5. Bb2 d6 6. Nf3 Nf6 7. c4 O-O 8. d3 d5 9. Qc2 c5 10. cxd5 Nxd5 11. Nc3 Nxc3 12. Bxc3 b5 13. Rb1 Nc6 14. Qb2 b4 15. axb4 Nxb4 16. Rd1 Rb8 17. g3 Bf5 18. Qc1 c4 19. Qd2 cxd3 20. exd3 Qd5 21. Nd4 Bg4 22. f3 Bg5 23. Qe2 Na2 24. Ba1 Rfe8 25. h4 Bf6 26. Qe4 Bxd4 27. Be2 Qa5+ 28. Kf1 Rxe4 29. fxe4 Bxe2+ 30. Kxe2 Nc3+ 31. Bxc3 Qxc3 32. g4 Rb2+ 33. Kf3 Rf2+ 34. Kg3 Qc7+ 35. Kh3 Rf3+ 36. Kg2 Qg3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/3ppppp/p7/1Pp5/8/N7/1PPPPPPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 e6 5. Nc4 g6 6. d4 d5 7. exd5 Nf6 8. d6 Nbd7 9. dxc5 Nxc5 10. Be3 Ncd7 11. Qf3 Nd5 12. Bd4 f6 13. Qe4 N7b6 14. Nxb6 f5 15. Qe5 Nb4 16. Qxh8 Rb8 17. Qxh7 Nxc2+ 18. Kd2 Qxd6 19. Qxg6+ Ke7 20. Qf6+ Ke8 21. Kxc2 Bb7 22. bxa6 Be4+ 23. Bd3 Bxd3+ 24. Kxd3 Bh6 25. a7 Rd8 26. a8=Q Bc1 27. Ra7 Qc7 28. Rxc7 Bd2 29. Qfxd8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/1pp1pppp/p2p1n2/8/P2P4/5N2/1PP1PPPP/RNBQKB1R w KQkq - 1 4"]
+[SetUp "1"]
+
+4. c3 e6 5. Qc2 d5 6. Bf4 c5 7. e3 Nc6 8. Nbd2 Nh5 9. Bg3 Nxg3 10. hxg3 h5 11. dxc5 Bxc5 12. b4 Be7 13. b5 axb5 14. Be2 b4 15. Bb5 bxc3 16. Qxc3 Bf6 17. Nd4 Bd7 18. O-O h4 19. gxh4 Bxd4 20. exd4 Qxh4 21. f4 Qh2+ 22. Kf2 Qh4+ 23. Kg1 Qh2+ 24. Kf2 Qh4+ 25. g3 Qh2+ 26. Ke3 Ne7 27. Qc5 Rh3 28. Bxd7+ Kxd7 29. Rab1 Rxg3+ 30. Nf3 Nf5+ 31. Kd3 Nd6 32. Rb6 Qh7+ 33. Ke3 Qe4+ 34. Kd2 Rg2+ 35. Kc1 Qe3+ 36. Kb1 Qd3+ 37. Kc1 Qxf1+ 38. Ne1 Qxe1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/p1p1pppp/8/3p4/1p4P1/8/PPPPPPBP/RNBQK1NR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c4 bxc3 5. Nxc3 Be6 6. Nf3 Qc8 7. Ng5 Nf6 8. Nxe6 Qxe6 9. Qb3 Nbd7 10. Nxd5 Rc8 11. d4 Qxg4 12. Bf3 Qh4 13. Qb7 Rb8 14. Nxc7+ Kd8 15. Qxa7 Ne4 16. O-O e6 17. Qa5 Ke7 18. Bxe4 Rb5 19. Qxb5 h6 20. Bc6 e5 21. Bxd7 Rg8 22. Bf5 Qxd4 23. Be3 g6 24. Bh3 f5 25. Bxd4 exd4 26. Qd5 d3 27. Qe6+ Kd8 28. Rac1 Bb4 29. Nb5 Bd6 30. Rc8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkb1r/pppppppp/n7/6P1/1P2n3/8/P1PPPP1P/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. d3 Nd6 5. Bd2 h6 6. gxh6 Nf5 7. a3 Nxh6 8. h4 d5 9. Bg2 e5 10. e4 c6 11. exd5 cxd5 12. Qe2 f6 13. c4 Nf5 14. Nf3 d4 15. h5 Be7 16. Bc1 Be6 17. Nfd2 Qd7 18. Bf3 O-O-O 19. Nb3 g5 20. hxg6 Rxh1+ 21. Bxh1 Rg8 22. Qg4 Ne3 23. Qg1 Nc2+ 24. Ke2 Nxa1 25. Nxa1 Bf5 26. Bf3 Bxb4 27. axb4 Nxb4 28. Kd2 Nxd3 29. Qh2 e4 30. Na3 exf3 31. g7 Qe7 32. Kc2 Nxc1+ 33. Kd2 Na2 34. Qc7+ Qxc7 35. Ke1 Qe7+ 36. Kf1 Rxg7 37. Nb1 Qe2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "r1bqkbnr/p1pppp1p/np4p1/8/2PP4/P7/1P2PPPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 c5 5. h4 Bg7 6. h5 cxd4 7. Nf3 Bb7 8. h6 Bf6 9. Nxd4 Rc8 10. Nc3 Nc5 11. Be3 Nxe4 12. Qf3 Nd6 13. Qg3 Rc5 14. Ncb5 Nxc4 15. Bxc4 Rxc4 16. b3 Rc8 17. Nxa7 Qc7 18. Qxc7 Rxc7 19. Nab5 Rc8 20. Kd2 Bxd4 21. Bxd4 f6 22. Rh4 Kf7 23. g4 Ba6 24. a4 Bxb5 25. axb5 g5 26. Rh3 Kg6 27. Bxb6 Nxh6 28. Ra4 Rb8 29. Bc5 f5 30. Bxe7 fxg4 31. Ra6+ Kf7 32. Rhxh6 Kxe7 33. b6 Rhf8 34. Rxh7+ Ke8 35. b4 Rxf2+ 36. Ke3 Rf7 37. Rh8+ Rf8 38. Rh5 Rf3+ 39. Kd4 Kf7 40. Rxg5 Ke7 41. Rxg4 Rb7 42. b5 Rf6 43. Kc5 Re6 44. Rg7+ Kf6 45. Rg3 Re1 46. Kb4 Rf1 47. Rc3 Rb1+ 48. Kc5 Rh1 49. Rc2 Rg1 50. Rf2+ Ke5 51. Raa2 Rc1+ 52. Rfc2 Rf1 53. Ra7 Rb8 54. Rxd7 Kf6 55. b7 Ke6 56. Kc6 Rf3 57. Rd1 Rf4 58. Kc7 Rff8 59. Rc5 Rfe8 60. Rd6+ Kf7 61. Rf5+ Kg7 62. Rg5+ Kf8 63. Rf5+ Kg8 64. Rg5+ Kf7 65. Rf5+ Kg7 66. Rg5+ Kh7 67. Rc6 Rh8 68. Kb6 Rhf8 69. Ka7 Rg8 70. Rh5+ Kg7 71. Ka6 Rge8 72. Rg5+ Kf7 73. Rf5+ Kg7 74. Rg5+ Kf7 75. Rf5+ Ke7 76. Ka7 Rg8 77. Rh5 Rge8 78. Rh7+ Kf8 79. Rcc7 Kg8 80. Rhg7+ Kh8 81. Rh7+ Kg8 82. Rhg7+ Kh8 83. Rh7+ Kg8 84. Rhg7+ Kh8 85. Rh7+ Kg8 86. Rhg7+ Kh8 87. Rh7+ Kg8 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1/2-1/2"]
+[FEN "rnbqkbnr/1ppp1ppp/4p3/8/p7/1P1P1N2/P1P1PPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 c5 5. e3 cxd4 6. Nxd4 Nf6 7. a3 e5 8. Ne2 d5 9. b4 Nc6 10. c4 d4 11. Nd2 dxe3 12. fxe3 Qd3 13. Nb1 Qxd1+ 14. Kxd1 Ne4 15. Rg1 Bf5 16. g4 O-O-O+ 17. Nd2 Nf2+ 18. Ke1 Nd3+ 19. Kd1 Nf2+ 20. Ke1 Nd3+ 21. Kd1 Nf2+ 22. Ke1 Nd3+ 23. Kd1 Nf2+ 24. Ke1 Nd3+ 25. Kd1 Nf2+ 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/p1pppp1p/6pn/1N6/8/P7/1PPPPPPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 Bg7 5. d4 O-O 6. Nf3 d5 7. Bd3 dxe4 8. Bxe4 c6 9. Nc3 Be6 10. h4 Qd6 11. h5 Nf5 12. Ne2 Qd7 13. Qd3 Rd8 14. hxg6 hxg6 15. Ng5 Nd6 16. Rh7 Nxe4 17. Qxe4 c5 18. Nxe6 fxe6 19. Qxg6 Kf8 20. Rxg7 Qa4 21. Rg8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1/2-1/2"]
+[FEN "rnbqkb1r/pp1pppp1/2p2n1p/8/3P2Q1/4P3/PPP2PPP/RNB1KBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Qe2 d5 5. c4 Bf5 6. Nf3 e6 7. Bd2 Be7 8. Bc3 Nbd7 9. Nbd2 O-O 10. Qd1 Bh7 11. a4 c5 12. Be2 cxd4 13. Bxd4 Re8 14. O-O Bb4 15. Rc1 e5 16. Bc3 a5 17. Bxb4 axb4 18. cxd5 Kh8 19. d6 e4 20. Nd4 Ne5 21. Nb5 Rf8 22. Rc7 Ne8 23. Nc4 Nxc7 24. Nxc7 Nxc4 25. Nxa8 Nxd6 26. h3 f5 27. a5 f4 28. exf4 Qf6 29. Nc7 Rc8 30. Nd5 Qxb2 31. Bh5 Rd8 32. Qa4 Bf5 33. Ne3 Bd7 34. Qc2 Qxc2 35. Nxc2 Bb5 36. Rd1 b3 37. Nd4 Bd3 38. Nxb3 Bc2 39. Rd4 Bxb3 40. Bg6 Bg8 41. g3 Bh7 42. Bxh7 Kxh7 43. Kg2 Kg6 44. Rd5 Kf6 45. h4 Nf7 46. Rb5 Rd2 47. Rxb7 e3 48. Rb1 Rxf2+ 49. Kg1 Kf5 50. Ra1 Rf3 51. a6 e2 52. a7 Ra3 53. Rxa3 e1=Q+ 54. Kh2 Qf2+ 55. Kh1 Qf1+ 56. Kh2 Qf2+ 57. Kh1 Qf1+ 58. Kh2 Qf2+ 59. Kh3 Qf1+ 60. Kh2 Qf2+ 61. Kh1 Qf1+ 62. Kh2 Qf2+ 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/1pp1p1pp/p4p2/3p4/1P4P1/8/P1PPPPBP/RNBQK1NR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c4 d4 5. a3 e5 6. Qc2 a5 7. b5 Nd7 8. h3 Nc5 9. d3 a4 10. Nd2 Ne7 11. Rb1 f5 12. gxf5 h6 13. Ngf3 Nxf5 14. Nxe5 Qd6 15. Ndf3 Be7 16. O-O Bg5 17. Kh1 Bxc1 18. Qxc1 g5 19. e3 Rf8 20. exd4 Nd7 21. c5 Qf6 22. Re1 Nxe5 23. Nxe5 Ne7 24. b6 c6 25. Qe3 Be6 26. Nxc6 Nxc6 27. Qxe6+ Qxe6 28. Rxe6+ Kf7 29. Rd6 Rae8 30. Bxc6 Re2 31. Bxb7 Ke7 32. Kg1 Rfxf2 33. Bd5 g4 34. b7 g3 35. b8=Q Rg2+ 36. Bxg2 Re1+ 37. Rxe1+ Kf7 38. Qd8 Kg7 39. Re7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rn1qkbnr/p2ppppp/b1p5/1p6/4P3/P1N5/1PPP1PPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Be2 e6 5. Nf3 Nf6 6. d4 b4 7. axb4 Bxe2 8. Qxe2 Bxb4 9. e5 Nd5 10. Qd3 h6 11. Kf1 a5 12. Ne4 O-O 13. c4 f5 14. Ng3 Ne7 15. Rg1 Qe8 16. c5 a4 17. Qc4 Nd5 18. h4 Ra5 19. Qc2 Qg6 20. h5 Qf7 21. Ne2 Qxh5 22. Rxa4 Rxa4 23. Qxa4 Qg4 24. Rh1 Qe4 25. Rh3 f4 26. Nfg1 Bxc5 27. f3 Ne3+ 28. Ke1 Qc2 29. Qxc2 Nxc2+ 30. Kf1 Nxd4 31. Rh1 Na6 32. Rh5 Nb3 33. Bxf4 Nb4 34. g3 Ra8 35. Rh4 Nd3 36. Kg2 Ra2 37. Bxh6 gxh6 38. Rg4+ Kf7 39. Nc3 Rxb2+ 40. Nce2 Bxg1 41. Rh4 Rxe2+ 42. Kf1 Re1+ 43. Kg2 Be3 44. Rc4 Nd4 45. Rxc6 Rg1+ 46. Kh2 Nxf3+ 47. Kh3 Nf2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnb1kbnr/pp1ppp1p/6p1/q1p5/P1P5/5N2/1P1PPPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. g3 Nc6 5. Bg2 Bg7 6. O-O Nf6 7. Nc3 a6 8. d4 Nxd4 9. Nxd4 cxd4 10. b4 Qh5 11. Bf3 Ng4 12. Bxg4 Qxg4 13. f3 Qe6 14. Nd5 Qc6 15. Bg5 f6 16. Qxd4 Kf7 17. Be3 Rd8 18. b5 axb5 19. axb5 e5 20. bxc6 exd4 21. c7 Re8 22. Rxa8 f5 23. Nb6 Rxe3 24. Nxc8 Bf8 25. Nb6 d3 26. c8=Q Ba3 27. Nd5 d2 28. Qg8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/p1pp1ppp/1p2pn2/8/2PP4/P7/1P2PPPP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. f3 c5 5. e3 Ba6 6. Be2 Qc7 7. d5 Bd6 8. g4 Bxh2 9. f4 Bg3+ 10. Kf1 Ne4 11. Rh5 Nf2 12. Qc2 Nc6 13. Rxh7 O-O-O 14. dxc6 Rxh7 15. Qxh7 g5 16. a4 gxf4 17. exf4 f5 18. a5 Nxg4 19. axb6 Qxc6 20. Bf3 Qxb6 21. Rxa6 Qxa6 22. Bxg4 fxg4 23. Qd3 Bh2 24. Kg2 Bxg1 25. Na3 Bd4 26. Nb5 Qb7+ 27. Kg3 Qh1 28. f5 Qh3+ 29. Kf4 Be5+ 30. Ke4 d5+ 31. Kxe5 Qxd3 32. Nxa7+ Kb7 33. Kxe6 Rf8 34. b3 Qxf5+ 35. Ke7 Qf6+ 36. Kd7 Rd8# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "r1bqkbnr/pp1ppppp/2p5/2n5/4P3/N7/PPPP1PPP/1RBQKBNR w Kkq - 1 4"]
+[SetUp "1"]
+
+4. e5 Ne6 5. d4 d6 6. Be2 dxe5 7. dxe5 g6 8. Qxd8+ Nxd8 9. Nf3 Bg7 10. O-O h5 11. h3 Bh6 12. b4 Ne6 13. b5 Bd7 14. Bc4 Bxc1 15. Rfxc1 Nh6 16. bxc6 Bxc6 17. Nb5 Bxf3 18. Bxe6 Bc6 19. Nc7+ Kd8 20. Nxa8 fxe6 21. f3 Kc8 22. a4 Kb8 23. Nb6 axb6 24. Rxb6 Kc7 25. a5 Nf7 26. f4 Nh6 27. Rb4 Rd8 28. Rb3 h4 29. Rd3 Rf8 30. Rd4 Nf5 31. Rd2 Ng3 32. Rf2 Nf5 33. Re1 Ng3 34. Rd1 Ne4 35. Rff1 Nc3 36. Rde1 Ne4 37. Rd1 Bd5 38. Rd4 Ra8 39. Re1 Ng3 40. Ra4 Kc6 41. c4 Be4 42. Ra3 Rd8 43. Ra2 Kc5 44. Rc1 Rd3 45. Rb2 Bc6 46. Ra2 Rd4 47. a6 b6 48. a7 Re4 49. Rca1 Rxc4 50. a8=Q Bxa8 51. Rxa8 Kd4 52. Re1 Rb4 53. Re8 Kc3 54. Rxe7 Kd2 55. Ra1 Ne2+ 56. Kh2 Nd4 57. Rg7 Nc2 58. Ra6 Ne3 59. Rxg6 Ke1 60. Ra1+ Ke2 61. Rh6 Rxf4 62. Rf6 Rc4 63. Rxe6 b5 64. Rb1 Nf1+ 65. Kh1 Rc2 66. Rb6 Ra2 67. R6xb5 Ra4 68. R5b4 Ra5 69. Re4+ Kd3 70. Rxh4 Ng3+ 71. Kh2 Ne4 72. Rb3+ Kc2 73. Re3 Nf2 74. Re2+ Kd3 75. Rxf2 Rc5 76. e6 Rg5 77. Rhf4 Rg7 78. Kg1 Rg3 79. R4f3+ Rxf3 80. Rxf3+ Kc2 81. e7 Kb1 82. Rf2 Ka1 83. e8=Q Kb1 84. Qc8 Ka1 85. Qc6 Kb1 86. Qc5 Ka1 87. Qc6 Kb1 88. Qc5 Ka1 89. Qc6 Kb1 90. Qc5 Ka1 91. Qc6 Kb1 92. Qc5 Ka1 93. Qc6 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/p1p1pppp/1p3n2/3p4/P2P4/7N/1PP1PPPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Ng5 h6 5. Nf3 e6 6. c3 Ba6 7. Ne5 Nbd7 8. g3 Nxe5 9. dxe5 Ng4 10. f4 Bc5 11. e3 Bxf1 12. Qxg4 Bd3 13. Qxg7 Rh7 14. Qg4 Qd7 15. Nd2 O-O-O 16. Qf3 Qc6 17. b4 Bxb4 18. Ra2 Bxc3 19. Kf2 Bxd2 20. Rd1 Be4 21. Qg4 Bxc1 22. a5 d4 23. axb6 Bxe3+ 24. Kf1 Qxb6 25. Rda1 d3 26. Ra6 Qb3 27. f5 exf5 28. Qg5 hxg5 29. h4 Re8 30. Rxa7 Bg2+ 31. Kxg2 Qd5+ 32. Kh2 Rxh4+ 33. gxh4 Kd7 34. R7a5 Bf4+ 35. Kg1 Be3+ 36. Kh2 Bf4+ 37. Kh3 Qf3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "r1bqkb1r/ppp1pppp/2n4n/3p4/3P3P/P7/1PP1PPP1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Bxh6 gxh6 5. Nf3 a6 6. e3 Rg8 7. c4 e5 8. cxd5 Qxd5 9. Nc3 Qa5 10. b4 Nxb4 11. axb4 Qxb4 12. Qc1 exd4 13. Nxd4 h5 14. Qc2 c5 15. Ra4 cxd4 16. Rxb4 dxc3 17. Rb3 Bc5 18. Rxc3 Be7 19. Rxc8+ Kd7 20. Qf5+ Kd6 21. Rxa8 Rxa8 22. Bc4 Rf8 23. Qd5+ Kc7 24. O-O Rh8 25. Qe5+ Kc6 26. Qxh8 Bd6 27. Qc8+ Kb6 28. Rb1+ Ka5 29. Qxb7 h6 30. Qxa6# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppp1ppp1/3p1n2/7p/2P5/1P6/PB1PPPPP/RN1QKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 e5 5. dxe5 dxe5 6. Qxd8+ Kxd8 7. Bxe5 Na6 8. Bxf6+ gxf6 9. Nc3 Ba3 10. e3 c6 11. Na4 Nb4 12. Ke2 Bf5 13. Nf3 Nc2 14. Nd4 Nxd4+ 15. exd4 b5 16. Nc5 Re8+ 17. Kf3 Bb2 18. Bd3 Bg4+ 19. Kf4 Bxd4 20. f3 Be3+ 21. Kg3 Bc8 22. Rac1 b4 23. Rhe1 h4+ 24. Kxh4 Bf2+ 25. Kh5 Rh8+ 26. Bh7 Rxh7# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkb1r/pppp1ppp/5n2/8/5p2/3P3N/PPP1PPPP/RN1QKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. Nxf4 d5 5. g3 Bd6 6. e3 O-O 7. Ne2 Kh8 8. Bg2 a5 9. a4 c6 10. Nd2 g6 11. h3 Na6 12. Nf3 Re8 13. O-O Bd7 14. Rc1 Kg7 15. Kh2 Qb6 16. Ng5 Nc7 17. c4 Bf8 18. Nf4 h6 19. Nxf7 Kxf7 20. d4 Ne6 21. Nxe6 Kxe6 22. cxd5+ cxd5 23. b4 axb4 24. a5 Qxa5 25. Kg1 Qb6 26. Rb1 Qc6 27. Qd3 Kf7 28. Rbc1 Qb6 29. Rfe1 Be6 30. Qb1 Bg7 31. Kh2 Rac8 32. Rcd1 Qc7 33. Kg1 Ra8 34. Qxb4 Bf8 35. Qb1 Qd7 36. h4 Bf5 37. Qb6 Ra2 38. Rf1 Be4 39. Ra1 Bxg2 40. Kxg2 Ra6 41. Rxa6 bxa6 42. Qxa6 Qf5 43. Rc1 Qe4+ 44. Kg1 Re7 45. Rc8 Qb1+ 46. Kg2 Qf5 47. Qc6 Kg7 48. Rd8 Ng4 49. Qxd5 Qxf2+ 50. Kh3 h5 51. Qg2 Qf6 52. Rb8 Rc7 53. Qe2 Qe6 54. d5 Nf2+ 55. Kg2 Qh3+ 56. Kxf2 Qh2+ 57. Ke1 Qg1+ 58. Kd2 Qc1+ 59. Kd3 Qc4+ 60. Kd2 Qc3+ 61. Kd1 Qa1+ 62. Rb1 Qxb1+ 63. Kd2 Bb4# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/1p1p1ppp/2p5/p3p3/8/4P3/PPPPBPPP/RNBQK1NR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. b3 d5 5. d3 Nf6 6. Bb2 Bd6 7. c4 O-O 8. cxd5 cxd5 9. h3 d4 10. exd4 exd4 11. Nd2 Nc6 12. Bf3 Ne5 13. Bxd4 Nxd3+ 14. Kf1 Bf5 15. Nc4 Re8 16. Bb6 Qd7 17. Ne2 Ne4 18. g3 Be5 19. Rb1 Ra6 20. Bg4 Bc7 21. Be3 Bxg4 22. hxg4 Rf6 23. Nf4 Bxf4 24. Bxf4 Nexf2 25. Rh4 Nxd1 26. Kg1 Nxf4 27. gxf4 Qd4+ 28. Kh2 Re2+ 29. Kg3 Qd3+ 30. Ne3 Qxe3# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqk1nr/ppp2ppp/4p3/3p4/2B1P3/N7/PPPP1PPP/R1BQK1NR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Be2 dxe4 5. d3 Nc6 6. dxe4 Qxd1+ 7. Bxd1 Bd7 8. Bg5 f6 9. Be3 O-O-O 10. Nf3 e5 11. Be2 Be6 12. b4 a6 13. b5 axb5 14. Bxb5 Nb4 15. O-O Nc6 16. Bxc6 Nh6 17. Ba4 Bg4 18. Nd2 g5 19. h3 Bxh3 20. gxh3 Rhg8 21. Bb3 Rg6 22. Be6+ Kb8 23. Rfc1 f5 24. exf5 Ng4 25. hxg4 Rxe6 26. fxe6 Kc8 27. Nac4 Re8 28. Re1 h5 29. Ba7 e4 30. Nxe4 hxg4 31. Rad1 Re7 32. Re3 Rxe6 33. Ned6+ Rxd6 34. Nxd6+ Kd7 35. Nf7+ Kc6 36. Re5 b5 37. Nd8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/1pp1ppp1/7p/p2p4/3PP3/7N/PPP2PPP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nd2 dxe4 5. c3 Nf6 6. Qe2 Bf5 7. f3 exf3 8. gxf3 c5 9. Nb3 Nc6 10. Be3 c4 11. Nd2 b5 12. b3 Nd5 13. bxc4 Nxc3 14. Qf2 Nb4 15. Qh4 Nc2+ 16. Kf2 Nxa1 17. Qf4 e6 18. Ne4 Nc2 19. Be2 Bxe4 20. Bd2 Qxd4+ 21. Kg2 Nxe2 22. Qc7 Qxd2 23. Rc1 Ne3+ 24. Kf2 Nc3+ 25. Kg1 Qg2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1/2-1/2"]
+[FEN "rnbqk1nr/ppp1ppbp/6p1/3p4/3PP3/5P2/PPP3PP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. exd5 c6 5. dxc6 bxc6 6. Nc3 Nf6 7. Bc4 Ba6 8. Bxa6 Nxa6 9. Nge2 Qb8 10. O-O c5 11. Bf4 Qxb2 12. Rb1 Qa3 13. Qd3 cxd4 14. Qb5+ Nd7 15. Ne4 Rc8 16. Rb3 Qxa2 17. Nd6+ exd6 18. Bxd6 Nc7 19. Qb4 Ne6 20. Re1 Qxc2 21. Nf4 Qc4 22. Qb7 Bf8 23. Nxe6 fxe6 24. Bf4 Bg7 25. Bd6 Bf6 26. h3 Rf8 27. Ra3 d3 28. Rxd3 Rc6 29. Re4 Rb6 30. Qa8+ Kf7 31. Qxf8+ Nxf8 32. Rxc4 Rb7 33. Rb4 Rxb4 34. Bxb4 g5 35. Kf1 h6 36. Bxf8 Kxf8 37. Rd7 h5 38. Rxa7 Be7 39. g4 hxg4 40. fxg4 Kf7 41. Ke2 Kf6 42. Kf3 Bf8 43. Ra1 Be7 44. Ra7 Kf7 45. Ke4 Kf6 46. Kf3 Bb4 47. Rb7 Bd6 48. Rb5 Be7 49. Rb7 Bf8 50. Rb8 Kf7 51. Rd8 Ba3 52. Rd3 Be7 53. Rb3 Ke8 54. Ke4 Kf7 55. Ke5 Bf6+ 56. Kd6 Bd4 57. Ra3 e5 58. Ra2 Kg7 59. Ke6 Kh7 60. Kf5 e4 61. Ra4 Bc5 62. Rxe4 Bg1 63. Re7+ Kh6 64. h4 Be3 65. Re6+ Kh7 66. Rxe3 Kg7 67. Kxg5 Kf7 68. Kh5 Kf6 69. Kh6 Kf7 70. Re1 Kf6 71. Kh7 Kf7 72. g5 Kf8 73. Re3 Kf7 74. Re4 Kf8 75. Re5 Kf7 76. Re4 Kf8 77. Re5 Kf7 78. Re4 Kf8 79. Rc4 Kf7 80. Re4 Kf8 81. Rc4 Ke8 82. Kg6 Kd8 83. h5 Ke8 84. Kg7 Ke7 85. Rd4 Ke6 86. Kg6 Ke5 87. Rb4 Kd6 88. Rc4 Kd5 89. Rb4 Ke5 90. Rc4 Kd6 91. Kf5 Ke7 92. Kg6 Kd7 93. Kh7 Ke8 94. Kg7 Ke7 95. Rb4 Kd6 96. Rc4 Ke5 97. Rb4 Kf5 98. Kh6 Ke6 99. Kg6 Ke7 100. Rf4 Kd6 101. Re4 Kd5 102. Kf5 Kc5 103. Rf4 Kb5 104. Rh4 Kc6 105. Rf4 Kc7 106. Re4 Kd8 107. Rc4 Ke8 108. Rb4 Kf8 109. Rf4 Kg7 110. Rc4 Kh7 111. Rb4 Kh8 112. Rc4 Kg7 113. Rc5 Kf8 114. Rc4 Ke7 115. Kg6 Kd6 116. h6 Ke6 117. Rd4 Ke5 118. Rb4 Kd6 119. Re4 Kc6 120. Rb4 Kd5 121. Kf5 Kc6 122. Ra4 Kc5 123. Rh4 Kd5 124. Ra4 Kc5 125. h7 Kb6 126. Ra7 Kc5 127. Ra4 Kc6 128. Ra7 Kb6 129. h8=Q Kxa7 130. Ke4 Kb7 131. Kf5 Kb6 132. Ke4 Kc5 133. Qh4 Kd6 134. Qh8 Kc5 135. Qh4 Kb5 136. Qh7 Ka4 137. Qh8 Kb3 138. Kd3 Kb4 139. Kc2 Ka5 140. Kc1 Ka6 141. g6 Ka7 142. Kb1 Kb6 143. Kc2 Kc6 144. Kb1 Kd6 145. Qb2 Ke6 146. Kc1 Ke7 147. Qh8 Kd6 148. Qg7 Kd5 149. Qh8 Ke6 150. Qf8 Kd5 151. Qc8 Ke5 152. Qh8+ Ke6 153. Qf8 Kd5 154. Qc8 Ke4 155. Qh8 Kd3 156. Qe5 Kc4 157. Qg7 Kd3 158. Qh8 Ke4 159. Qh6 Ke5 160. Qh8+ Kd6 161. Qc8 Ke7 162. Qh8 Kd7 163. Qh6 Ke7 164. Qh8 Kd7 165. Qh6 Ke6 166. Qh8 Kd6 167. Qg7 Kc6 168. Qe5 Kb6 169. Qg7 Ka6 170. Qh6 Kb6 171. Qh2 Kc6 172. Qe5 Kb6 173. Kb1 Kc6 174. Kc1 Kb6 175. Kb1 Kb7 176. Qf6 Kc7 177. Qe5+ Kb6 178. Qf5 Kb7 179. Qf6 Kc7 180. Qe5+ Kd8 181. Qh5 Kc8 182. Qh8+ Kb7 183. Qf6 Kc8 184. Qd6 Kb7 185. Qf6 Ka7 186. Qe5 Ka6 187. Qe1 Kb6 188. Qe7 Kc6 189. Qh7 Kd6 190. Qh8 Ke7 191. g7 Kd7 192. Qh2 Ke6 193. g8=Q+ Kd7 194. Qhh8 Kc6 195. Qa1 Kd7 196. Kc1 Kc7 197. Qe8 Kb7 198. Qe6 Kb8 199. Qg4 Kb7 200. Qc4 Kb6 201. Qe2 Kc7 202. Qea2 Kd7 203. Kb1 Ke8 204. Qg8+ Ke7 205. Kc1 Kd6 206. Kb1 Kc7 207. Qb3 Kd7 208. Qe3 Kc8 209. Qd3 Kc7 210. Qdd4 Kb8 211. Qd3 Kc7 212. Qdd4 Kb7 213. Qe5 Kc8 214. Qh5 Kd7 215. Qe2 Kc8 216. Qc2+ Kd8 217. Qe2 Kd7 218. Qc2 Ke6 219. Qcb2 Kf5 220. Qh8 Kg4 221. Qae5 Kf3 222. Qeg7 Kf2 223. Qe7 Kf1 224. Qee8 Kf2 225. Qb8 Ke1 226. Qbg8 Ke2 227. Qc3 Kf2 228. Qb4 Kf3 229. Qe7 Kf4 230. Qee8 Kf3 231. Qd8 Ke4 232. Qdf8 Ke3 233. Kc1 Ke4 234. Qc8 Ke3 235. Qcf8 Kd4 236. Qc8 Kd3 237. Qg2 Kd4 238. Qga8 Ke5 239. Kb1 Kf6 240. Qc4 Kg5 241. Qc3 Kh6 242. Qch8+ Kg5 243. Ka1 Kf4 244. Kb1 Kf5 245. Ka1 Ke6 246. Kb1 Kd6 247. Ka1 Kd7 248. Kb1 Ke6 249. Ka1 Kd7 250. Kb1 Ke7 251. Ka1 Kd7 252. Kb1 Kc7 253. Ka1 Kd7 254. Kb1 Ke7 255. Ka1 Ke6 256. Kb1 Kd6 257. Ka1 Kc7 258. Kb1 Kb6 259. Ka1 Kb5 260. Kb1 Kc5 261. Ka1 Kb6 262. Kb1 Kc5 263. Ka1 Kd6 264. Kb1 Kc7 265. Ka1 Kd7 1/2-1/2
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkb1r/ppp2ppp/5n2/3pp3/P7/4P2P/1PPP1PP1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 Nc6 5. Be2 Bd6 6. Nf3 e4 7. Ng1 h5 8. Bb5 a5 9. c4 dxc4 10. Ne2 O-O 11. O-O Be6 12. Nd2 Kh7 13. f3 Nb4 14. Nxc4 exf3 15. e4 fxe2 16. Qxe2 Bg3 17. Qe3 Nc2 18. Qxg3 Bxc4 19. Bh6 Qxd4+ 20. Kh2 Nxe4 21. Qxc7 Rac8 22. Qe7 Bxb5 23. Bxg7 Kxg7 24. Rad1 Rce8 25. Qxf8+ Kxf8 26. Rxf7+ Kxf7 27. Rxd4 Bc6 28. Rc4 Ne3 29. Rxe4 Rxe4 30. Kg3 Rb4 31. Kh2 Rb3 32. g4 Nxg4+ 33. Kg1 Ne5 34. Kh2 Bd5 35. Kg1 Rxb2 36. Kf1 Nf3 37. h4 Bc4# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp2p1p/4p1p1/3p4/3P2P1/4P3/PPP2P1P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c4 dxc4 5. Nc3 c5 6. h4 h6 7. Bxc4 a6 8. Nf3 Nf6 9. h5 gxh5 10. g5 b5 11. gxf6 bxc4 12. Ne5 Qc7 13. Qxh5 Rg8 14. Bd2 Nc6 15. Nxc6 Bb7 16. d5 Rg5 17. Qh3 Rxd5 18. Nxd5 Qxc6 19. e4 exd5 20. exd5 Qd7 21. Qe3+ Kd8 22. Ba5+ Kc8 23. O-O-O Bd6 24. Rxh6 Bxd5 25. Rxd5 Qa4 26. Rxd6 Ra7 27. Qxc5+ Kb8 28. Rd8+ Kb7 29. Qb6# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkbnr/ppp1p2p/5pp1/3p4/3P4/7N/PPP1PPPP/RNBQKBR1 w Qkq - 0 4"]
+[SetUp "1"]
+
+4. e4 dxe4 5. Nf4 e5 6. dxe5 Qxd1+ 7. Kxd1 Nc6 8. Nd2 Nxe5 9. Be2 f5 10. b4 Bg7 11. Bb2 Ne7 12. Nc4 Nxc4 13. Bxg7 Rg8 14. Bd4 Nd6 15. f3 Bd7 16. c4 g5 17. Nh5 O-O-O 18. c5 exf3 19. Bxf3 Nb5 20. Bf6 g4 21. Bxb7+ Kxb7 22. Bxe7 Rc8 23. a4 Nd4 24. b5 Ka8 25. c6 Be6 26. Rb1 Bf7 27. Nf4 Rce8 28. Re1 g3 29. h3 Ba2 30. Rb4 Ne6 31. Nxe6 Rxe7 32. Nc5 Rd8+ 33. Nd7 Rexd7+ 34. cxd7 Rxd7+ 35. Kc1 a5 36. Rf4 Bd5 37. Re8+ Kb7 38. Rd4 c6 39. bxc6+ Kxc6 40. Re3 Rg7 41. Rc3+ Kd6 42. Rcd3 Rc7+ 43. Kb2 Rc5 44. Rxg3 Ke5 45. Rd1 Rc4 46. Rc3 Rd4 47. Re3+ Be4 48. Rxd4 Kxd4 49. Rg3 f4 50. Rg4 Ke3 51. Kb3 Bd5+ 52. Kc3 Bc6 53. Rg7 Bxa4 54. Rxh7 Bc6 55. Re7+ Kf2 56. h4 Kxg2 57. h5 f3 58. h6 f2 59. Rg7+ Kf3 60. h7 f1=Q 61. Rf7+ Ke2 62. Rxf1 Kxf1 63. Kd2 Kg2 64. h8=Q Bf3 65. Ke3 Kg3 66. Qd4 Bg4 67. Qa1 a4 68. Qxa4 Kh4 69. Qf4 Kh5 70. Qf6 Bc8 71. Kf4 Bd7 72. Qg7 Bh3 73. Qg5# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/pppppp2/8/7p/4P1p1/2N5/PPPP1PPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. h3 Rh6 5. d4 Rg6 6. hxg4 Rxg4 7. Rxh5 Nf6 8. e5 Nxh5 9. Qxg4 c5 10. Qxh5 cxd4 11. Bc4 e6 12. Ne4 Qc7 13. Qh8 d5 14. exd6 Qa5+ 15. Bd2 Qd8 16. Nf6+ Qxf6 17. Qxf6 Nd7 18. Qxd4 b6 19. Bg5 Nc5 20. b4 Na4 21. Ne2 Bxd6 22. Bb5+ Bd7 23. Qxd6 e5 24. Bxd7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/ppppp2p/8/5p2/3P2p1/6P1/PPP1PPBP/RNBQK1NR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 fxe4 5. Bxe4 d5 6. Bd3 Nc6 7. Nc3 Nxd4 8. Be3 e5 9. h3 Nf6 10. hxg4 Bxg4 11. f3 Nxf3+ 12. Nxf3 e4 13. Bb5+ c6 14. Be2 exf3 15. Bxf3 Qe7 16. Qe2 d4 17. Nd5 Nxd5 18. Bxg4 Qxe3 19. Rd1 Bb4+ 20. c3 dxc3 21. Qxe3+ Nxe3 22. Bh5+ Ke7 23. bxc3 Bxc3+ 24. Kf2 Nxd1+ 25. Bxd1 b5 26. Bb3 c5 27. Rh4 c4 28. Re4+ Kd6 29. a4 cxb3 30. Re3 Bd4 31. Kf1 Raf8+ 32. Ke2 Bxe3 33. a5 Bg5 34. Kd1 Re8 35. g4 Rhf8 36. a6 Rf1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rn1qkbnr/pbpppppp/8/8/Pp4P1/5N2/1PPPPP1P/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. d4 e6 5. c4 Nc6 6. a5 Nb8 7. Bg2 h5 8. g5 h4 9. Nxh4 Bxg2 10. Nxg2 d5 11. g6 Nf6 12. Nf4 Nc6 13. cxd5 Nxd5 14. Qa4 Qd6 15. e4 O-O-O 16. gxf7 Nxd4 17. exd5 Rh4 18. Na3 Qe5+ 19. Be3 Rxf4 20. Nb5 Nf3+ 21. Kf1 Bc5 22. Bxc5 Nd2+ 23. Kg2 Rg4+ 24. Kh3 Qh5# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkbnr/pppp1pp1/2n4p/4p3/5P2/3P4/PPP1P1PP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e4 exf4 5. Be2 Qh4+ 6. Kf1 Bc5 7. d4 Nxd4 8. Nc3 Nb3 9. Nh3 Nxa1 10. Nd5 d6 11. Nxc7+ Kd8 12. Qd2 Bxh3 13. Bc4 Qg4 14. b4 Bxg2+ 15. Ke1 Bxb4 16. Qxb4 Nxc2+ 17. Kd2 Nxb4 18. Re1 Kd7 19. Bb2 Ne7 20. Rc1 Bxe4 21. Bf1 Nxa2 22. Rc4 Qg1 23. Rxe4 Qxf1 24. Rxe7+ Kxe7 25. h3 Kf8 26. h4 Qg2+ 27. Ke1 f3 28. Bxg7+ Kg8 29. Na6 Qe2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/ppppp2p/5n2/5pp1/1P6/5N2/PBPPPPPP/RN1QKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. Nxg5 e6 5. e4 Bg7 6. exf5 Qe7 7. fxe6 O-O 8. Bd3 Nc6 9. O-O Nxb4 10. Bxf6 Rxf6 11. Bxh7+ Kf8 12. Nc3 d5 13. a3 d4 14. Nce4 Nd5 15. Re1 d3 16. Nxf6 Bxf6 17. h4 Bxg5 18. hxg5 Nf4 19. Qf3 Qd6 20. e7+ Qxe7 21. Rxe7 Bh3 22. Rae1 Be6 23. R1xe6 a5 24. Qxf4# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkb1r/pppnpppp/5n2/3p4/1P6/3P1N2/P1P1PPPP/RNBQKB1R w KQkq - 2 4"]
+[SetUp "1"]
+
+4. Nbd2 e5 5. c3 a5 6. b5 Bd6 7. Qc2 O-O 8. e3 a4 9. c4 d4 10. exd4 exd4 11. Be2 Re8 12. Bb2 Nc5 13. Ne4 Ncxe4 14. dxe4 Bb4+ 15. Kf1 Nxe4 16. Rc1 a3 17. Ba1 Bf5 18. Bd3 Bc3 19. Bxc3 dxc3 20. Kg1 Qd6 21. h4 h6 22. h5 Rad8 23. Bxe4 Rxe4 24. c5 Qd5 25. Qxc3 Qxa2 26. Nh4 Be6 27. g3 Rc4 28. Qe1 Rxc1 29. Qxc1 Bd5 30. Ng2 Re8 31. c6 bxc6 32. bxc6 Re2 33. Qd1 Rxf2 34. Qd2 Rxg2+ 35. Qxg2 Qxg2# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/1ppppppp/7n/8/p7/1P3NP1/P1PPPP1P/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. c4 axb3 5. Qxb3 Ng4 6. d4 d6 7. Nc3 Nd7 8. Bh3 Ngf6 9. Be3 g6 10. Ng5 h6 11. Nge4 Nh5 12. c5 Nxc5 13. dxc5 Bxh3 14. g4 Bxg4 15. h3 Be6 16. Qb5+ Bd7 17. Qxb7 Bg7 18. Nd5 Rb8 19. Nxc7+ Kf8 20. Qa7 Rb4 21. Qa5 Rb5 22. Ne6+ fxe6 23. Qxd8+ Kf7 24. Qxd7 Ng3 25. fxg3 Ra8 26. O-O+ Kg8 27. Qxb5 Bd4 28. Bxd4 d5 29. Qc6 Ra5 30. Qe8+ Kh7 31. Rf7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/p2ppppp/8/1pp5/4P3/3P3P/PPP2PP1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Be3 e6 5. Nf3 Bb7 6. a4 b4 7. Nbd2 Nf6 8. c3 Be7 9. Be2 Nc6 10. Nb3 c4 11. Nc1 O-O 12. Nd2 d5 13. O-O a5 14. Rb1 Qc7 15. dxc4 dxe4 16. Ncb3 Kh8 17. Nd4 Rg8 18. Nb5 Qe5 19. c5 Rad8 20. cxb4 axb4 21. Qc1 Na5 22. Nc4 Nxc4 23. Qxc4 Nd5 24. Bd4 Qg5 25. h4 Qxh4 26. Be5 Rc8 27. Bd6 Nf4 28. Rfe1 Bd5 29. Qd4 Bf6 30. Qxb4 Nxg2 31. Nc7 Nxe1 32. Rxe1 e3 33. Qxh4 Bxh4 34. Kf1 Be4 35. fxe3 Rb8 36. Bb5 Bxe1 37. Nxe6 fxe6 38. Bxb8 Rxb8 39. Kxe1 g5 40. b3 h5 41. b4 h4 42. Ke2 h3 43. Kd1 h2 44. Bd3 Bxd3 45. b5 h1=Q+ 46. Kd2 Bxb5 47. e4 Bc6 48. e5 Qd5+ 49. Kc1 Bxa4 50. c6 Qd1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rn1qkbnr/ppp1ppp1/3p4/5b1p/3P4/5N1P/PPP1PPP1/RNBQKB1R w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Ng5 e5 5. e4 Be6 6. Nxe6 fxe6 7. c3 exd4 8. cxd4 d5 9. Nc3 Bb4 10. Qb3 Qe7 11. a3 Bxc3+ 12. bxc3 Nf6 13. Qxb7 O-O 14. Qxa8 Nxe4 15. Be3 c6 16. Bd3 e5 17. Bxe4 exd4 18. Bxd5+ Kh8 19. cxd4 Qd6 20. Bc4 Qg6 21. O-O Nd7 22. Qxa7 Qd6 23. Qa5 c5 24. dxc5 Qf6 25. Qa4 Ne5 26. Bd5 Qg6 27. Qh4 Rf3 28. Qd8+ Kh7 29. Qg8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "r1bqkb1r/p1pppppp/1pn2n2/8/3P4/2P5/PP2PPPP/RNBQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Bf4 g6 5. Bg3 Bg7 6. Nd2 Nh5 7. Bh4 Bb7 8. e4 a5 9. Nh3 a4 10. Bb5 a3 11. b3 O-O 12. O-O Na7 13. Be2 c5 14. Bxh5 Nb5 15. Qc2 cxd4 16. c4 Nc3 17. Bf3 b5 18. cxb5 Ra5 19. Rfe1 Rxb5 20. e5 Qc7 21. Qd3 d6 22. Bxb7 Rxb7 23. exd6 Qxd6 24. Nc4 Qb4 25. Bg5 e6 26. Bd2 Rb5 27. Ng5 Rd5 28. Nf3 h6 29. h3 Qc5 30. Kh1 Rc8 31. Bxc3 dxc3 32. Qc2 Rcd8 33. Re3 Bh8 34. Re2 Bg7 35. Rae1 Rc8 36. Re3 Bf6 37. R3e2 Bg7 38. Nfe5 Qd4 39. Nf3 Qc5 40. Ne3 Rdd8 41. h4 Qb4 42. Rc1 Qb5 43. Rd1 Rxd1+ 44. Qxd1 Qc5 45. Qc2 Rc6 46. Re1 Rb6 47. Rc1 Rd6 48. Rd1 Rxd1+ 49. Nxd1 h5 50. Ne3 Bd4 51. Nxd4 Qxd4 52. Nd1 Qxh4+ 53. Kg1 Qd4 54. Qc1 c2 55. Qxc2 h4 56. Qc8+ Kh7 57. Qc1 Kg8 58. Kf1 Kh7 59. Kg1 Kg8 60. Kh1 h3 61. Nc3 Qxf2 62. gxh3 Qg3 63. Qd2 Qxh3+ 64. Kg1 Qg3+ 65. Kf1 Qf3+ 66. Ke1 Qh1+ 67. Kf2 Qh2+ 68. Ke1 Qh1+ 69. Ke2 Qh3 70. Qd8+ Kg7 71. Qd4+ Kg8 72. b4 e5 73. Qc5 Qg2+ 74. Kd1 e4 75. Ne2 Qf1+ 76. Kd2 Qb1 77. Qc8+ Kg7 78. Qc4 g5 79. Nc3 Qb2+ 80. Ke1 Qc1+ 81. Ke2 Qc2+ 82. Ke1 Qc1+ 83. Kf2 Qc2+ 84. Ke3 f5 85. Kd4 Qf2+ 86. Ke5 g4 87. Ne2 e3 88. Nf4 Qb2+ 89. Kxf5 g3 90. Ne6+ Kh8 91. Qh4+ Kg8 92. Qd8+ Kh7 93. Qe7+ Kg8 94. Qf8+ Kh7 95. Qf7+ Qg7 96. Qxg7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkbnr/1pp1pp1p/p5p1/3p4/3P4/5P1N/PPP1P1PP/RNBQKB1R w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nf2 c5 5. dxc5 Nf6 6. e4 Qa5+ 7. Nc3 dxe4 8. Bd2 Bg7 9. Ncxe4 Qd8 10. Bc3 O-O 11. Qxd8 Rxd8 12. Nxf6+ exf6 13. Ne4 Nd7 14. O-O-O f5 15. Nf6+ Kf8 16. Nxh7+ Kg8 17. Nf6+ Bxf6 18. Bxf6 Re8 19. Bd4 Nf8 20. h4 Ne6 21. Bc3 Kh7 22. Bc4 Rf8 23. b4 a5 24. bxa5 Kh6 25. Rhe1 Kh7 26. Rd6 Re8 27. g4 Rg8 28. gxf5 Nf4 29. Bxf7 Bxf5 30. Re7 Rgd8 31. Bxg6+ Kg8 32. Bxf5 Rab8 33. Re4 Nh5 34. Rh6 Re8 35. Rxh5 Rxe4 36. fxe4 Kf7 37. Rh7+ Kf8 38. Rh8+ Ke7 39. Rh7+ Kd8 40. Bf6+ Ke8 41. Be6 Rc8 42. Rh8# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/pppp2p1/4p2p/5P2/8/2P5/PP1PPP1P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. e3 Nf6 5. e4 exf5 6. d4 fxe4 7. Be2 g6 8. d5 d6 9. h4 Bg7 10. Nd2 Nbd7 11. Nh3 O-O 12. Nf4 Ne5 13. Nc4 Nf3+ 14. Bxf3 exf3 15. a4 Qe8+ 16. Be3 g5 17. Ne6 Bxe6 18. dxe6 g4 19. Rg1 d5 20. Qc2 dxc4 21. O-O-O Qxe6 22. Rd4 Rad8 23. Rf4 Rd3 24. Bd2 Re8 25. Kb1 Qe2 26. Rxf6 Bxf6 27. Ka1 Qxd2 28. Rxg4+ Bg7 29. Qxd2 Rxd2 30. Kb1 Ree2 31. Rxc4 Rxb2+ 32. Kc1 h5 33. Re4 Bxc3 34. Re3 Rxe3 35. Kd1 Re1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "r1bqkbnr/p1ppp1pp/1pn2p2/8/8/6PP/PPPPPPB1/RNBQK1NR w KQkq - 2 4"]
+[SetUp "1"]
+
+4. d4 Bb7 5. e4 e6 6. Nf3 Nce7 7. c4 f5 8. e5 Ng6 9. Nc3 Bb4 10. h4 Bxc3+ 11. bxc3 h5 12. O-O N8e7 13. d5 exd5 14. Ng5 Nc6 15. cxd5 Ncxe5 16. f4 Ng4 17. Re1+ Qe7 18. d6 Bxg2 19. Rxe7+ Nxe7 20. dxe7 Be4 21. Ba3 b5 22. Qb3 Nh6 23. Rd1 Bc6 24. c4 Bh1 25. Kxh1 Rh7 26. Kg1 a6 27. Qf3 Rb8 28. Rxd7 Ng4 29. Qc6 b4 30. Rxc7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkb1r/ppp1pppp/n6n/3p4/4P2P/3P4/PPP2PP1/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nf3 dxe4 5. dxe4 Qxd1+ 6. Kxd1 Ng4 7. Be3 e5 8. Bxa6 bxa6 9. Nc3 Bb7 10. Re1 O-O-O+ 11. Nd2 Be7 12. g3 Bb4 13. Bxa7 f5 14. exf5 e4 15. a3 Bxc3 16. bxc3 Rhf8 17. Kc1 Rxf5 18. Re2 c5 19. Nxe4 Bxe4 20. Rxe4 Nxf2 21. Re7 Rd7 22. Rxd7 Kxd7 23. Rb1 Kc6 24. c4 Ne4 25. Rb3 Nd6 26. Kd1 Nxc4 27. Bb8 Rf2 28. a4 Rd2+ 29. Kc1 Rg2 30. c3 h6 31. Rb1 Rg1+ 32. Kc2 Na3+ 33. Kd3 Rxb1 34. Be5 g5 35. Ke4 Nc4 36. Bf6 Nd6+ 37. Kf3 Rf1+ 38. Kg2 Rxf6 39. a5 g4 40. Kg1 c4 41. Kh1 Rf2 42. h5 Kd5 43. Kg1 Ne4 44. Kh1 Ke6 45. Kg1 Kf7 46. Kh1 Re2 47. Kg1 Kg8 48. Kh1 Rb2 49. Kg1 Nxc3 50. Kf1 Re2 51. Kg1 Rb2 52. Kh1 Rf2 53. Kg1 Nd1 54. Kh1 Rc2 55. Kg1 Ne3 56. Kh1 c3 57. Kg1 Re2 58. Kh1 c2 59. Kg1 c1=Q# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "0-1"]
+[FEN "rnbqkbnr/pp2pp1p/6p1/2pp4/P2P4/8/RPP1PPPP/1NBQKBNR w Kkq - 0 4"]
+[SetUp "1"]
+
+4. e3 cxd4 5. exd4 Bg7 6. Nf3 Nf6 7. Bb5+ Nfd7 8. O-O a6 9. Be2 Qc7 10. c3 b6 11. b4 O-O 12. a5 b5 13. Re1 Bb7 14. Rb2 Nc6 15. Nbd2 Rae8 16. g3 Nd8 17. Rc2 e5 18. Nb3 e4 19. Bf4 Qc8 20. Nh4 Qc6 21. Qd2 f6 22. Be3 Rf7 23. f4 Bh6 24. f5 Bxe3+ 25. Qxe3 Rg7 26. fxg6 hxg6 27. Bf1 Nf7 28. Rf2 Nf8 29. Nc5 Bc8 30. Qd2 f5 31. g4 fxg4 32. Qe3 Nh7 33. Kh1 Nhg5 34. Rf4 Rh7 35. Qg3 Qd6 36. Kg1 Rxh4 37. Rxf7 Qd8 38. Rf2 Nf3+ 39. Rxf3 gxf3 40. h3 g5 41. Nd3 Rh7 42. Ne5 Qd6 43. Kh2 Qf6 44. Nxf3 Rh5 45. Ne5 Rf8 46. Bg2 Qd8 47. c4 bxc4 48. Rg1 Bd7 49. Ng6 Rf5 50. Qd6 Rf2 51. Nf4 Rxf4 52. Qg6+ Kf8 53. Qxh5 Qf6 54. Qh7 Qg7 55. Qh5 Qf6 56. Qh7 Qg7 57. Qh5 Be8 58. Qd1 Bd7 59. Qd2 Qe7 60. Qe3 Qf6 61. Rh1 Rf2 62. Re1 Qf4+ 63. Kg1 Qxe3 64. Rxe3 Rd2 65. Rg3 Bc6 66. Kh2 Ke7 67. Rxg5 Bb5 68. Rxd5 c3 69. Kg3 c2 70. Rc5 e3 71. Ba8 e2 72. Kf2 Rd1 73. Re5+ Kf6 74. Rxe2 c1=Q 75. Re4 Qb2+ 76. Kg3 Rg1+ 77. Kh4 Qf2+ 78. Kh5 Qf3+ 79. Rg4 Qxh3+ 80. Rh4 Qf5+ 81. Kh6 Rg6+ 82. Kh7 Rg4+ 83. Kh8 Rxh4+ 84. Kg8 Qc8# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "1-0"]
+[FEN "rnbqkb1r/p1ppppp1/1p3n1p/8/8/NP2P3/P1PP1PPP/R1BQKBNR w KQkq - 1 4"]
+[SetUp "1"]
+
+4. Be2 e5 5. Bb2 Nc6 6. c4 Bb7 7. Nc2 Qe7 8. Nf3 O-O-O 9. Rc1 d5 10. b4 dxc4 11. O-O Ng4 12. h3 h5 13. b5 Na5 14. hxg4 hxg4 15. Nxe5 f5 16. Ng6 Qe4 17. f3 Qe8 18. Nxh8 Bd6 19. Nf7 Qxf7 20. Kf2 Qh5 21. Rh1 g3+ 22. Kg1 Qg6 23. Bd4 f4 24. Ne1 Ba3 25. Bxc4 Bxc1 26. Qxc1 Nxc4 27. Qxc4 Qb1 28. Qe6+ Kb8 29. exf4 Bc8 30. Qe4 Qxe4 31. fxe4 Rxd4 32. d3 Rb4 33. f5 Rxb5 34. Rh7 Rb1 35. Kf1 Rb2 36. Nf3 Rf2+ 37. Ke1 Ba6 38. Ne5 Rxa2 39. Kf1 Rf2+ 40. Ke1 Rxg2 41. Rxg7 Bc8 42. f6 Be6 43. Nc6+ Kc8 44. d4 Rg1+ 45. Kd2 g2 46. Ne7+ Kb7 47. Ke2 Bc4+ 48. Kd2 Bf7 49. Ke3 a5 50. Nf5 Re1+ 51. Kf2 Rxe4 52. Nd6+ cxd6 53. Kxg2 Re6 54. Rxf7+ Ka6 55. Rf8 Kb5 56. Kg3 Re1 57. Kh4 a4 58. Ra8 Rf1 59. Kg5 d5 60. Ra7 Kb4 61. Kg6 b5 62. f7 Kc4 63. Ra6 b4 64. Rf6 Rxf6+ 65. Kxf6 Kxd4 66. f8=Q Kc3 67. Qc5+ Kb3 68. Ke6 a3 69. Qxd5+ Kc3 70. Qc5+ Kd3 71. Kd5 a2 72. Qd4+ Kc2 73. Qa1 b3 74. Kc4 Kd2 75. Qb2+ Ke3 76. Qd4+ Ke2 77. Qb2+ Ke3 78. Qxb3+ Ke4 79. Qxa2 Ke5 80. Qa5+ Kd6 81. Kd4 Ke6 82. Qb4 Kf6 83. Qc3 Ke7 84. Ke5 Ke8 85. Ke6 Kd8 86. Qg7 Kc8 87. Qf7 Kb8 88. Qg7 Ka8 89. Qg3 Ka7 90. Qb3 Ka8 91. Kd5 Ka7 92. Kc6 Ka6 93. Qa2# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/p1ppp1pp/5n2/1p3P2/8/8/PPPPNPPP/RNBQKB1R w KQkq - 1 4"]
+[SetUp "1"]
+
+4. d4 a6 5. a4 e6 6. axb5 exf5 7. Nf4 Bb4+ 8. c3 g5 9. Nd5 Be7 10. Bc4 Bb7 11. Nxf6+ Kf8 12. Qh5 d5 13. Bxg5 h6 14. Bxh6+ Rxh6 15. Qxh6+ Kf7 16. Nxd5 Bxd5 17. Qh7+ Ke6 18. Nd2 axb5 19. Bxd5+ Qxd5 20. Qg8+ Kf6 21. Qxd5 Rxa1+ 22. Ke2 Ra5 23. Qe5+ Kg5 24. Qxe7+ Kg6 25. Ne4 Ra6 26. Qg5+ Kf7 27. Qxf5+ Ke8 28. Qh5+ Ke7 29. Qh7+ Ke6 30. Nc5+ Kd6 31. Qe4 Nd7 32. Qe6# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "rnbqkbnr/1ppppp2/p6p/6p1/1P1P4/2P5/P3PPPP/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Nd2 d5 5. h4 g4 6. e4 dxe4 7. Nxe4 e5 8. Qc2 exd4 9. Bc4 Bf5 10. Ne2 Nf6 11. Qb3 Nxe4 12. Nf4 Qd7 13. Bd5 Nc6 14. O-O O-O-O 15. cxd4 Bd6 16. Be3 Bxf4 17. Bxf7 Bxe3 18. fxe3 Nd2 19. Qb2 Nxf1 20. Bb3 Nxe3 21. d5 Nxd5 22. Rd1 Ncxb4 23. Qxh8 Rxh8 24. Rc1 Nxa2 25. Ra1 Rf8 26. Re1 Rd8 27. Re5 Nab4 28. Bxd5 Nxd5 29. Kf2 Ne3 30. Rxe3 Qd1 31. Re7 Kb8 32. Re5 Rd3 33. Re8+ Bc8 34. Re1 g3+ 35. Kg1 Qxe1# 0-1
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "YACE_v3-6"]
+[Black "Stockfish"]
+[Result "1-0"]
+[FEN "rnbqkb1r/pppp1ppp/7n/8/3p4/P1N5/1PP1PPPP/R1BQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. Qxd4 Ng8 5. Bf4 d6 6. e4 Nf6 7. O-O-O Nc6 8. Bb5 Be6 9. Nf3 a6 10. Bxc6+ bxc6 11. Qa4 Qd7 12. Ne5 Qc8 13. Qxc6+ Nd7 14. Nd5 Ra7 15. Be3 Kd8 16. Nxf7+ Ke8 17. Nxh8 Rb7 18. Nf4 Bg4 19. f3 g5 20. Nd5 Be6 21. b3 g4 22. Rhe1 a5 23. e5 g3 24. exd6 a4 25. Bg5 Bxd6 26. Rxe6+ Kf8 27. Be7+ Bxe7 28. Rxe7 Rb6 29. Qc3 Nf6 30. Nxb6 Qf5 31. Rd8+ Kxe7 32. Qxc7+ Nd7 33. Nxd7 Qa5 34. Re8+ Kxe8 35. Nf6+ Kf8 36. Qf7# 1-0
+
+[Event "YACE Gauntlet"]
+[Site "?"]
+[Date "????.??.??"]
+[Round "?"]
+[White "Stockfish"]
+[Black "YACE_v3-6"]
+[Result "0-1"]
+[FEN "r1bqkbnr/pppp1pp1/n6p/4p3/3P2P1/5P2/PPP1P2P/RNBQKBNR w KQkq - 0 4"]
+[SetUp "1"]
+
+4. dxe5 Qh4+ 5. Kd2 d6 6. e4 dxe5 7. Bxa6 bxa6 8. Qf1 Be7 9. Nc3 Be6 10. Kd1 Rd8+ 11. Nd5 c6 12. c4 cxd5 13. exd5 Nf6 14. Kc2 Nxd5 15. cxd5 Bxd5 16. b3 Qf6 17. Qd3 e4 18. fxe4 Qc6+ 19. Qc3 Bxe4+ 20. Kb2 Ba3+ 21. Kxa3 Qxc3 22. Ne2 Qa5+ 23. Kb2 O-O 24. Bf4 Rd2+ 25. Kc1 Rc8+ 26. Bc7 Rxc7+ 27. Nc3 Qxc3# 0-1
+

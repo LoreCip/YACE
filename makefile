@@ -14,8 +14,15 @@ INCLUDES = -Isrc/Core/include \
            -Isrc/Evaluation/include/NNUE \
            -Isrc/Search/include
 
-CXXFLAGS = -Wall -Wextra -std=c++17 -O3 -flto -march=native -fopenmp $(INCLUDES)
-LDFLAGS  = -lcblas -lblas
+COMMON   = -Wall -Wextra -std=c++17 -O3 -flto -march=native -DNDEBUG \
+           -mavx512f -mavx512bw -mavx512dq -mavx512vl -mavx512vnni \
+           -mprefer-vector-width=512 $(INCLUDES)
+
+PGO_FLAGS =
+CXXFLAGS = $(COMMON) $(PGO_FLAGS)
+CXXFLAGS_FEN = $(COMMON) -fopenmp $(PGO_FLAGS)
+LDFLAGS  = $(PGO_FLAGS)
+LDFLAGS_FEN = -fopenmp $(PGO_FLAGS)
 
 # Cartelle sorgenti radice
 APP_SRC_DIR       = src/App
@@ -76,7 +83,7 @@ $(TARGET_GAME): $(ALL_CORE_OBJS) $(OBJ_MAIN_GAME)
 # Build di main_fen
 $(TARGET_FEN): $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN)
 	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN) -o $(TARGET_FEN) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS_FEN) $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN) -o $(TARGET_FEN) $(LDFLAGS_FEN)
 	@echo "[SUCCESS] Build completata: $(TARGET_FEN)"
 
 # ------------------------------------------------------------------------------
@@ -84,6 +91,10 @@ $(TARGET_FEN): $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN)
 # ------------------------------------------------------------------------------
 
 # Compilazione App (I Main)
+$(OBJ_MAIN_FEN): $(APP_SRC_DIR)/main_fen.cpp
+	@mkdir -p $(OBJ_APP_DIR)
+	$(CXX) $(CXXFLAGS_FEN) -c $< -o $@
+
 $(OBJ_APP_DIR)/%.o: $(APP_SRC_DIR)/%.cpp
 	@mkdir -p $(OBJ_APP_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -123,7 +134,7 @@ clean:
 	@echo "[CLEAN] Cartella build eliminata correttamente."
 
 # Uso: make release V=1.0
-release: all
+release: pgo
 	@if [ -z "$(V)" ]; then \
 		echo "Errore: Devi specificare una versione. Usa 'make release V=1.0'"; \
 		exit 1; \
@@ -140,4 +151,19 @@ release: all
 	@cp build/main_fen gauntlet/versions/engine_fen_v$(V)
 	@echo "[RELEASE] Versione v$(V) rilasciata con successo in gauntlet/versions/"
 
-.PHONY: all clean release
+PGO_DIR = build/pgo-data
+pgo:
+	@echo "[PGO] Fase 1/3: build strumentata..."
+	@rm -rf $(PGO_DIR)
+	@mkdir -p $(PGO_DIR)
+	$(MAKE) clean
+	$(MAKE) PGO_FLAGS="-fprofile-generate=$(PGO_DIR)" all
+	@echo "[PGO] Fase 2/3: esecuzione del carico di lavoro rappresentativo (bench, NNUE e HCE)..."
+	@printf 'bench 9\nquit\n' | ./build/main_game -e nnue -w parameters/weights/nnue_weights_v3-6.bin -p parameters/evals.txt -c 1 > /dev/null
+	@printf 'bench 9\nquit\n' | ./build/main_game -e hce -p parameters/evals.txt -c 1 > /dev/null
+	@echo "[PGO] Fase 3/3: rebuild ottimizzata con i dati di profilo raccolti..."
+	$(MAKE) clean
+	$(MAKE) PGO_FLAGS="-fprofile-use=$(PGO_DIR) -fprofile-correction -Wno-missing-profile" all
+	@echo "[PGO] Completato: build/main_game e build/main_fen ottimizzati con PGO."
+
+.PHONY: all clean release pgo

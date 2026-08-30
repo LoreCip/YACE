@@ -96,7 +96,7 @@ public:
     uint8_t GetCastlingRights() const {
         return castlingRights;
     }
-    UndoState GetHistory(int ply) const {
+    const UndoState& GetHistory(int ply) const {
         return history[ply];
     }
     int GetHistoryPly() const {

@@ -1,8 +1,30 @@
 #include "Uci.hpp"
 #include <iostream>
 #include <iomanip>
+#include <cstdint>
 
 namespace UCI {
+
+    static const char* const BENCH_FENS[] = {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQkq - 4 5",
+        "rnbqkb1r/pp1p1ppp/4pn2/2p5/2PP4/5N2/PP2PPPP/RNBQKB1R w KQkq - 0 4",
+        "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1 w - - 6 8",
+        "2rq1rk1/pb1n1ppp/1p2pn2/8/2BP4/2N1PN2/PP3PPP/2RQ1RK1 w - - 0 14",
+        "r1b1kb1r/pp3ppp/1qn1pn2/2ppN3/3P4/2N1P3/PPP1BPPP/R1BQK2R w KQkq - 0 8",
+        "rnb1kb1r/ppp1pppp/5n2/3q4/8/2N2N2/PPPP1PPP/R1BQKB1R w KQkq - 2 5",
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+        "2kr3r/pp1n1ppp/2p1p3/q7/1b1P4/2N1PN2/PPQ2PPP/2KR1B1R w - - 0 13",
+        "5rk1/1p3ppp/p1p5/3Nn3/4P3/1P6/P4PPP/3R2K1 w - - 0 22",
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+        "8/8/8/8/8/5k2/8/4K2R w K - 0 1",
+        "r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1",
+        "r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 0 1",
+        "4k3/8/8/8/8/8/8/4K2R w K - 0 1",
+        "8/P7/8/8/8/8/p7/K6k w - - 0 1",
+        "6k1/5p2/6p1/8/7P/6P1/5PK1/8 w - - 0 1",
+    };  
+    static const int NUM_BENCH_FENS = sizeof(BENCH_FENS) / sizeof(BENCH_FENS[0]);
 
     void Initialize() {
         std::cout << "id name YACE v1.0\n";
@@ -93,6 +115,58 @@ namespace UCI {
                     std::cout << "bestmove " << MoveToString(best) << "\n";
                     std::cout.flush();     
                 }
+            } else if (token == "bench") {
+                std::string line;
+                std::getline(std::cin, line);
+                std::stringstream ss(line);
+                int depth = 8;
+                ss >> depth;
+                if (depth <= 0) depth = 8;
+
+                long long totalNodes = 0;
+                double totalTimeMs = 0.0;
+                // FNV-1a, offset basis a 64 bit: firma deterministica di (profondita', score
+                // finale, bestmove) per ogni posizione — il cancello di correttezza per ogni
+                // ottimizzazione di velocita' successiva (deve restare invariata).
+                uint64_t signature = 14695981039346656037ULL;
+                auto foldSig = [&signature](long long v) {
+                    for (int b = 0; b < 8; b++) {
+                        uint8_t byte = static_cast<uint8_t>((static_cast<uint64_t>(v) >> (b * 8)) & 0xFFULL);
+                        signature ^= byte;
+                        signature *= 1099511628211ULL;
+                    }
+                };
+
+                for (int i = 0; i < NUM_BENCH_FENS; i++) {
+                    board.InitializeFromFEN(BENCH_FENS[i]);
+                    if (onPositionLoaded) onPositionLoaded();
+
+                    long long lastNodes = 0, lastTimeMs = 0;
+                    int lastScore = 0;
+                    LoggerCallback capture = [&](int, int, int score, long long timeMs, long long nodes,
+                                                 long long, int, const std::string&, double, long long, long long) {
+                        lastScore = score;
+                        lastNodes = nodes;
+                        lastTimeMs = timeMs;
+                    };
+                    Move best = onGoCommand ? onGoCommand(depth, 99999999.0, capture) : 0;
+
+                    totalNodes += lastNodes;
+                    totalTimeMs += static_cast<double>(lastTimeMs);
+
+                    foldSig(static_cast<long long>(depth));
+                    foldSig(static_cast<long long>(lastScore));
+                    foldSig(static_cast<long long>(best));
+                }
+
+                long long nps = (totalTimeMs > 0.0)
+                    ? static_cast<long long>(totalNodes / totalTimeMs * 1000.0)
+                    : 0;
+
+                std::cout << "bench: " << totalNodes << " nodes  " << totalTimeMs << " ms  "
+                          << nps << " nps\n";
+                std::cout << "bench signature: " << std::hex << signature << std::dec << "\n";
+                std::cout.flush();
             } else if (token == "state") {
                 std::cout << "info fen: " << board.GetFEN() << "\n";
             } else if (token == "move") {

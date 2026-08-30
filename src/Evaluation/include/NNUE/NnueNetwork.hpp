@@ -49,8 +49,16 @@ BINARY FILE MAP (RAW SEQUENTIAL BYTES)
 
 #include <string>
 #include <cstdint>
+#include <memory>
 
-class NnueNetwork {
+// alignas(64): tutti gli accessi SIMD a L0/L1 nel percorso caldo (AccumulateColumnsInto,
+// IncrementalUpdate, RefreshAccumulator, DenseLayerLinear per L1) possono cosi' usare load/store
+// ALLINEATI invece di loadu/storeu — le righe di L0 (512B) e L1 (512B) sono multipli esatti di
+// 64B, quindi se l'array parte allineato ogni riga lo e' automaticamente. Senza allineamento
+// esplicito il compilatore garantisce solo l'allineamento naturale (2/4 byte), quindi una riga
+// da 512B poteva iniziare su un confine qualunque — fino a 9 cache line toccate invece di 8, con
+// load "split" che costano un ciclo extra di porta L1 ciascuna sul percorso più caldo del motore.
+class alignas(64) NnueNetwork {
 public:
     static constexpr int M = 256;
     static constexpr int K = 32;
@@ -73,31 +81,43 @@ public:
     static constexpr int64_t CP_SCALE = 400;
 
     // --- Pesi Quantizzati ---
-    int16_t L0[NUM_FEATURES][M];
-    int16_t L0Bias[M];
-    int8_t L1[K][2 * M];
-    int32_t L1Bias[K];     
+    // Solo L0 e L1 sono allineati esplicitamente: le loro righe sono 512B (multiplo di 64),
+    // quindi l'allineamento paga in aligned load/store nel percorso caldo (vedi sopra). L2 ha
+    // righe da soli 32B (non multiplo di 64) — restano su load/store non allineati, l'intero
+    // layer e' 1KB e non e' dove va il tempo (vedi profilo nello Step 2).
+    alignas(64) int16_t L0[NUM_FEATURES][M];
+    alignas(64) int16_t L0Bias[M];
+    alignas(64) int8_t L1[K][2 * M];
+    alignas(64) int32_t L1Bias[K];
     int8_t L2[K][K];
     int32_t L2Bias[K];
     int16_t L3[K];
     int32_t L3Bias;
 
-    // --- Buffer di memoria interni ---
-    int8_t inputBuffer[2 * M];
-    int8_t outputBuffer[K];
-
     // --- Metodi e Helper (Struttura Originale) ---
     bool InitializeFromFile(std::string path);
-    int EvaluateNnue(int16_t* smt, int16_t* nsmt);
+    // const: nessuno stato mutabile nell'oggetto (inputBuffer/outputBuffer erano scratch
+    // condivisi qui, ora locali allo stack di EvaluateNnue) — questo e' cio' che rende sicuro
+    // condividere una singola istanza tra i thread di ricerca (vedi NnueEvaluator).
+    int EvaluateNnue(const int16_t* smt, const int16_t* nsmt) const;
 
 private:
-    void DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols, int shift);    
-    int32_t OutputLayerDotProduct(const int8_t* input, const int16_t* weights, int32_t bias, int len);
-    
-    void ActivationFunction(const int16_t* in, int8_t* out, int len);
-    void ActivationFunction(const int32_t* in, int8_t* out, int len); // Overload per il Layer 1
+    void DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols, int shift) const;
+    int32_t OutputLayerDotProduct(const int8_t* input, const int16_t* weights, int32_t bias, int len) const;
+
+    void ActivationFunction(const int16_t* in, int8_t* out, int len) const;
+    void ActivationFunction(const int32_t* in, int8_t* out, int len) const; // Overload per il Layer 1
 
 };
+
+// Carica una rete da disco in un oggetto condiviso e in sola lettura, da riusare per tutti i
+// thread di ricerca di una sessione (invece di rileggere il file e duplicare i 20MB di L0 per
+// ogni thread a ogni `go`). Ritorna nullptr se il file non puo' essere aperto/letto.
+// Usa `new` invece di `std::make_shared` cosi' l'allocazione passa esplicitamente per
+// `operator new(size_t, std::align_val_t)` quando NnueNetwork acquisira' un `alignas(64)` —
+// `make_shared` dovrebbe allineare l'intera allocazione combinata oggetto+control-block, `new`
+// rende la garanzia ovvia a chi legge il codice.
+std::shared_ptr<const NnueNetwork> LoadNnueNetwork(const std::string& path);
 
 #endif
 

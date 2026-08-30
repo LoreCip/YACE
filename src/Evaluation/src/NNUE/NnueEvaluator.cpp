@@ -3,13 +3,16 @@
 #include "Types.hpp"
 #include "Move.hpp"
 #include <immintrin.h>   // AVX-512 intrinsics
+#include <cassert>
+#include <cstring>
+#include <cstdint>
 
 // ============================================================================
 // Richiede compilazione con -mavx512f -mavx512bw (stesso requisito di
 // NnueNetwork.cpp, che in più usa -mavx512dq -mavx512vl -mavx512vnni).
 // ============================================================================
 
-NnueEvaluator::NnueEvaluator() : eager(true), currentPly(0) {
+NnueEvaluator::NnueEvaluator() : currentPly(0) {
     // Inizializzazione pulita
     for (int i = 0; i < MAX_HISTORY_PLY; i++) {
         nnueStack[i].computed[0] = false;
@@ -17,8 +20,19 @@ NnueEvaluator::NnueEvaluator() : eager(true), currentPly(0) {
     }
 }
 
+NnueEvaluator::NnueEvaluator(std::shared_ptr<const NnueNetwork> sharedNetwork)
+    : currentPly(0), networkOwner(std::move(sharedNetwork)), net(networkOwner.get()) {
+    for (int i = 0; i < MAX_HISTORY_PLY; i++) {
+        nnueStack[i].computed[0] = false;
+        nnueStack[i].computed[1] = false;
+    }
+}
+
 bool NnueEvaluator::Initialize(const std::string& weightsPath) {
-    return network.InitializeFromFile(weightsPath); 
+    // Shim di compatibilita': carica una rete privata (non condivisa) per questa sola istanza.
+    networkOwner = LoadNnueNetwork(weightsPath);
+    net = networkOwner.get();
+    return net != nullptr;
 }
 
 void NnueEvaluator::Reset(const Board& board) {
@@ -29,14 +43,33 @@ void NnueEvaluator::Reset(const Board& board) {
     RefreshAccumulator(board, ColorInt(Color::BLACK));
 }
 
-int NnueEvaluator::Evaluate(const Board& board) {
-    if (!eager) {
-        if (!nnueStack[currentPly].computed[ColorInt(Color::WHITE)]) 
-            RefreshAccumulator(board, ColorInt(Color::WHITE));
-        if (!nnueStack[currentPly].computed[ColorInt(Color::BLACK)]) 
-            RefreshAccumulator(board, ColorInt(Color::BLACK));
+#ifdef NNUE_VALIDATE
+void NnueEvaluator::ValidateAccumulators(const Board& board) {
+    for (int p = 0; p <= 1; p++) {
+        if (!nnueStack[currentPly].computed[p]) continue;
+
+        int16_t saved[ACC_SIZE];
+        std::memcpy(saved, nnueStack[currentPly].accumulator[p], sizeof(saved));
+
+        RefreshAccumulator(board, p); // sovrascrive nnueStack[currentPly].accumulator[p]
+
+        bool match = (std::memcmp(saved, nnueStack[currentPly].accumulator[p], sizeof(saved)) == 0);
+
+        // Ripristina l'accumulatore incrementale originale: la validazione deve essere pura
+        // osservazione, la ricerca continua a usare esattamente cio' che avrebbe usato senza
+        // NNUE_VALIDATE.
+        std::memcpy(nnueStack[currentPly].accumulator[p], saved, sizeof(saved));
+
+        assert(match && "NNUE_VALIDATE: accumulatore incrementale diverge dal refresh completo");
     }
-    
+}
+#endif
+
+int NnueEvaluator::Evaluate(const Board& board) {
+#ifdef NNUE_VALIDATE
+    ValidateAccumulators(board);
+#endif
+
     int16_t *smt, *nsmt;
     if (board.GetSideToMove() == ColorInt(Color::WHITE)) {
         smt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
@@ -46,16 +79,8 @@ int NnueEvaluator::Evaluate(const Board& board) {
         nsmt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
     }
     
-    int score = network.EvaluateNnue(smt, nsmt);
+    int score = net->EvaluateNnue(smt, nsmt);
 
-    // network.EvaluateNnue(smt, nsmt) e' relativo a chi deve muovere (smt = side to move),
-    // seguendo la convenzione standard NNUE/training (us/them). Ma IEvaluator::Evaluate() ha
-    // un contratto WHITE-relative (vedi ClassicalEvaluator::Evaluate, che ritorna
-    // scores[WHITE]-scores[BLACK]) — SearchWorker::QuiescenceSearch nega il risultato solo se
-    // il lato di muovere e' il nero, assumendo esattamente questo contratto. Senza questa
-    // conversione, ogni valutazione NNUE con il nero di turno viene negata due volte (una qui
-    // implicitamente scegliendo la prospettiva di chi muove, una in SearchWorker), invertendo
-    // il segno per meta' di tutte le posizioni valutate in quiescence.
     if (board.GetSideToMove() != ColorInt(Color::WHITE)) {
         score = -score;
     }
@@ -63,40 +88,52 @@ int NnueEvaluator::Evaluate(const Board& board) {
 }
 
 void NnueEvaluator::OnMakeMove(const Board& board, Move move) {
+    if (currentPly + 1 >= MAX_HISTORY_PLY) {
+        overflowDepth++;
+        return;
+    }
     int prevPly = currentPly;
     currentPly++;
-    
-    if (currentPly >= MAX_HISTORY_PLY) return;
 
-    nnueStack[currentPly] = nnueStack[prevPly];
-    
-    int movedColor = (board.GetSideToMove() == ColorInt(Color::WHITE)) 
-                     ? ColorInt(Color::BLACK) 
+    nnueStack[currentPly].computed[0] = false;
+    nnueStack[currentPly].computed[1] = false;
+
+    int movedColor = (board.GetSideToMove() == ColorInt(Color::WHITE))
+                     ? ColorInt(Color::BLACK)
                      : ColorInt(Color::WHITE);
-                     
-    int boardHistoryIdx = board.GetHistoryPly() - 1;
-    
-    // Se è stato mosso il re, tutta la prospettiva cambia e dobbiamo ricalcolare da zero
-    if (board.GetHistory(boardHistoryIdx).movedPiece == PieceType::KING) {
-        nnueStack[currentPly].computed[movedColor] = false;
-    }
 
-    // Aggiornamento prospettiva BIANCO
-    if (nnueStack[currentPly].computed[ColorInt(Color::WHITE)]) {
-        IncrementalUpdate(board, move, ColorInt(Color::WHITE));
-    } else if (eager) {
+    const UndoState& undo = board.GetHistory(board.GetHistoryPly() - 1);
+    PieceType movedPiece = static_cast<PieceType>(undo.movedPiece);
+    PieceType capturedPiece = static_cast<PieceType>(undo.capturedPiece);
+    bool isKingMove = (movedPiece == PieceType::KING);
+
+    BuildDelta(board, move, movedPiece, capturedPiece, movedColor, nnueStack[currentPly].delta);
+
+    if (isKingMove && movedColor == ColorInt(Color::WHITE)) {
+        RefreshAccumulator(board, ColorInt(Color::WHITE));
+    } else if (nnueStack[prevPly].computed[ColorInt(Color::WHITE)]) {
+        ApplyDelta(ColorInt(Color::WHITE), currentPly);
+        nnueStack[currentPly].computed[ColorInt(Color::WHITE)] = true;
+    } else {
         RefreshAccumulator(board, ColorInt(Color::WHITE));
     }
 
     // Aggiornamento prospettiva NERO
-    if (nnueStack[currentPly].computed[ColorInt(Color::BLACK)]) {
-        IncrementalUpdate(board, move, ColorInt(Color::BLACK));
-    } else if (eager) {
+    if (isKingMove && movedColor == ColorInt(Color::BLACK)) {
+        RefreshAccumulator(board, ColorInt(Color::BLACK));
+    } else if (nnueStack[prevPly].computed[ColorInt(Color::BLACK)]) {
+        ApplyDelta(ColorInt(Color::BLACK), currentPly);
+        nnueStack[currentPly].computed[ColorInt(Color::BLACK)] = true;
+    } else {
         RefreshAccumulator(board, ColorInt(Color::BLACK));
     }
 }
 
 void NnueEvaluator::OnUnmakeMove() {
+    if (overflowDepth > 0) {
+        overflowDepth--;
+        return;
+    }
     currentPly--;
     if (currentPly < 0) currentPly = 0;
 }
@@ -108,13 +145,16 @@ void NnueEvaluator::OnUnmakeMove() {
 // scalare resta per sicurezza/robustezza se M dovesse cambiare.
 // ---------------------------------------------------------------------------
 static inline void AccumulateColumnsInto(int16_t* acc, const int16_t* base, const int16_t* const* cols, int count) {
+    assert((reinterpret_cast<uintptr_t>(acc) & 63) == 0);
+    assert((reinterpret_cast<uintptr_t>(base) & 63) == 0);
     int i = 0;
     for (; i + 32 <= M; i += 32) {
-        __m512i v = _mm512_loadu_si512(reinterpret_cast<const void*>(base + i));
+        __m512i v = _mm512_load_si512(reinterpret_cast<const void*>(base + i));
         for (int f = 0; f < count; f++) {
-            v = _mm512_add_epi16(v, _mm512_loadu_si512(reinterpret_cast<const void*>(cols[f] + i)));
+            assert((reinterpret_cast<uintptr_t>(cols[f]) & 63) == 0);
+            v = _mm512_add_epi16(v, _mm512_load_si512(reinterpret_cast<const void*>(cols[f] + i)));
         }
-        _mm512_storeu_si512(reinterpret_cast<void*>(acc + i), v);
+        _mm512_store_si512(reinterpret_cast<void*>(acc + i), v);
     }
     for (; i < M; i++) {
         int32_t s = base[i];
@@ -128,7 +168,7 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
 
     uint64_t kingBb = board.GetBitBoard(perspective, PieceType::KING);
     if (kingBb == 0) {
-        for (int i = 0; i < M; i++) acc[i] = network.L0Bias[i];
+        for (int i = 0; i < M; i++) acc[i] = net->L0Bias[i];
         nnueStack[currentPly].computed[perspective] = true;
         return;
     }
@@ -152,31 +192,36 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
                 
                 int fIdx = MakeFeatureIndex(pieceSq, pt, color, kingSq, perspective);
                 if (activeCount < MAX_ACTIVE_FEATURES) {
-                    activeCols[activeCount++] = network.L0[fIdx];
+                    activeCols[activeCount++] = net->L0[fIdx];
                 }
             }
         }
     }
 
     // Passo 2: un solo passaggio vettoriale bias + tutte le colonne
-    AccumulateColumnsInto(acc, network.L0Bias, activeCols, activeCount);
+    AccumulateColumnsInto(acc, net->L0Bias, activeCols, activeCount);
 
     nnueStack[currentPly].computed[perspective] = true;
 }
 
 int NnueEvaluator::MakeFeatureIndex(int square, PieceType pieceType, int pieceColor, int kingSq, int perspective) const {
+    assert(pieceType != PieceType::KING && "MakeFeatureIndex chiamata con KING: il re non e' una feature HalfKP");
+
     int finalSquare = (perspective == ColorInt(Color::BLACK)) ? FlipSquareVertical(square) : square;
     int finalKingSq = (perspective == ColorInt(Color::BLACK)) ? FlipSquareVertical(kingSq) : kingSq;
-    
+
     int nnuePt = PIECE_TO_NNUE_IDX[PieceInt(pieceType)];
     int relativeColor = (pieceColor != perspective) ? 1 : 0;
     int pIdx = nnuePt * 2 + relativeColor;
-    
-    return finalSquare + (pIdx + finalKingSq * 10) * 64; 
+    int idx = finalSquare + (pIdx + finalKingSq * 10) * 64;
+
+    assert(idx >= 0 && idx < NUM_FEATURES && "MakeFeatureIndex ha prodotto un indice fuori scala per L0");
+    return idx;
 }
 
-void NnueEvaluator::IncrementalUpdate(const Board& board, Move move, int perspective) {
-    int16_t* acc = nnueStack[currentPly].accumulator[perspective];
+void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPiece, PieceType capturedPiece,
+                                int movedColor, AccDelta& delta) const {
+    (void)movedColor; // Il chiamante ha gia' deciso se rinfrescare quella prospettiva; qui non serve.
 
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
@@ -184,66 +229,83 @@ void NnueEvaluator::IncrementalUpdate(const Board& board, Move move, int perspec
     Color us = (board.GetSideToMove() == Color::WHITE) ? Color::BLACK : Color::WHITE;
     Color them = !us;
 
-    int boardHistoryIdx = board.GetHistoryPly() - 1;
-    PieceType movedPiece = static_cast<PieceType>(board.GetHistory(boardHistoryIdx).movedPiece);
-    PieceType capturedPiece = static_cast<PieceType>(board.GetHistory(boardHistoryIdx).capturedPiece);
+    bool isKingMove = (movedPiece == PieceType::KING);
+    PieceType promoPiece = getMovePromotionPiece(flags);
 
-    uint64_t king_bb = board.GetBitBoard(perspective, PieceType::KING);
-    int king_sq = __builtin_ctzll(king_bb);
+    int actualCaptureSq = to;
+    if (flags == FlagMap::ENPASS) {
+        actualCaptureSq = (us == ColorInt(Color::WHITE)) ? to - 8 : to + 8;
+    }
+
+    int rookFrom = -1, rookTo = -1;
+    if (flags == FlagMap::CASTLING) {
+        if (to == 6)        { rookFrom = 7;  rookTo = 5;  }
+        else if (to == 2)   { rookFrom = 0;  rookTo = 3;  }
+        else if (to == 62)  { rookFrom = 63; rookTo = 61; }
+        else if (to == 58)  { rookFrom = 56; rookTo = 59; }
+    }
+
+    for (int perspective = 0; perspective <= 1; perspective++) {
+        uint64_t king_bb = board.GetBitBoard(perspective, PieceType::KING);
+        int king_sq = __builtin_ctzll(king_bb);
+
+        int rCount = 0, aCount = 0;
+
+        if (!isKingMove) {
+            delta.removed[perspective][rCount++] =
+                static_cast<uint32_t>(MakeFeatureIndex(from, movedPiece, ColorInt(us), king_sq, perspective));
+        }
+        if (capturedPiece != PieceType::NONE) {
+            delta.removed[perspective][rCount++] =
+                static_cast<uint32_t>(MakeFeatureIndex(actualCaptureSq, capturedPiece, ColorInt(them), king_sq, perspective));
+        }
+        if (!isKingMove) {
+            PieceType addPiece = (promoPiece != PieceType::NONE) ? promoPiece : movedPiece;
+            delta.added[perspective][aCount++] =
+                static_cast<uint32_t>(MakeFeatureIndex(to, addPiece, ColorInt(us), king_sq, perspective));
+        }
+        if (flags == FlagMap::CASTLING) {
+            delta.removed[perspective][rCount++] =
+                static_cast<uint32_t>(MakeFeatureIndex(rookFrom, PieceType::ROOK, ColorInt(us), king_sq, perspective));
+            delta.added[perspective][aCount++] =
+                static_cast<uint32_t>(MakeFeatureIndex(rookTo, PieceType::ROOK, ColorInt(us), king_sq, perspective));
+        }
+
+        delta.nRemoved = static_cast<uint8_t>(rCount);
+        delta.nAdded = static_cast<uint8_t>(aCount);
+    }
+}
+
+void NnueEvaluator::ApplyDelta(int perspective, int ply) {
+    const int16_t* src = nnueStack[ply - 1].accumulator[perspective];
+    int16_t* dst = nnueStack[ply].accumulator[perspective];
+    const AccDelta& d = nnueStack[ply].delta;
 
     const int16_t* removedCols[3];
-    const int16_t* addedCols[3];
-    int removedCount = 0;
-    int addedCount = 0;
+    const int16_t* addedCols[2];
+    for (int r = 0; r < d.nRemoved; r++) removedCols[r] = net->L0[d.removed[perspective][r]];
+    for (int a = 0; a < d.nAdded; a++) addedCols[a] = net->L0[d.added[perspective][a]];
 
-    removedCols[removedCount++] = network.L0[MakeFeatureIndex(from, movedPiece, ColorInt(us), king_sq, perspective)];
-
-    if (capturedPiece != PieceType::NONE) {
-        int actualCaptureSq = to;
-        if (flags == FlagMap::ENPASS) {
-            actualCaptureSq = (us == ColorInt(Color::WHITE)) ? to - 8 : to + 8;
-        }
-        removedCols[removedCount++] = network.L0[MakeFeatureIndex(actualCaptureSq, capturedPiece, ColorInt(them), king_sq, perspective)];
-    }
-
-    // Identifica la promozione
-    PieceType promoPiece = getMovePromotionPiece(flags);
-    
-    if (promoPiece != PieceType::NONE) {
-        addedCols[addedCount++] = network.L0[MakeFeatureIndex(to, promoPiece, ColorInt(us), king_sq, perspective)];
-    } else {
-        addedCols[addedCount++] = network.L0[MakeFeatureIndex(to, movedPiece, ColorInt(us), king_sq, perspective)];
-    }
-
-    // Gestione Arrocco per le Torri
-    if (flags == FlagMap::CASTLING) {
-        int rookFrom = 0;
-        int rookTo = 0;
-        
-        if (to == 6)        { rookFrom = 7;  rookTo = 5;  } 
-        else if (to == 2)   { rookFrom = 0;  rookTo = 3;  } 
-        else if (to == 62)  { rookFrom = 63; rookTo = 61; } 
-        else if (to == 58)  { rookFrom = 56; rookTo = 59; } 
-        
-        removedCols[removedCount++] = network.L0[MakeFeatureIndex(rookFrom, PieceType::ROOK, ColorInt(us), king_sq, perspective)];
-        addedCols[addedCount++] = network.L0[MakeFeatureIndex(rookTo, PieceType::ROOK, ColorInt(us), king_sq, perspective)];
-    }
-
-    // Un solo passaggio vettoriale: sottrai tutte le rimosse, poi somma tutte le aggiunte
+    assert((reinterpret_cast<uintptr_t>(src) & 63) == 0);
+    assert((reinterpret_cast<uintptr_t>(dst) & 63) == 0);
     int i = 0;
     for (; i + 32 <= M; i += 32) {
-        __m512i v = _mm512_loadu_si512(reinterpret_cast<const void*>(acc + i));
-        for (int r = 0; r < removedCount; r++)
-            v = _mm512_sub_epi16(v, _mm512_loadu_si512(reinterpret_cast<const void*>(removedCols[r] + i)));
-        for (int a = 0; a < addedCount; a++)
-            v = _mm512_add_epi16(v, _mm512_loadu_si512(reinterpret_cast<const void*>(addedCols[a] + i)));
-        _mm512_storeu_si512(reinterpret_cast<void*>(acc + i), v);
+        __m512i v = _mm512_load_si512(reinterpret_cast<const void*>(src + i));
+        for (int r = 0; r < d.nRemoved; r++) {
+            assert((reinterpret_cast<uintptr_t>(removedCols[r]) & 63) == 0);
+            v = _mm512_sub_epi16(v, _mm512_load_si512(reinterpret_cast<const void*>(removedCols[r] + i)));
+        }
+        for (int a = 0; a < d.nAdded; a++) {
+            assert((reinterpret_cast<uintptr_t>(addedCols[a]) & 63) == 0);
+            v = _mm512_add_epi16(v, _mm512_load_si512(reinterpret_cast<const void*>(addedCols[a] + i)));
+        }
+        _mm512_store_si512(reinterpret_cast<void*>(dst + i), v);
     }
     for (; i < M; i++) {
-        int32_t s = acc[i];
-        for (int r = 0; r < removedCount; r++) s -= removedCols[r][i];
-        for (int a = 0; a < addedCount; a++) s += addedCols[a][i];
-        acc[i] = static_cast<int16_t>(s);
+        int32_t s = src[i];
+        for (int r = 0; r < d.nRemoved; r++) s -= removedCols[r][i];
+        for (int a = 0; a < d.nAdded; a++) s += addedCols[a][i];
+        dst[i] = static_cast<int16_t>(s);
     }
 }
 

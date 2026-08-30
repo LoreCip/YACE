@@ -1,0 +1,15 @@
+**/.vscode
+**/__pycache__
+**/build
+**/compile_flags.txt
+**/gauntlet/versions/*.tar.gz
+**/gauntlet/versions/archive/*.tar.gz
+**/gauntlet/versions/engine_v*
+**/gauntlet/versions/engine_fen_v*
+**/gauntlet/versions/archive/engine_v*
+**/gauntlet/versions/archive/engine_fen_v*
+**/data/*.zst
+**/*.ipynb
+**/*.bin
+**/*.bin.bak
+**/*.pth

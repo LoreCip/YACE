@@ -13,11 +13,8 @@ import chess.engine
 
 # --- CONFIGURAZIONE MOTORI ---
 BASEPATH    = "/home/lorenzo/Scrivania/Projects/YACE/gauntlet/versions/"
-# NOTA: ENGINE_YACE include esplicitamente "-e nnue" -- prima non veniva passato alcun
-# flag e il binario partiva con la valutazione classica (HCE) di default, quindi tutti i
-# risultati storici etichettati come test della rete NNUE misuravano in realta' l'HCE.
 ENGINE_YACE = [
-    BASEPATH + "engine_v3-3.2", "-e", "nnue",
+    BASEPATH + "engine_v3-6", "-e", "nnue",
     "-w", "/home/lorenzo/Scrivania/Projects/YACE/parameters/weights/nnue_weights_v3-6.bin",
 ]
 ENGINE_SF   = "stockfish"

@@ -402,9 +402,7 @@ bool SearchWorker::SEE(Move move, int threshold) {
 
     int gain[32]; // Massimo 32 catture possibili su una singola casa
     int d = 0;
-
-    // Il primo guadagno è semplicemente il pezzo catturato
-    gain[0] = LookupTables::pieceValues[PieceInt(capturedPiece)];
+    gain[0] = (capturedPiece != PieceType::NONE) ? LookupTables::pieceValues[PieceInt(capturedPiece)] : 0;
 
     // Bonus in caso di promozione (la nuova regina - il pedone perso)
     if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {

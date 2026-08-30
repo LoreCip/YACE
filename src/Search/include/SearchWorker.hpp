@@ -40,15 +40,17 @@ private:
 public:
     Move bestRootMove = 0;
 
-    SearchWorker(int id, bool mainThread, const Board& rootBoard, 
+    SearchWorker(int id, bool mainThread, const Board& rootBoard,
                  TranspositionTable& globalTT, std::atomic<bool>& stopFlag,
                  std::unique_ptr<IEvaluator> eval)
-        : threadId(id), 
-          isMainThread(mainThread), 
-          board(rootBoard),        
-          tt(globalTT), 
+        : threadId(id),
+          isMainThread(mainThread),
+          board(rootBoard),
+          tt(globalTT),
           globalTimeIsUp(stopFlag),
-          evaluator(std::move(eval)) {}
+          evaluator(std::move(eval)) {
+        if (evaluator) evaluator->Reset(board);
+    }
 
     void Search(int maxDepth, InfoReporter callback = nullptr);
     const SearchStats& GetStats() const { return stats; }

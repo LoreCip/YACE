@@ -43,7 +43,7 @@ class HalfKP_NNUE_QAT(nn.Module):
     def clipped_relu(self, x):
         return torch.clamp(x, 0.0, 1.0)
 
-    def forward(self, us_indices, them_indices):
+    def forward(self, us_indices, them_indices, return_logits=False):
         # -- FAKE QUANTIZATION: ACCUMULATORE (Pesi in int16: -32768 a 32767) --
         acc_w_q = fake_quant(self.accumulator.weight, self.SCALE_W_ACC, -32768, 32767)
         acc_b_q = fake_quant(self.accumulator_bias, self.SCALE_W_ACC, -32768, 32767)
@@ -77,5 +77,7 @@ class HalfKP_NNUE_QAT(nn.Module):
         out_b_q = fake_quant(self.output_layer.bias, self.SCALE_ACT * self.SCALE_W_OUT, -32768, 32767)
         
         x = F.linear(x, out_w_q, out_b_q)
-        
+
+        if return_logits:
+            return torch.sigmoid(x), x
         return torch.sigmoid(x)

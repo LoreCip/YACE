@@ -175,7 +175,12 @@ int32_t NnueNetwork::OutputLayerDotProduct(const int8_t* input, const int16_t* w
     int32_t dot = bias + _mm512_reduce_add_epi32(acc);
     for (; i < len; i++) dot += input[i] * weights[i];
 
-    return dot >> SHIFT_OUT;
+    // Descala dal dominio quantizzato (OUTPUT_SCALE) e riscala in centipawns (CP_SCALE),
+    // con arrotondamento invece di troncamento a bit-shift.
+    int64_t scaled = static_cast<int64_t>(dot) * CP_SCALE;
+    int64_t half = OUTPUT_SCALE / 2;
+    return static_cast<int32_t>(scaled >= 0 ? (scaled + half) / OUTPUT_SCALE
+                                             : (scaled - half) / OUTPUT_SCALE);
 }
 
 int NnueNetwork::EvaluateNnue(int16_t* smt, int16_t* nsmt) {

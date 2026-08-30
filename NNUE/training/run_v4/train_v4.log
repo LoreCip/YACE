@@ -1,0 +1,243 @@
+Sto addestrando HalfKP su: cuda
+Caricamento del dataset in RAM da /home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin...
+Dataset caricato: 91,262,338 posizioni totali (89,437,092 train / 1,825,246 validation, 2.0%).
+
+--- Epoca 1/40 ---
+
+Epoca 1/40 [LR: 0.000100]: 100%|██████████| 5458/5458 [03:12<00:00, 28.40it/s, Avg_Loss: 0.4100 | WDL: 0.0354 | Logit: 0.7805]
+W0829 10:42:42.626000 621370 torch/_inductor/utils.py:1717] [0/1] Not enough SMs to use max_autotune_gemm mode
+ Val (held-out, mai vista in training): MAE_WDL=0.1048 | MAE_CP=182.81 | SignAcc=52.44% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 2/40 ---
+
+Epoca 2/40 [LR: 0.000232]: 100%|██████████| 5458/5458 [03:16<00:00, 27.75it/s, Avg_Loss: 0.4053 | WDL: 0.0350 | Logit: 0.7734]
+ Val (held-out, mai vista in training): MAE_WDL=0.1047 | MAE_CP=182.67 | SignAcc=53.09% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 3/40 ---
+
+Epoca 3/40 [LR: 0.000550]: 100%|██████████| 5458/5458 [03:19<00:00, 27.33it/s, Avg_Loss: 0.4003 | WDL: 0.0348 | Logit: 0.7702]
+ Val (held-out, mai vista in training): MAE_WDL=0.1044 | MAE_CP=182.18 | SignAcc=53.55% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 4/40 ---
+
+ Val (held-out, mai vista in training): MAE_WDL=0.1035 | MAE_CP=180.60 | SignAcc=53.43% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 5/40 ---
+
+Epoca 5/40 [LR: 0.001000]: 100%|██████████| 5458/5458 [03:16<00:00, 27.75it/s, Avg_Loss: 0.3868 | WDL: 0.0337 | Logit: 0.7426]
+ Val (held-out, mai vista in training): MAE_WDL=0.1037 | MAE_CP=180.96 | SignAcc=53.43% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 6/40 ---
+
+Epoca 6/40 [LR: 0.000998]: 100%|██████████| 5458/5458 [03:16<00:00, 27.82it/s, Avg_Loss: 0.3794 | WDL: 0.0333 | Logit: 0.7345]
+ Val (held-out, mai vista in training): MAE_WDL=0.1042 | MAE_CP=181.89 | SignAcc=53.76% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 7/40 ---
+
+Epoca 7/40 [LR: 0.000992]: 100%|██████████| 5458/5458 [03:14<00:00, 28.01it/s, Avg_Loss: 0.3726 | WDL: 0.0321 | Logit: 0.7070]
+ Val (held-out, mai vista in training): MAE_WDL=0.1038 | MAE_CP=181.29 | SignAcc=53.91% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 8/40 ---
+
+Epoca 8/40 [LR: 0.000983]: 100%|██████████| 5458/5458 [03:11<00:00, 28.50it/s, Avg_Loss: 0.3662 | WDL: 0.0315 | Logit: 0.6956]
+ Val (held-out, mai vista in training): MAE_WDL=0.1043 | MAE_CP=182.02 | SignAcc=53.72% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 9/40 ---
+
+Epoca 9/40 [LR: 0.000970]: 100%|██████████| 5458/5458 [03:10<00:00, 28.70it/s, Avg_Loss: 0.3605 | WDL: 0.0321 | Logit: 0.7063]
+ Val (held-out, mai vista in training): MAE_WDL=0.1048 | MAE_CP=183.07 | SignAcc=54.10% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 10/40 ---
+
+Epoca 10/40 [LR: 0.000953]: 100%|██████████| 5458/5458 [03:09<00:00, 28.76it/s, Avg_Loss: 0.3554 | WDL: 0.0309 | Logit: 0.6756]
+ Val (held-out, mai vista in training): MAE_WDL=0.1050 | MAE_CP=183.47 | SignAcc=53.88% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 11/40 ---
+
+Epoca 11/40 [LR: 0.000933]: 100%|██████████| 5458/5458 [03:09<00:00, 28.86it/s, Avg_Loss: 0.3508 | WDL: 0.0307 | Logit: 0.6716]
+ Val (held-out, mai vista in training): MAE_WDL=0.1054 | MAE_CP=184.11 | SignAcc=53.95% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 12/40 ---
+
+Epoca 12/40 [LR: 0.000910]: 100%|██████████| 5458/5458 [03:07<00:00, 29.16it/s, Avg_Loss: 0.3467 | WDL: 0.0303 | Logit: 0.6625]
+ Val (held-out, mai vista in training): MAE_WDL=0.1060 | MAE_CP=185.34 | SignAcc=54.08% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 13/40 ---
+
+Epoca 13/40 [LR: 0.000883]: 100%|██████████| 5458/5458 [03:06<00:00, 29.21it/s, Avg_Loss: 0.3429 | WDL: 0.0298 | Logit: 0.6534]
+ Val (held-out, mai vista in training): MAE_WDL=0.1066 | MAE_CP=186.32 | SignAcc=53.91% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 14/40 ---
+
+Epoca 14/40 [LR: 0.000854]: 100%|██████████| 5458/5458 [03:07<00:00, 29.04it/s, Avg_Loss: 0.3396 | WDL: 0.0300 | Logit: 0.6545]
+ Val (held-out, mai vista in training): MAE_WDL=0.1060 | MAE_CP=185.31 | SignAcc=54.06% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 15/40 ---
+
+Epoca 15/40 [LR: 0.000822]: 100%|██████████| 5458/5458 [03:08<00:00, 29.03it/s, Avg_Loss: 0.3365 | WDL: 0.0299 | Logit: 0.6531]
+ Val (held-out, mai vista in training): MAE_WDL=0.1063 | MAE_CP=185.70 | SignAcc=54.00% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 16/40 ---
+
+Epoca 16/40 [LR: 0.000787]: 100%|██████████| 5458/5458 [03:10<00:00, 28.63it/s, Avg_Loss: 0.3336 | WDL: 0.0297 | Logit: 0.6483]
+ Val (held-out, mai vista in training): MAE_WDL=0.1066 | MAE_CP=186.44 | SignAcc=54.01% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 17/40 ---
+
+Epoca 17/40 [LR: 0.000750]: 100%|██████████| 5458/5458 [03:14<00:00, 28.07it/s, Avg_Loss: 0.3310 | WDL: 0.0290 | Logit: 0.6340]
+ Val (held-out, mai vista in training): MAE_WDL=0.1063 | MAE_CP=185.85 | SignAcc=53.98% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 18/40 ---
+
+Epoca 18/40 [LR: 0.000712]: 100%|██████████| 5458/5458 [03:18<00:00, 27.55it/s, Avg_Loss: 0.3286 | WDL: 0.0289 | Logit: 0.6321]
+ Val (held-out, mai vista in training): MAE_WDL=0.1070 | MAE_CP=187.23 | SignAcc=54.13% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 19/40 ---
+
+Epoca 19/40 [LR: 0.000671]: 100%|██████████| 5458/5458 [03:18<00:00, 27.44it/s, Avg_Loss: 0.3263 | WDL: 0.0284 | Logit: 0.6204]
+ Val (held-out, mai vista in training): MAE_WDL=0.1074 | MAE_CP=188.01 | SignAcc=53.88% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 20/40 ---
+
+Epoca 20/40 [LR: 0.000630]: 100%|██████████| 5458/5458 [03:18<00:00, 27.49it/s, Avg_Loss: 0.3243 | WDL: 0.0285 | Logit: 0.6222]
+ Val (held-out, mai vista in training): MAE_WDL=0.1072 | MAE_CP=187.62 | SignAcc=53.92% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 21/40 ---
+
+Epoca 21/40 [LR: 0.000587]: 100%|██████████| 5458/5458 [03:13<00:00, 28.26it/s, Avg_Loss: 0.3223 | WDL: 0.0279 | Logit: 0.6084]
+ Val (held-out, mai vista in training): MAE_WDL=0.1073 | MAE_CP=187.92 | SignAcc=53.98% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 22/40 ---
+
+Epoca 22/40 [LR: 0.000544]: 100%|██████████| 5458/5458 [03:12<00:00, 28.42it/s, Avg_Loss: 0.3205 | WDL: 0.0289 | Logit: 0.6317]
+ Val (held-out, mai vista in training): MAE_WDL=0.1071 | MAE_CP=187.44 | SignAcc=54.27% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 23/40 ---
+
+Epoca 23/40 [LR: 0.000500]: 100%|██████████| 5458/5458 [03:11<00:00, 28.56it/s, Avg_Loss: 0.3188 | WDL: 0.0282 | Logit: 0.6146]
+ Val (held-out, mai vista in training): MAE_WDL=0.1078 | MAE_CP=188.71 | SignAcc=53.49% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 24/40 ---
+
+Epoca 24/40 [LR: 0.000457]: 100%|██████████| 5458/5458 [03:09<00:00, 28.77it/s, Avg_Loss: 0.3172 | WDL: 0.0286 | Logit: 0.6217]
+ Val (held-out, mai vista in training): MAE_WDL=0.1082 | MAE_CP=189.51 | SignAcc=53.77% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 25/40 ---
+
+Epoca 25/40 [LR: 0.000414]: 100%|██████████| 5458/5458 [03:03<00:00, 29.80it/s, Avg_Loss: 0.3158 | WDL: 0.0279 | Logit: 0.6070]
+ Val (held-out, mai vista in training): MAE_WDL=0.1078 | MAE_CP=188.84 | SignAcc=54.09% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 26/40 ---
+
+Epoca 26/40 [LR: 0.000371]: 100%|██████████| 5458/5458 [03:04<00:00, 29.61it/s, Avg_Loss: 0.3144 | WDL: 0.0280 | Logit: 0.6105]
+ Val (held-out, mai vista in training): MAE_WDL=0.1082 | MAE_CP=189.61 | SignAcc=54.03% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 27/40 ---
+
+Epoca 27/40 [LR: 0.000330]: 100%|██████████| 5458/5458 [03:05<00:00, 29.44it/s, Avg_Loss: 0.3131 | WDL: 0.0280 | Logit: 0.6102]
+ Val (held-out, mai vista in training): MAE_WDL=0.1079 | MAE_CP=189.15 | SignAcc=54.12% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 28/40 ---
+
+Epoca 28/40 [LR: 0.000289]: 100%|██████████| 5458/5458 [03:06<00:00, 29.34it/s, Avg_Loss: 0.3119 | WDL: 0.0273 | Logit: 0.5941]
+ Val (held-out, mai vista in training): MAE_WDL=0.1085 | MAE_CP=190.11 | SignAcc=53.98% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 29/40 ---
+
+Epoca 29/40 [LR: 0.000251]: 100%|██████████| 5458/5458 [03:06<00:00, 29.24it/s, Avg_Loss: 0.3108 | WDL: 0.0273 | Logit: 0.5948]
+ Val (held-out, mai vista in training): MAE_WDL=0.1085 | MAE_CP=190.18 | SignAcc=53.90% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 30/40 ---
+
+Epoca 30/40 [LR: 0.000214]: 100%|██████████| 5458/5458 [03:06<00:00, 29.25it/s, Avg_Loss: 0.3098 | WDL: 0.0272 | Logit: 0.5897]
+ Val (held-out, mai vista in training): MAE_WDL=0.1086 | MAE_CP=190.22 | SignAcc=53.58% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 31/40 ---
+
+Epoca 31/40 [LR: 0.000179]: 100%|██████████| 5458/5458 [03:09<00:00, 28.78it/s, Avg_Loss: 0.3090 | WDL: 0.0277 | Logit: 0.6036]
+ Val (held-out, mai vista in training): MAE_WDL=0.1083 | MAE_CP=189.80 | SignAcc=54.01% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 32/40 ---
+
+Epoca 32/40 [LR: 0.000147]: 100%|██████████| 5458/5458 [03:09<00:00, 28.80it/s, Avg_Loss: 0.3082 | WDL: 0.0268 | Logit: 0.5826]
+ Val (held-out, mai vista in training): MAE_WDL=0.1083 | MAE_CP=189.90 | SignAcc=54.13% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 33/40 ---
+
+Epoca 33/40 [LR: 0.000118]: 100%|██████████| 5458/5458 [03:07<00:00, 29.14it/s, Avg_Loss: 0.3075 | WDL: 0.0260 | Logit: 0.5666]
+ Val (held-out, mai vista in training): MAE_WDL=0.1082 | MAE_CP=189.72 | SignAcc=53.84% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 34/40 ---
+
+Epoca 34/40 [LR: 0.000091]: 100%|██████████| 5458/5458 [03:07<00:00, 29.14it/s, Avg_Loss: 0.3069 | WDL: 0.0271 | Logit: 0.5904]
+ Val (held-out, mai vista in training): MAE_WDL=0.1089 | MAE_CP=190.95 | SignAcc=53.79% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 35/40 ---
+
+Epoca 35/40 [LR: 0.000068]: 100%|██████████| 5458/5458 [03:07<00:00, 29.16it/s, Avg_Loss: 0.3064 | WDL: 0.0271 | Logit: 0.5865]
+ Val (held-out, mai vista in training): MAE_WDL=0.1086 | MAE_CP=190.51 | SignAcc=53.98% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 36/40 ---
+
+Epoca 36/40 [LR: 0.000048]: 100%|██████████| 5458/5458 [03:07<00:00, 29.12it/s, Avg_Loss: 0.3061 | WDL: 0.0269 | Logit: 0.5869]
+ Val (held-out, mai vista in training): MAE_WDL=0.1086 | MAE_CP=190.32 | SignAcc=53.85% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 37/40 ---
+
+Epoca 37/40 [LR: 0.000031]: 100%|██████████| 5458/5458 [03:07<00:00, 29.11it/s, Avg_Loss: 0.3058 | WDL: 0.0272 | Logit: 0.5907]
+ Val (held-out, mai vista in training): MAE_WDL=0.1089 | MAE_CP=190.98 | SignAcc=53.69% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 38/40 ---
+
+Epoca 38/40 [LR: 0.000018]: 100%|██████████| 5458/5458 [03:06<00:00, 29.21it/s, Avg_Loss: 0.3055 | WDL: 0.0278 | Logit: 0.6070]
+ Val (held-out, mai vista in training): MAE_WDL=0.1089 | MAE_CP=190.98 | SignAcc=53.78% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 39/40 ---
+
+Epoca 39/40 [LR: 0.000009]: 100%|██████████| 5458/5458 [03:07<00:00, 29.16it/s, Avg_Loss: 0.3054 | WDL: 0.0270 | Logit: 0.5891]
+ Val (held-out, mai vista in training): MAE_WDL=0.1085 | MAE_CP=190.22 | SignAcc=53.75% (su 500,000 posizioni)
+ Checkpoint salvato.
+
+--- Epoca 40/40 ---
+
+Epoca 40/40 [LR: 0.000003]: 100%|██████████| 5458/5458 [03:07<00:00, 29.09it/s, Avg_Loss: 0.3053 | WDL: 0.0268 | Logit: 0.5825]
+ Val (held-out, mai vista in training): MAE_WDL=0.1090 | MAE_CP=191.12 | SignAcc=53.83% (su 500,000 posizioni)
+ Checkpoint salvato.

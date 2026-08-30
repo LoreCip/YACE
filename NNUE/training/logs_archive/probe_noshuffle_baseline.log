@@ -1,0 +1,26 @@
+Sto addestrando HalfKP su: cuda
+Dataset caricato: 91,262,338 posizioni totali (89,437,092 train / 1,825,246 validation, 2.0%).
+--- Epoca 1/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1443 | MAE_CP=261.23 | SignAcc=56.92% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 2/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1427 | MAE_CP=258.43 | SignAcc=57.41% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 3/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1414 | MAE_CP=256.22 | SignAcc=57.65% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 4/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1410 | MAE_CP=255.64 | SignAcc=57.79% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 5/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1409 | MAE_CP=255.57 | SignAcc=57.58% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 6/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1405 | MAE_CP=254.72 | SignAcc=57.93% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 7/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1407 | MAE_CP=255.01 | SignAcc=57.83% (su 500,000 posizioni)
+ Checkpoint salvato.
+--- Epoca 8/8 ---
+ Val (held-out, mai vista in training): MAE_WDL=0.1407 | MAE_CP=255.00 | SignAcc=57.81% (su 500,000 posizioni)
+ Checkpoint salvato.

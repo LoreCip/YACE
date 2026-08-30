@@ -21,18 +21,28 @@ def export_to_cpp_binary(pth_path, base_path, bin_path):
 
     # 1. Accumulatore (L0) - int16_t
     # shape: (40961, 256)
+    # NOTA: L0/L0Bias vanno quantizzati a SCALE_ACT (127), NON SCALE_W_ACC (255) — il
+    # C++ (NnueNetwork::ActivationFunction) applica il clamp QA_BOUND=127 DIRETTAMENTE
+    # alla somma grezza dell'accumulatore, senza alcuna riscala intermedia. Esportare a
+    # scala 255 fa sì che il clamp a 127 corrisponda a un valore vero di ~0.498 invece di
+    # 1.0 (quello usato dal clipped_relu in training) — un troncamento indebito confermato
+    # empiricamente su circa il 5% delle attivazioni dell'accumulatore.
     l0_weight_float = clean_state_dict['accumulator.weight'][:40960, :].numpy()
     l0_bias_float   = clean_state_dict['accumulator_bias'].numpy()
-    
-    L0      = np.clip(np.round(l0_weight_float * SCALE_W_ACC), -32768, 32767).astype(np.int16)
-    L0Bias  = np.clip(np.round(l0_bias_float * SCALE_W_ACC), -32768, 32767).astype(np.int16)
+
+    L0      = np.clip(np.round(l0_weight_float * SCALE_ACT), -32768, 32767).astype(np.int16)
+    L0Bias  = np.clip(np.round(l0_bias_float * SCALE_ACT), -32768, 32767).astype(np.int16)
 
     # 2. Layer 1 (L1) - pesi int8_t, bias int32_t
     l1_weight_float = clean_state_dict['layer1.weight'].numpy()
     l1_bias_float   = clean_state_dict['layer1.bias'].numpy()
-    
+
     L1      = np.clip(np.round(l1_weight_float * SCALE_W_L1), -128, 127).astype(np.int8)
-    L1Bias  = np.round(l1_bias_float * (SCALE_W_ACC * SCALE_W_L1)).astype(np.int32)
+    # NOTA: l'input di L1 (l'attivazione dell'accumulatore dopo ActivationFunction) è sulla
+    # scala SCALE_ACT (127), non SCALE_W_ACC (255) — stessa scala usata correttamente per
+    # L2Bias sotto. Era SCALE_W_ACC*SCALE_W_L1 (16320, ~2x troppo grande), disallineato col
+    # prodotto scalare int8*int8 che usa davvero la scala SCALE_ACT*SCALE_W_L1 (8128).
+    L1Bias  = np.round(l1_bias_float * (SCALE_ACT * SCALE_W_L1)).astype(np.int32)
 
     # 3. Layer 2 (L2) - pesi int8_t, bias int32_t
     l2_weight_float = clean_state_dict['layer2.weight'].numpy()

@@ -5,6 +5,7 @@ import numpy as np
 import math
 import os
 
+import matplotlib.pyplot as plt
 from NNUE import FakeQuantizeSTE, HalfKP_NNUE_QAT
 from tqdm import tqdm
 
@@ -12,10 +13,12 @@ torch.set_float32_matmul_precision('high')
 
 # --- 2. FUNZIONI DI SUPPORTO ---
 def prob_to_cp(p):
-    """Converte la probabilità di vittoria (0-1) in Centipawns (CP)."""
+    """Converte la probabilità di vittoria (0-1) in Centipawns (CP).
+    Il target di training è sigmoid(cp/400) (vedi cleanDataset.py), quindi l'inverso
+    corretto è logit*400, non logit*100."""
     p = max(1e-6, min(1.0 - 1e-6, p))
     logit = math.log(p / (1.0 - p))
-    return logit * 100.0
+    return logit * 400.0
 
 def fen_to_halfkp_indices(fen):
     """Converte un FEN in due liste di 32 indici HalfKP speculari al C++."""
@@ -85,7 +88,7 @@ def prob_to_cp_tensor(p_tensor):
     """Versione vettorizzata (veloce) per convertire interi tensori da WDL a CP."""
     p_clamped = torch.clamp(p_tensor, 1e-6, 1.0 - 1e-6)
     logit = torch.log(p_clamped / (1.0 - p_clamped))
-    return logit * 100.0
+    return logit * 400.0
 
 def run_statistical_analysis(weights_path, bin_path, num_samples=500_000, batch_size=16384):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -190,7 +193,7 @@ def run_statistical_analysis(weights_path, bin_path, num_samples=500_000, batch_
     plt.show()
 
 if __name__ == "__main__":
-    WEIGHTS = "./checkpoints/halfkp_epoch_35_final.pth" 
+    WEIGHTS = "./checkpoints/halfkp_epoch_38_final.pth" 
     BIN_DATASET = "../data/clean_db_halfkp_balanced.bin"
     
     run_statistical_analysis(WEIGHTS, BIN_DATASET, num_samples=15_000_000)

@@ -46,7 +46,20 @@ int NnueEvaluator::Evaluate(const Board& board) {
         nsmt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
     }
     
-    return network.EvaluateNnue(smt, nsmt);
+    int score = network.EvaluateNnue(smt, nsmt);
+
+    // network.EvaluateNnue(smt, nsmt) e' relativo a chi deve muovere (smt = side to move),
+    // seguendo la convenzione standard NNUE/training (us/them). Ma IEvaluator::Evaluate() ha
+    // un contratto WHITE-relative (vedi ClassicalEvaluator::Evaluate, che ritorna
+    // scores[WHITE]-scores[BLACK]) — SearchWorker::QuiescenceSearch nega il risultato solo se
+    // il lato di muovere e' il nero, assumendo esattamente questo contratto. Senza questa
+    // conversione, ogni valutazione NNUE con il nero di turno viene negata due volte (una qui
+    // implicitamente scegliendo la prospettiva di chi muove, una in SearchWorker), invertendo
+    // il segno per meta' di tutte le posizioni valutate in quiescence.
+    if (board.GetSideToMove() != ColorInt(Color::WHITE)) {
+        score = -score;
+    }
+    return score;
 }
 
 void NnueEvaluator::OnMakeMove(const Board& board, Move move) {

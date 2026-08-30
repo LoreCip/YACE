@@ -60,7 +60,17 @@ public:
     static constexpr int QA_BOUND = 127;  // Limite massimo per la Clipped ReLU (es. int8 max)
     static constexpr int SHIFT_L1 = 6;    // Bit-shift per de-quantizzare L1 (2^6 = 64)
     static constexpr int SHIFT_L2 = 6;    // Bit-shift per de-quantizzare L2 (2^6 = 64)
-    static constexpr int SHIFT_OUT = 14;  // Bit-shift per de-quantizzare l'Output Finale
+    static constexpr int SHIFT_OUT = 14;  // (non usato per l'output finale, vedi OUTPUT_SCALE sotto)
+
+    // Scala combinata reale dell'output L3 = SCALE_ACT * SCALE_W_OUT (127*127) in convertToWeights.py,
+    // NON 2^SHIFT_OUT (16384): usare una divisione esatta, non uno shift, per evitare l'errore
+    // sistematico del ~1.6% introdotto dall'approssimazione a potenza di 2.
+    static constexpr int64_t OUTPUT_SCALE = 16129;
+    // I "cp" del motore devono combaciare con la scala usata per generare il target di
+    // training: cleanDataset.py definisce target = sigmoid(cp / 400) (non /100!), quindi il
+    // logit imparato dalla rete approssima cp/400, e va ri-scalato di conseguenza qui e in
+    // prob_to_cp()/prob_to_cp_tensor() in testingNNUE_HalfKP.py.
+    static constexpr int64_t CP_SCALE = 400;
 
     // --- Pesi Quantizzati ---
     int16_t L0[NUM_FEATURES][M];

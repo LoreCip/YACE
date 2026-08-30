@@ -1,13 +1,13 @@
---- ARENA: YACE_v5 vs Stockfish ---
+--- ARENA: YACE_v2-2 vs Stockfish ---
 Forza Stockfish limitata a: 2000 Elo
 Partite: 100  |  Thread: 1
 
-[Progresso: 100/100] YACE_v5: 30 | Stockfish: 53 | Patte: 17
+[Progresso: 100/100] YACE_v2-2: 30 | Stockfish: 53 | Patte: 17
 
 =============================================
 RISULTATI FINALI
 ---------------------------------------------
-YACE_v5         :  30 vittorie ( 30.0%)
+YACE_v2-2         :  30 vittorie ( 30.0%)
 Stockfish       :  53 vittorie ( 53.0%)
 Patte           :  17 patte    ( 17.0%)
 ---------------------------------------------
@@ -15,3 +15,53 @@ Diff. Elo       : -81.4
 Elo stimato YACE: 1919 (Basato su SF a 2000)
 =============================================
 
+--- ARENA: YACE_v3-3.1 vs Stockfish ---
+Forza Stockfish limitata a: 2000 Elo
+Partite: 100  |  Thread: 1
+
+[Progresso: 100/100] YACE_v3-3.1: 4 | Stockfish: 95 | Patte: 1
+
+=============================================
+RISULTATI FINALI
+---------------------------------------------
+YACE_v3-3.1     :   4 vittorie (  4.0%)
+Stockfish       :  95 vittorie ( 95.0%)
+Patte           :   1 patte    (  1.0%)
+---------------------------------------------
+Diff. Elo       : -530.7
+Elo stimato YACE: 1469 (Basato su SF a 2000)
+=============================================
+
+--- ARENA: YACE_v3-4 vs Stockfish ---
+Forza Stockfish limitata a: 2000 Elo
+Partite: 100  |  Thread: 1
+
+[Progresso: 100/100] YACE_v3-4: 2 | Stockfish: 98 | Patte: 0
+
+=============================================
+RISULTATI FINALI
+---------------------------------------------
+YACE_v3-4       :   2 vittorie (  2.0%)
+Stockfish       :  98 vittorie ( 98.0%)
+Patte           :   0 patte    (  0.0%)
+---------------------------------------------
+Diff. Elo       : -676.1
+Elo stimato YACE: 1324 (Basato su SF a 2000)
+=============================================
+
+--- ARENA: YACE_v3-6 vs Stockfish ---
+Forza Stockfish limitata a: 2000 Elo
+Partite: 100  |  Thread: 1
+
+[Progresso: 100/100] YACE_v3-6: 70 | Stockfish: 19 | Patte: 11
+
+=============================================
+RISULTATI FINALI
+---------------------------------------------
+YACE_v3-6       :  70 vittorie ( 70.0%)
+Stockfish       :  19 vittorie ( 19.0%)
+Patte           :  11 patte    ( 11.0%)
+---------------------------------------------
+Diff. Elo       : +195.5
+Elo stimato YACE: 2196 (Basato su SF a 2000)
+=============================================

@@ -13,15 +13,21 @@ import chess.engine
 
 # --- CONFIGURAZIONE MOTORI ---
 BASEPATH    = "/home/lorenzo/Scrivania/Projects/YACE/gauntlet/versions/"
-ENGINE_YACE = BASEPATH + "engine_v5"
-ENGINE_SF   = "stockfish" 
+# NOTA: ENGINE_YACE include esplicitamente "-e nnue" -- prima non veniva passato alcun
+# flag e il binario partiva con la valutazione classica (HCE) di default, quindi tutti i
+# risultati storici etichettati come test della rete NNUE misuravano in realta' l'HCE.
+ENGINE_YACE = [
+    BASEPATH + "engine_v3-3.2", "-e", "nnue",
+    "-w", "/home/lorenzo/Scrivania/Projects/YACE/parameters/weights/nnue_weights_v3-6.bin",
+]
+ENGINE_SF   = "stockfish"
 
-VA = "YACE_v5"
+VA = "YACE_v3-6"
 VB = "Stockfish"
 ENGINE_A = ENGINE_YACE
 ENGINE_B = ENGINE_SF
 NUM_GAMES  = 100
-MAX_WORKERS = 1 
+MAX_WORKERS = 1
 
 # --- CONFIGURAZIONE ELO STOCKFISH ---
 LIMIT_STOCKFISH = True
@@ -69,9 +75,10 @@ def read_line(engine, engine_name="Engine"):
 # ---------------------------------------------------------------------------
 # Gestione processi persistenti
 # ---------------------------------------------------------------------------
-def start_engine(path: str) -> subprocess.Popen:
+def start_engine(path: str | list[str]) -> subprocess.Popen:
+    cmd = path if isinstance(path, list) else [path]
     return subprocess.Popen(
-        [path],
+        cmd,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, bufsize=1,
     )
@@ -129,7 +136,7 @@ def setup_engine_position(proc, fen, engine_name):
     else:
         send_command(proc, f"fen {fen}", engine_name)
 
-def play_game(white_path: str, black_path: str, start_fen: str) -> tuple[str, chess.pgn.Game]:
+def play_game(white_path: str | list[str], black_path: str | list[str], start_fen: str) -> tuple[str, chess.pgn.Game]:
     board = chess.Board(start_fen)
 
     white_name = VB if "stockfish" in white_path else VA

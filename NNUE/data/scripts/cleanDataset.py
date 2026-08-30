@@ -146,7 +146,14 @@ def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
     while len(us_indices) < 32: us_indices.append(PAD_VAL)
     while len(them_indices) < 32: them_indices.append(PAD_VAL)
     
-    # Sigmoide per il target CP (Standard per training NNUE)
+    # Il cp del dump Lichess è relativo al BIANCO, ma le feature HalfKP (us/them) sono
+    # relative a chi deve muovere. Senza questo flip il target sarebbe invertito per ogni
+    # posizione con il nero di turno (~metà del dataset) — bug confermato empiricamente:
+    # correlazione quasi nulla (0.04) tra il materiale lato-di-mossa e il target originale.
+    if not is_white_turn:
+        cp = -cp
+
+    # Sigmoide per il target CP (Standard per training NNUE), ora relativo a chi deve muovere
     target = 1.0 / (1.0 + math.exp(-cp / 400.0))
     
     valori = us_indices + them_indices + [target]

@@ -4,6 +4,7 @@
 #include "LookupTables.hpp"
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 
 void SearchWorker::Search(int maxDepth, InfoReporter callback) {
     stats.ResetForNewMove();
@@ -15,37 +16,29 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
     MoveList moveList;
     MoveGen::GenerateAllMoves(board, moveList);    
     int nMoves = moveList.count;
-    if (nMoves == 0) return; // Ritorno void
+    if (nMoves == 0) return;
     
-    Move mossaMiglioreAssoluta = 0;
+    Move bestMove = 0;
     for (int i = 0; i < nMoves; i++) {
         if (board.MakeMove(moveList.moves[i])) {
-            mossaMiglioreAssoluta = moveList.moves[i];
+            bestMove = moveList.moves[i];
             board.UnmakeMove(moveList.moves[i]);
             break; 
         }
     }
-    if (mossaMiglioreAssoluta == 0) return; // Ritorno void
+    if (bestMove == 0) return;
 
     // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
     for (int d = 1; d <= maxDepth; d++) {
         if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
 
         stats.maxDepthReached = d;
-        int alpha = -999999;
-        int beta  = 999999;
-        Move bestMoveCurrentDepth = mossaMiglioreAssoluta;
+        int alpha = -INFINITE_SCORE;
+        int beta  = INFINITE_SCORE;
+        Move bestMoveCurrentDepth = bestMove;
 
-        struct ScoredMove {
-            Move move;
-            int score;
-        };
         ScoredMove scoredMoves[256];
-        for (int i = 0; i < nMoves; i++) {
-            scoredMoves[i].move = moveList.moves[i];
-            // RIMOSSO: board non è più un parametro
-            scoredMoves[i].score = ScoreMove(moveList.moves[i], mossaMiglioreAssoluta, 0); 
-        }
+        ScoreMoves(moveList, bestMove, 0, scoredMoves);
 
         std::sort(scoredMoves, scoredMoves + nMoves, [](const ScoredMove& a, const ScoredMove& b) {
             return a.score > b.score;
@@ -73,8 +66,8 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
         
         if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
         
-        mossaMiglioreAssoluta = bestMoveCurrentDepth;
-        bestRootMove = mossaMiglioreAssoluta;
+        bestMove = bestMoveCurrentDepth;
+        bestRootMove = bestMove;
 
         auto now = std::chrono::high_resolution_clock::now();
         stats.lastMoveTimeMs = std::chrono::duration<double, std::milli>(now - startTime).count();
@@ -143,26 +136,18 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
     int nMoves = moveList.count;
     int legalMovesCount = 0; 
 
-    struct ScoredMove {
-        Move move;
-        int score;
-    };
     ScoredMove scoredMoves[256];
-    for (int i = 0; i < nMoves; i++) {
-        scoredMoves[i].move = moveList.moves[i];
-        scoredMoves[i].score = ScoreMove(moveList.moves[i], ttMove, ply);
-    }
+    ScoreMoves(moveList, ttMove, ply, scoredMoves);
 
     // --- 4. CICLO PRINCIPALE DELLE MOSSE (PVS + LMR) ---
     for (int i = 0; i < nMoves; i++) {
-        
-        // On-Demand Selection Sort
+        // Selection sort su richiesta: un taglio beta arriva spesso nelle prime mosse.
+        // Scritto qui e non in un helper: come funzione separata misurava ~1.5% di nps in meno.
         int bestIndex = i;
         for (int j = i + 1; j < nMoves; j++) {
             if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
         }
         if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
-        
         Move move = scoredMoves[i].move;
         int flags = getMoveFlags(move);
         bool isQuiet = (flags == FlagMap::MOVE || flags == FlagMap::DMOVE || flags == FlagMap::CASTLING);
@@ -256,7 +241,7 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
     // --- 7. VERIFICA MATTO / STALLO ---
     if (legalMovesCount == 0) {
         if (inCheck) {
-            return -(999999 - ply); // Valuta la profondità del matto
+            return -(INFINITE_SCORE - ply); // matto: piu' vicino = peggiore
         } else {
             return 0; // Stallo
         }
@@ -300,26 +285,15 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
     MoveGen::GenerateCaptureMoves(board, moveList);
     int nMoves = moveList.count;
 
-    struct ScoredMove {
-        Move move;
-        int score;
-    };
-
     ScoredMove scoredMoves[256];
-    for (int i = 0; i < nMoves; i++) {
-        scoredMoves[i].move = moveList.moves[i];
-        scoredMoves[i].score = ScoreMove(moveList.moves[i], (Move)0, 0); 
-    }
+    ScoreMoves(moveList, 0, 0, scoredMoves);
 
     for (int i = 0; i < nMoves; i++) {
-        /* ********** ON DEMAND SELECTION SORT ******************************************/
         int bestIndex = i;
         for (int j = i + 1; j < nMoves; j++) {
             if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
         }
         if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
-        /********************************************************************************/
-        
         Move move = scoredMoves[i].move;
 
         if (!SEE(move, 0)) {
@@ -339,6 +313,12 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
         }
     }
     return alpha;
+}
+
+void SearchWorker::ScoreMoves(const MoveList& moveList, Move ttMove, int ply, ScoredMove* scored) {
+    for (int i = 0; i < moveList.count; i++) {
+        scored[i] = {moveList.moves[i], ScoreMove(moveList.moves[i], ttMove, ply)};
+    }
 }
 
 int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
@@ -450,14 +430,12 @@ bool SearchWorker::SEE(Move move, int threshold) {
 
 uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t occupancy, PieceType& outPiece) {
     uint64_t attackers = 0;
-    int colorIdx = (color == Color::WHITE) ? 0 : 1; 
-    int enemyIdx = colorIdx ^ 1; // L'indice dell'avversario per l'array dei pedoni
 
     // 1. Pedoni
     uint64_t pawns = board.GetBitBoard(color, PieceType::PAWN) & occupancy;
     if (pawns) {
         // Usiamo l'array precalcolato dal punto di vista dell'avversario
-        if ((attackers = AttackTables::pawnAttacks[enemyIdx][sq] & pawns)) {
+        if ((attackers = AttackTables::pawnAttacks[ColorInt(!color)][sq] & pawns)) {
             outPiece = PieceType::PAWN;
             return attackers & -attackers; 
         }
@@ -505,11 +483,5 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
 }
 
 void SearchWorker::ClearHistory() {
-    for (int c = 0; c < 2; c++) {
-        for (int i = 0; i < 64; i++) {
-            for (int j = 0; j < 64; j++) {
-                historyTable[c][i][j] = 0;
-            }
-        }
-    }
+    std::memset(historyTable, 0, sizeof(historyTable));
 }

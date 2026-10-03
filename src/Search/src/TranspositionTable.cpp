@@ -21,8 +21,8 @@ bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int
         if (ttDepth >= depth) {
             if (ttFlag == EXACT) {
                 int returnedScore = ttScore;
-                if (returnedScore > MATE_SCORE)  returnedScore -= ply; 
-                if (returnedScore < -MATE_SCORE) returnedScore += ply;
+                if (returnedScore > MATE_THRESHOLD)  returnedScore -= ply; 
+                if (returnedScore < -MATE_THRESHOLD) returnedScore += ply;
                 score = returnedScore;
                 return true;
             }
@@ -45,8 +45,8 @@ void TranspositionTable::Record(uint64_t key, Move bestMove, int depth, int scor
     TTEntry& entry = table[index];
     
     int scoreToSave = score;
-    if (score > MATE_SCORE)  scoreToSave += ply;
-    if (score < -MATE_SCORE) scoreToSave -= ply;
+    if (score > MATE_THRESHOLD)  scoreToSave += ply;
+    if (score < -MATE_THRESHOLD) scoreToSave -= ply;
 
     uint64_t old_data = entry.data.load(std::memory_order_relaxed);
     uint64_t old_key = entry.key.load(std::memory_order_relaxed);

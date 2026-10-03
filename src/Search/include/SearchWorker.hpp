@@ -9,8 +9,14 @@
 #include "SearchStats.hpp"
 #include "IEvaluator.hpp"
 #include "Move.hpp"
+#include "MoveGenerator.hpp"
 
 using InfoReporter = std::function<void(int depth, int score, const SearchStats& stats, Move bestMove)>;
+
+struct ScoredMove {
+    Move move;
+    int score;
+};
 
 class SearchWorker {
 private:
@@ -31,6 +37,7 @@ private:
     int AlphaBeta(int depth, int alpha, int beta, int ply);
     int QuiescenceSearch(int alpha, int beta, int ply);
     int ScoreMove(Move move, Move ttMove, int ply);
+    void ScoreMoves(const MoveList& moveList, Move ttMove, int ply, ScoredMove* scored);
     void ClearHistory();
 
     bool SEE(Move move, int threshold = 0);

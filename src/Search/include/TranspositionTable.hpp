@@ -8,6 +8,9 @@
 
 enum TTFlag { ALPHA, BETA, EXACT };
 
+constexpr int INFINITE_SCORE = 999999;  // anche base dei matti: matto in `ply` = -(INFINITE_SCORE - ply)
+constexpr int MATE_THRESHOLD = 990000;  // |score| oltre questa soglia = punteggio di matto
+
 struct TTEntry {
     std::atomic<uint64_t> key;  
     std::atomic<uint64_t> data; 
@@ -18,8 +21,6 @@ private:
     size_t numEntries = 0;
     std::atomic<size_t> occupiedEntries{0};
     std::unique_ptr<TTEntry[]> table = nullptr;
-
-    const int MATE_SCORE = 990000;
 
     /*
     0-15 (16 bit): bestMove (Move -> uint16_t

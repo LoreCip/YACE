@@ -13,19 +13,10 @@ struct MoveList {
 };
 
 namespace MoveGen {
-    // Generate all pseudo-legal moves
+    // Mosse pseudo-legali (la legalita' la verifica Board::MakeMove); ritornano moveList.count
     int GenerateAllMoves(const Board& board, MoveList& moveList);
+    // Solo catture e promozioni a donna, per la quiescenza
     int GenerateCaptureMoves(const Board& board, MoveList& moveList);
-
-    // Single functions
-    void GeneratePawnMoves(const Board& board, MoveList& moveList, Color us);
-    void GenerateKnightMoves(const Board& board, MoveList& moveList, Color us);
-    void GenerateKingMoves(const Board& board, MoveList& moveList, Color us);
-    void GenerateSlidingMoves(const Board& board, MoveList& moveList, Color us, PieceType piece);
-    void GenerateKnightCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies);
-    void GenerateKingCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies);
-    void GenerateSlidingCaptures(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t enemies);
-    void GeneratePawnCapturesAndPromotions(const Board& board, MoveList& moveList, Color us, uint64_t enemies);
 }
 
 #endif

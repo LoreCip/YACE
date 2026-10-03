@@ -6,280 +6,183 @@
 
 namespace MoveGen {
 
-    int GenerateAllMoves(const Board& board, MoveList& moveList) {
-        Color us = board.GetSideToMove();
-        
-        GenerateKnightMoves(board, moveList, us);
-        GenerateKingMoves(board, moveList, us);
-        GenerateSlidingMoves(board, moveList, us, PieceType::BISHOP);
-        GenerateSlidingMoves(board, moveList, us, PieceType::ROOK);
-        GenerateSlidingMoves(board, moveList, us, PieceType::QUEEN);
-        GeneratePawnMoves(board, moveList, us);
-        return moveList.count;
-    }
+namespace {
 
-    void GenerateKnightMoves(const Board& board, MoveList& moveList, Color us) {
-        uint64_t bitboard = board.GetBitBoard(us, PieceType::KNIGHT);
-        uint64_t allies = board.GetColorOccupation(us);
-        uint64_t enemies = board.GetColorOccupation(!us);
-
-        while (bitboard != 0ULL) {
-            int from = __builtin_ctzll(bitboard);
-            // Calcola gli attacchi validi escludendo le case occupate da alleati
-            uint64_t attacks = AttackTables::knightAttacks[from] & (~allies);
-            
-            while (attacks != 0ULL) {
-                int to = __builtin_ctzll(attacks);
-                int flag = (setBit(0ULL, to) & enemies) ? FlagMap::CAPTURE : FlagMap::MOVE;
-                moveList.push(createMove(from, to, flag));
-                attacks = clearBit(attacks, to);
-            }
-            bitboard = clearBit(bitboard, from);
-        }
-    }
-
-    void GenerateKingMoves(const Board& board, MoveList& moveList, Color us) {
-        uint64_t bitboard = board.GetBitBoard(us, PieceType::KING);
-        uint64_t allies = board.GetColorOccupation(us);
-        uint64_t enemies = board.GetColorOccupation(!us);
-
-        if (bitboard == 0ULL) return;
-        int from = __builtin_ctzll(bitboard);
-        
-        // Normal moves
-        uint64_t attacks = AttackTables::kingAttacks[from] & (~allies);
-        while (attacks != 0ULL) {
-            int to = __builtin_ctzll(attacks);
+    // Una mossa da `from` verso ogni casa di `targets`: CAPTURE se la casa e' nemica.
+    inline void PushMoves(MoveList& moveList, int from, uint64_t targets, uint64_t enemies) {
+        while (targets != 0ULL) {
+            int to = __builtin_ctzll(targets);
             int flag = (setBit(0ULL, to) & enemies) ? FlagMap::CAPTURE : FlagMap::MOVE;
             moveList.push(createMove(from, to, flag));
-            attacks = clearBit(attacks, to);
-        }
-
-        // Castling
-        uint8_t castlingRights = board.GetCastlingRights();
-        uint64_t totalOcc = board.GetTotalOccupation();
-
-        auto canCastle = [&](uint64_t emptyMask, int transit1, int transit2, int destSq) {
-            if (!(totalOcc & emptyMask)) {
-                if (!const_cast<Board&>(board).IsSquareAttacked(transit1, !us) && 
-                    !const_cast<Board&>(board).IsSquareAttacked(transit2, !us)) {
-                    moveList.push(createMove(from, destSq, FlagMap::CASTLING));
-                }
-            }
-        };
-
-        if (!const_cast<Board&>(board).IsSquareAttacked(from, !us)) {
-            if (us == Color::WHITE) {
-                if (castlingRights & CastlingRights::WK) canCastle(AttackTables::maskWK, 5, 6, 6);
-                if (castlingRights & CastlingRights::WQ) canCastle(AttackTables::maskWQ, 3, 2, 2);
-            } else {
-                if (castlingRights & CastlingRights::BK) canCastle(AttackTables::maskBK, 61, 62, 62);
-                if (castlingRights & CastlingRights::BQ) canCastle(AttackTables::maskBQ, 59, 58, 58);
-            }
+            targets = clearBit(targets, to);
         }
     }
 
-    void GenerateSlidingMoves(const Board& board, MoveList& moveList, Color us, PieceType piece) {
-        uint64_t bitboard = board.GetBitBoard(us, piece);
-        uint64_t allies = board.GetColorOccupation(us);
+    inline uint64_t PieceAttacks(PieceType piece, int square, uint64_t occupancy) {
+        switch (piece) {
+            case PieceType::KNIGHT: return AttackTables::knightAttacks[square];
+            case PieceType::KING:   return AttackTables::kingAttacks[square];
+            case PieceType::BISHOP: return MagicBitboards::GetBishopAttacks(square, occupancy);
+            case PieceType::ROOK:   return MagicBitboards::GetRookAttacks(square, occupancy);
+            case PieceType::QUEEN:  return MagicBitboards::GetRookAttacks(square, occupancy) |
+                                           MagicBitboards::GetBishopAttacks(square, occupancy);
+            default:                return 0ULL;
+        }
+    }
+
+    // Mosse di cavallo/re/alfiere/torre/donna verso le case di `targetMask` (arrocco escluso).
+    inline void GeneratePieceMoves(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t targetMask) {
         uint64_t enemies = board.GetColorOccupation(!us);
-        uint64_t totalOcc = board.GetTotalOccupation();
+        uint64_t occupancy = board.GetTotalOccupation();
+        uint64_t pieces = board.GetBitBoard(us, piece);
+        while (pieces != 0ULL) {
+            int from = __builtin_ctzll(pieces);
+            PushMoves(moveList, from, PieceAttacks(piece, from, occupancy) & targetMask, enemies);
+            pieces = clearBit(pieces, from);
+        }
+    }
 
-        while (bitboard != 0ULL) {
-            int from = __builtin_ctzll(bitboard);
-            uint64_t attacks = 0ULL;
+    void GenerateCastling(const Board& board, MoveList& moveList, Color us) {
+        uint64_t king = board.GetBitBoard(us, PieceType::KING);
+        if (king == 0ULL) return;
+        int from = __builtin_ctzll(king);
+        if (board.IsSquareAttacked(from, !us)) return;
 
-            if (piece == PieceType::BISHOP) {
-                attacks = MagicBitboards::GetBishopAttacks(from, totalOcc);
-            } else if (piece == PieceType::ROOK) {
-                attacks = MagicBitboards::GetRookAttacks(from, totalOcc);
-            } else if (piece == PieceType::QUEEN) {
-                attacks = MagicBitboards::GetRookAttacks(from, totalOcc) | 
-                          MagicBitboards::GetBishopAttacks(from, totalOcc);
+        uint8_t castlingRights = board.GetCastlingRights();
+        uint64_t occupancy = board.GetTotalOccupation();
+
+        // Le case tra re e torre devono essere libere, quelle attraversate dal re non attaccate
+        auto tryCastle = [&](uint8_t right, uint64_t emptyMask, int transit, int kingTo) {
+            if ((castlingRights & right) && !(occupancy & emptyMask) &&
+                !board.IsSquareAttacked(transit, !us) && !board.IsSquareAttacked(kingTo, !us)) {
+                moveList.push(createMove(from, kingTo, FlagMap::CASTLING));
             }
-
-            attacks &= (~allies);
-
-            while (attacks != 0ULL) {
-                int to = __builtin_ctzll(attacks);
-                int flag = (setBit(0ULL, to) & enemies) ? FlagMap::CAPTURE : FlagMap::MOVE;
-                moveList.push(createMove(from, to, flag));
-                attacks = clearBit(attacks, to);
-            }
-            bitboard = clearBit(bitboard, from);
+        };
+        if (us == Color::WHITE) {
+            tryCastle(CastlingRights::WK, AttackTables::maskWK, 5, 6);
+            tryCastle(CastlingRights::WQ, AttackTables::maskWQ, 3, 2);
+        } else {
+            tryCastle(CastlingRights::BK, AttackTables::maskBK, 61, 62);
+            tryCastle(CastlingRights::BQ, AttackTables::maskBQ, 59, 58);
         }
     }
 
     void GeneratePawnMoves(const Board& board, MoveList& moveList, Color us) {
-        
         uint64_t myPawns = board.GetBitBoard(us, PieceType::PAWN);
         uint64_t emptySquares = board.GetFreeCells();
-        uint64_t enemyOccupation = board.GetColorOccupation(!us);
-        
-        int direction = (us == Color::WHITE) ? 8 : -8;
-        int startRankStart = (us == Color::WHITE) ? 8  : 48;
-        int startRankEnd   = (us == Color::WHITE) ? 15 : 55;
-        int promoRankStart = (us == Color::WHITE) ? 56 : 0; 
-        int promoRankEnd   = (us == Color::WHITE) ? 63 : 7; 
+        uint64_t enemies = board.GetColorOccupation(!us);
+        int epSquare = board.GetEnPassantSquare();
+
+        int direction      = (us == Color::WHITE) ? 8 : -8;
+        int startRankFirst = (us == Color::WHITE) ? 8 : 48;
+        int promoRankFirst = (us == Color::WHITE) ? 56 : 0;
+        auto onStartRank = [&](int sq) { return sq >= startRankFirst && sq < startRankFirst + 8; };
+        auto onPromoRank = [&](int sq) { return sq >= promoRankFirst && sq < promoRankFirst + 8; };
+
+        auto pushPromotions = [&](int from, int to, bool isCapture) {
+            moveList.push(createMove(from, to, isCapture ? FlagMap::PRCAPQUEEN : FlagMap::PRQUEEN));
+            moveList.push(createMove(from, to, isCapture ? FlagMap::PRCAPROOK : FlagMap::PRROOK));
+            moveList.push(createMove(from, to, isCapture ? FlagMap::PRCAPBISHOP : FlagMap::PRBISHOP));
+            moveList.push(createMove(from, to, isCapture ? FlagMap::PRCAPKNIGHT : FlagMap::PRKNIGHT));
+        };
 
         while (myPawns != 0ULL) {
             int from = __builtin_ctzll(myPawns);
-            int toSingle = from + direction;
-            
+
             // Spinta singola e doppia
+            int toSingle = from + direction;
             if (setBit(0ULL, toSingle) & emptySquares) {
-                if (toSingle >= promoRankStart && toSingle <= promoRankEnd) {
-                    moveList.push(createMove(from, toSingle, FlagMap::PRQUEEN));
-                    moveList.push(createMove(from, toSingle, FlagMap::PRROOK));
-                    moveList.push(createMove(from, toSingle, FlagMap::PRBISHOP));
-                    moveList.push(createMove(from, toSingle, FlagMap::PRKNIGHT));
+                if (onPromoRank(toSingle)) {
+                    pushPromotions(from, toSingle, false);
                 } else {
                     moveList.push(createMove(from, toSingle, FlagMap::MOVE));
-                    if (from >= startRankStart && from <= startRankEnd) {
-                        int toDouble = from + (direction * 2);
-                        if (setBit(0ULL, toDouble) & emptySquares) {
-                            moveList.push(createMove(from, toDouble, FlagMap::DMOVE));
-                        }
+                    int toDouble = toSingle + direction;
+                    if (onStartRank(from) && (setBit(0ULL, toDouble) & emptySquares)) {
+                        moveList.push(createMove(from, toDouble, FlagMap::DMOVE));
                     }
                 }
             }
 
-            // Catture normali
-            uint64_t targets = AttackTables::pawnAttacks[ColorInt(us)][from] & enemyOccupation;
+            // Catture
+            uint64_t attacks = AttackTables::pawnAttacks[ColorInt(us)][from];
+            uint64_t targets = attacks & enemies;
             while (targets != 0ULL) {
-                int toCapture = __builtin_ctzll(targets);
-                if (toCapture >= promoRankStart && toCapture <= promoRankEnd) {
-                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPQUEEN));
-                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPROOK));
-                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPBISHOP));
-                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPKNIGHT));
-                } else {
-                    moveList.push(createMove(from, toCapture, FlagMap::CAPTURE));
-                }
-                targets = clearBit(targets, toCapture);
+                int to = __builtin_ctzll(targets);
+                if (onPromoRank(to)) pushPromotions(from, to, true);
+                else moveList.push(createMove(from, to, FlagMap::CAPTURE));
+                targets = clearBit(targets, to);
             }
 
-            // En Passant
-            int epSquare = board.GetEnPassantSquare();
-            if (epSquare != NO_SQUARE) {
-                uint64_t epBB = 1ULL << epSquare;
-                if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
-                    moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
-                }
+            // En passant
+            if (epSquare != NO_SQUARE && (attacks & setBit(0ULL, epSquare))) {
+                moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
             }
             myPawns = clearBit(myPawns, from);
         }
+    }
+
+    // Quiescenza: catture, en passant e solo promozioni a donna. Tenuta separata da
+    // GeneratePawnMoves: la versione unificata con un flag misurava ~1% in meno di bench HCE (build PGO).
+    void GeneratePawnCaptures(const Board& board, MoveList& moveList, Color us) {
+        uint64_t myPawns = board.GetBitBoard(us, PieceType::PAWN);
+        uint64_t emptySquares = board.GetFreeCells();
+        uint64_t enemies = board.GetColorOccupation(!us);
+        int epSquare = board.GetEnPassantSquare();
+
+        int direction      = (us == Color::WHITE) ? 8 : -8;
+        int promoRankFirst = (us == Color::WHITE) ? 56 : 0;
+
+        while (myPawns != 0ULL) {
+            int from = __builtin_ctzll(myPawns);
+
+            int toSingle = from + direction;
+            if ((setBit(0ULL, toSingle) & emptySquares) && toSingle >= promoRankFirst && toSingle < promoRankFirst + 8) {
+                moveList.push(createMove(from, toSingle, FlagMap::PRQUEEN));
+            }
+
+            uint64_t attacks = AttackTables::pawnAttacks[ColorInt(us)][from];
+            uint64_t targets = attacks & enemies;
+            while (targets != 0ULL) {
+                int to = __builtin_ctzll(targets);
+                bool promotes = to >= promoRankFirst && to < promoRankFirst + 8;
+                moveList.push(createMove(from, to, promotes ? FlagMap::PRCAPQUEEN : FlagMap::CAPTURE));
+                targets = clearBit(targets, to);
+            }
+
+            if (epSquare != NO_SQUARE && (attacks & setBit(0ULL, epSquare))) {
+                moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
+            }
+            myPawns = clearBit(myPawns, from);
+        }
+    }
+
+} // namespace
+
+    int GenerateAllMoves(const Board& board, MoveList& moveList) {
+        Color us = board.GetSideToMove();
+        uint64_t notAllies = ~board.GetColorOccupation(us);
+
+        GeneratePieceMoves(board, moveList, us, PieceType::KNIGHT, notAllies);
+        GeneratePieceMoves(board, moveList, us, PieceType::KING, notAllies);
+        GenerateCastling(board, moveList, us);
+        GeneratePieceMoves(board, moveList, us, PieceType::BISHOP, notAllies);
+        GeneratePieceMoves(board, moveList, us, PieceType::ROOK, notAllies);
+        GeneratePieceMoves(board, moveList, us, PieceType::QUEEN, notAllies);
+        GeneratePawnMoves(board, moveList, us);
+        return moveList.count;
     }
 
     int GenerateCaptureMoves(const Board& board, MoveList& moveList) {
         Color us = board.GetSideToMove();
         uint64_t enemies = board.GetColorOccupation(!us);
 
-        GenerateKnightCaptures(board, moveList, us, enemies);
-        GenerateKingCaptures(board, moveList, us, enemies);
-        GenerateSlidingCaptures(board, moveList, us, PieceType::BISHOP, enemies);
-        GenerateSlidingCaptures(board, moveList, us, PieceType::ROOK, enemies);
-        GenerateSlidingCaptures(board, moveList, us, PieceType::QUEEN, enemies);
-        GeneratePawnCapturesAndPromotions(board, moveList, us, enemies);
-
+        GeneratePieceMoves(board, moveList, us, PieceType::KNIGHT, enemies);
+        GeneratePieceMoves(board, moveList, us, PieceType::KING, enemies);
+        GeneratePieceMoves(board, moveList, us, PieceType::BISHOP, enemies);
+        GeneratePieceMoves(board, moveList, us, PieceType::ROOK, enemies);
+        GeneratePieceMoves(board, moveList, us, PieceType::QUEEN, enemies);
+        GeneratePawnCaptures(board, moveList, us);
         return moveList.count;
     }
 
-    // Helper interni al namespace (non esportati nell'header per l'incapsulamento)
-    void GenerateKnightCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
-        uint64_t bitboard = board.GetBitBoard(us, PieceType::KNIGHT);
-        while (bitboard != 0ULL) {
-            int from = __builtin_ctzll(bitboard);
-            // Ottimizzazione matematica: filtriamo subito solo le case nemiche via AND bitwise
-            uint64_t attacks = AttackTables::knightAttacks[from] & enemies;
-            
-            while (attacks != 0ULL) {
-                int to = __builtin_ctzll(attacks);
-                moveList.push(createMove(from, to, FlagMap::CAPTURE));
-                attacks = clearBit(attacks, to);
-            }
-            bitboard = clearBit(bitboard, from);
-        }
-    }
-
-    void GenerateKingCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
-        uint64_t bitboard = board.GetBitBoard(us, PieceType::KING);
-        if (bitboard == 0ULL) return;
-        int from = __builtin_ctzll(bitboard);
-        
-        uint64_t attacks = AttackTables::kingAttacks[from] & enemies;
-        while (attacks != 0ULL) {
-            int to = __builtin_ctzll(attacks);
-            moveList.push(createMove(from, to, FlagMap::CAPTURE));
-            attacks = clearBit(attacks, to);
-        }
-    }
-
-    void GenerateSlidingCaptures(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t enemies) {
-        uint64_t bitboard = board.GetBitBoard(us, piece);
-        uint64_t totalOcc = board.GetTotalOccupation();
-
-        while (bitboard != 0ULL) {
-            int from = __builtin_ctzll(bitboard);
-            uint64_t attacks = 0ULL;
-
-            if (piece == PieceType::BISHOP) {
-                attacks = MagicBitboards::GetBishopAttacks(from, totalOcc);
-            } else if (piece == PieceType::ROOK) {
-                attacks = MagicBitboards::GetRookAttacks(from, totalOcc);
-            } else if (piece == PieceType::QUEEN) {
-                attacks = MagicBitboards::GetRookAttacks(from, totalOcc) | 
-                          MagicBitboards::GetBishopAttacks(from, totalOcc);
-            }
-
-            attacks &= enemies;
-
-            while (attacks != 0ULL) {
-                int to = __builtin_ctzll(attacks);
-                moveList.push(createMove(from, to, FlagMap::CAPTURE));
-                attacks = clearBit(attacks, to);
-            }
-            bitboard = clearBit(bitboard, from);
-        }
-    }
-
-    void GeneratePawnCapturesAndPromotions(const Board& board, MoveList& moveList, Color us, uint64_t enemies) {
-        uint64_t myPawns = board.GetBitBoard(us, PieceType::PAWN);
-        uint64_t emptySquares = board.GetFreeCells();
-        
-        int direction = (us == Color::WHITE) ? 8 : -8;
-        int promoRankStart = (us == Color::WHITE) ? 56 : 0; 
-        int promoRankEnd   = (us == Color::WHITE) ? 63 : 7; 
-
-        while (myPawns != 0ULL) {
-            int from = __builtin_ctzll(myPawns);
-            int toSingle = from + direction;
-            
-            if (setBit(0ULL, toSingle) & emptySquares) {
-                if (toSingle >= promoRankStart && toSingle <= promoRankEnd) {
-                    moveList.push(createMove(from, toSingle, FlagMap::PRQUEEN));
-                }
-            }
-
-            uint64_t targets = AttackTables::pawnAttacks[ColorInt(us)][from] & enemies;
-            while (targets != 0ULL) {
-                int toCapture = __builtin_ctzll(targets);
-                if (toCapture >= promoRankStart && toCapture <= promoRankEnd) {
-                    moveList.push(createMove(from, toCapture, FlagMap::PRCAPQUEEN));
-                } else {
-                    moveList.push(createMove(from, toCapture, FlagMap::CAPTURE));
-                }
-                targets = clearBit(targets, toCapture);
-            }
-
-            int epSquare = board.GetEnPassantSquare();
-            if (epSquare != NO_SQUARE) {
-                uint64_t epBB = 1ULL << epSquare;
-                if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
-                    moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
-                }
-            }
-            myPawns = clearBit(myPawns, from);
-        }
-    }
 } // namespace MoveGen

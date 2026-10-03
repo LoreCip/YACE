@@ -137,11 +137,11 @@ void NnueNetwork::ActivationFunction(const int32_t* in, int8_t* out, int len) co
 // istruzione fusa, 64 byte per volta. Niente stadio intermedio a 16 bit
 // (più sicuro anche dal punto di vista della saturazione rispetto a
 // maddubs+madd), niente add esplicito (l'accumulo è già incluso).
-// 4 righe di output per volta per tenere occupate più catene indipendenti.
+// 4 righe di output per volta per tenere occupate più catene indipendenti (rows % 4 == 0).
 // ---------------------------------------------------------------------------
 void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols, int shift) const {
-    int i = 0;
-    for (; i + 4 <= rows; i += 4) {
+    assert(rows % 4 == 0); // sempre K = 32 righe: niente coda per righe rimanenti
+    for (int i = 0; i < rows; i += 4) {
         __m512i acc0 = _mm512_setzero_si512();
         __m512i acc1 = _mm512_setzero_si512();
         __m512i acc2 = _mm512_setzero_si512();
@@ -191,25 +191,6 @@ void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, c
 
         output[i + 0] = s0 >> shift; output[i + 1] = s1 >> shift;
         output[i + 2] = s2 >> shift; output[i + 3] = s3 >> shift;
-    }
-
-    // righe rimanenti (rows non multiplo di 4)
-    for (; i < rows; i++) {
-        __m512i acc = _mm512_setzero_si512();
-        const int8_t* w = weights + static_cast<size_t>(i) * cols;
-
-        int j = 0;
-        for (; j + 64 <= cols; j += 64)
-            acc = _mm512_dpbusd_epi32(acc, _mm512_loadu_si512(reinterpret_cast<const void*>(input + j)), _mm512_loadu_si512(reinterpret_cast<const void*>(w + j)));
-
-        int32_t sum = _mm512_reduce_add_epi32(acc) + bias[i];
-
-        for (; j + 32 <= cols; j += 32)
-            sum += hsum_epi32_256(_mm256_dpbusd_epi32(_mm256_setzero_si256(), _mm256_loadu_si256(reinterpret_cast<const __m256i*>(input + j)), _mm256_loadu_si256(reinterpret_cast<const __m256i*>(w + j))));
-
-        for (; j < cols; j++) sum += input[j] * w[j];
-
-        output[i] = sum >> shift;
     }
 }
 

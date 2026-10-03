@@ -8,6 +8,7 @@ class IEvaluator {
 public:
     virtual ~IEvaluator() = default;
 
+    // Punteggio in centipawn dal punto di vista di chi muove
     virtual int Evaluate(const Board& board) = 0;
     virtual void Reset(const Board& board) = 0;
     

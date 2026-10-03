@@ -265,9 +265,6 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
     if (ply > stats.selDepthReached) stats.selDepthReached = ply;
 
     int stand_pat = evaluator->Evaluate(board);
-    if (board.GetSideToMove() == Color::BLACK) {
-        stand_pat = -stand_pat;
-    }
     
     if (stand_pat >= beta){
         return beta;

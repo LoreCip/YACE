@@ -27,5 +27,6 @@ int ClassicalEvaluator::Evaluate(const Board& board) {
         }
     }
 
-    return scores[ColorInt(Color::WHITE)] - scores[ColorInt(Color::BLACK)];
+    int stm = ColorInt(board.GetSideToMove());
+    return scores[stm] - scores[stm ^ 1];
 }

@@ -13,17 +13,10 @@
 // ============================================================================
 
 NnueEvaluator::NnueEvaluator(std::shared_ptr<const NnueNetwork> sharedNetwork)
-    : currentPly(0), networkOwner(std::move(sharedNetwork)), net(networkOwner.get()) {
-    for (int i = 0; i < MAX_HISTORY_PLY; i++) {
-        nnueStack[i].computed[0] = false;
-        nnueStack[i].computed[1] = false;
-    }
-}
+    : networkOwner(std::move(sharedNetwork)), net(networkOwner.get()) {}
 
 void NnueEvaluator::Reset(const Board& board) {
     currentPly = 0;
-    nnueStack[0].computed[ColorInt(Color::WHITE)] = false;
-    nnueStack[0].computed[ColorInt(Color::BLACK)] = false;
     RefreshAccumulator(board, ColorInt(Color::WHITE));
     RefreshAccumulator(board, ColorInt(Color::BLACK));
 }
@@ -31,8 +24,6 @@ void NnueEvaluator::Reset(const Board& board) {
 #ifdef NNUE_VALIDATE
 void NnueEvaluator::ValidateAccumulators(const Board& board) {
     for (int p = 0; p <= 1; p++) {
-        if (!nnueStack[currentPly].computed[p]) continue;
-
         int16_t saved[M];
         std::memcpy(saved, nnueStack[currentPly].accumulator[p], sizeof(saved));
 
@@ -55,21 +46,9 @@ int NnueEvaluator::Evaluate(const Board& board) {
     ValidateAccumulators(board);
 #endif
 
-    int16_t *smt, *nsmt;
-    if (board.GetSideToMove() == ColorInt(Color::WHITE)) {
-        smt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
-        nsmt = nnueStack[currentPly].accumulator[ColorInt(Color::BLACK)];
-    } else {
-        smt = nnueStack[currentPly].accumulator[ColorInt(Color::BLACK)];
-        nsmt = nnueStack[currentPly].accumulator[ColorInt(Color::WHITE)];
-    }
-    
-    int score = net->EvaluateNnue(smt, nsmt);
-
-    if (board.GetSideToMove() != ColorInt(Color::WHITE)) {
-        score = -score;
-    }
-    return score;
+    // La rete valuta dal punto di vista di chi muove: il suo accumulatore va per primo
+    int stm = ColorInt(board.GetSideToMove());
+    return net->EvaluateNnue(nnueStack[currentPly].accumulator[stm], nnueStack[currentPly].accumulator[stm ^ 1]);
 }
 
 void NnueEvaluator::OnMakeMove(const Board& board, Move move) {
@@ -77,40 +56,19 @@ void NnueEvaluator::OnMakeMove(const Board& board, Move move) {
         overflowDepth++;
         return;
     }
-    int prevPly = currentPly;
     currentPly++;
 
-    nnueStack[currentPly].computed[0] = false;
-    nnueStack[currentPly].computed[1] = false;
-
-    int movedColor = (board.GetSideToMove() == ColorInt(Color::WHITE))
-                     ? ColorInt(Color::BLACK)
-                     : ColorInt(Color::WHITE);
-
+    // La board ha gia' eseguito la mossa: chi ha mosso e' ora l'avversario di chi muove
+    int movedColor = ColorInt(!board.GetSideToMove());
     const UndoState& undo = board.GetHistory(board.GetHistoryPly() - 1);
-    PieceType movedPiece = static_cast<PieceType>(undo.movedPiece);
-    PieceType capturedPiece = static_cast<PieceType>(undo.capturedPiece);
-    bool isKingMove = (movedPiece == PieceType::KING);
+    bool isKingMove = (undo.movedPiece == PieceType::KING);
 
-    BuildDelta(board, move, movedPiece, capturedPiece, nnueStack[currentPly].delta);
+    BuildDelta(board, move, undo.movedPiece, undo.capturedPiece, nnueStack[currentPly].delta);
 
-    if (isKingMove && movedColor == ColorInt(Color::WHITE)) {
-        RefreshAccumulator(board, ColorInt(Color::WHITE));
-    } else if (nnueStack[prevPly].computed[ColorInt(Color::WHITE)]) {
-        ApplyDelta(ColorInt(Color::WHITE), currentPly);
-        nnueStack[currentPly].computed[ColorInt(Color::WHITE)] = true;
-    } else {
-        RefreshAccumulator(board, ColorInt(Color::WHITE));
-    }
-
-    // Aggiornamento prospettiva NERO
-    if (isKingMove && movedColor == ColorInt(Color::BLACK)) {
-        RefreshAccumulator(board, ColorInt(Color::BLACK));
-    } else if (nnueStack[prevPly].computed[ColorInt(Color::BLACK)]) {
-        ApplyDelta(ColorInt(Color::BLACK), currentPly);
-        nnueStack[currentPly].computed[ColorInt(Color::BLACK)] = true;
-    } else {
-        RefreshAccumulator(board, ColorInt(Color::BLACK));
+    // HalfKP: se il re si muove cambiano tutte le feature della sua prospettiva → refresh completo
+    for (int perspective = 0; perspective < NUM_COLORS; perspective++) {
+        if (isKingMove && perspective == movedColor) RefreshAccumulator(board, perspective);
+        else ApplyDelta(perspective, currentPly);
     }
 }
 
@@ -154,7 +112,6 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
     uint64_t kingBb = board.GetBitBoard(perspective, PieceType::KING);
     if (kingBb == 0) {
         for (int i = 0; i < M; i++) acc[i] = net->L0Bias[i];
-        nnueStack[currentPly].computed[perspective] = true;
         return;
     }
     
@@ -185,15 +142,14 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
 
     // Passo 2: un solo passaggio vettoriale bias + tutte le colonne
     AccumulateColumnsInto(acc, net->L0Bias, activeCols, activeCount);
-
-    nnueStack[currentPly].computed[perspective] = true;
 }
 
 int NnueEvaluator::MakeFeatureIndex(int square, PieceType pieceType, int pieceColor, int kingSq, int perspective) const {
     assert(pieceType != PieceType::KING && "MakeFeatureIndex chiamata con KING: il re non e' una feature HalfKP");
 
-    int finalSquare = (perspective == ColorInt(Color::BLACK)) ? FlipSquareVertical(square) : square;
-    int finalKingSq = (perspective == ColorInt(Color::BLACK)) ? FlipSquareVertical(kingSq) : kingSq;
+    // La prospettiva nera vede la scacchiera ribaltata verticalmente (sq ^ 56)
+    int finalSquare = (perspective == ColorInt(Color::BLACK)) ? square ^ 56 : square;
+    int finalKingSq = (perspective == ColorInt(Color::BLACK)) ? kingSq ^ 56 : kingSq;
 
     int nnuePt = PIECE_TO_NNUE_IDX[PieceInt(pieceType)];
     int relativeColor = (pieceColor != perspective) ? 1 : 0;
@@ -209,7 +165,7 @@ void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPie
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);
-    Color us = (board.GetSideToMove() == Color::WHITE) ? Color::BLACK : Color::WHITE;
+    Color us = !board.GetSideToMove();  // chi ha appena mosso
     Color them = !us;
 
     bool isKingMove = (movedPiece == PieceType::KING);
@@ -287,6 +243,3 @@ void NnueEvaluator::ApplyDelta(int perspective, int ply) {
     }
 }
 
-int NnueEvaluator::FlipSquareVertical(int square) const {
-    return square ^ 56;
-}

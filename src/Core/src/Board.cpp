@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <cstdint>
 #include <cstdlib>
@@ -75,6 +76,7 @@ bool Board::MakeMove(Move move) {
     Color them = !us;
     PieceType pieceType = GetPieceOnSquare(from);
     if (pieceType == PieceType::NONE) return false;
+    uint64_t hashBefore = zobristHash;
 
     // --- 1. Togli turno/arrocco/ep correnti dall'hash ---
     zobristHash ^= Zobrist::sideKey;
@@ -101,7 +103,7 @@ bool Board::MakeMove(Move move) {
         RemovePiece(them, capturedPieceType, to);
     }
     bool captured = (capturedPieceType != PieceType::NONE);
-    PushHistory(pieceType, capturedPieceType);
+    PushHistory(pieceType, capturedPieceType, hashBefore);
 
     // --- 3. Nuovo stato ---
     halfMoveClock = (pieceType == PieceType::PAWN || captured) ? 0 : halfMoveClock + 1;
@@ -208,7 +210,7 @@ void Board::UnmakeMove(Move move) {
 }
 
 void Board::MakeNullMove() {
-    PushHistory(PieceType::NONE, PieceType::NONE);
+    PushHistory(PieceType::NONE, PieceType::NONE, zobristHash);
 
     zobristHash ^= Zobrist::sideKey;
     if (enPassantSquare != NO_SQUARE) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
@@ -230,10 +232,11 @@ void Board::UnmakeNullMove() {
 }
 
 bool Board::IsRepetition() const {
+    // Solo le posizioni con lo stesso giocatore al tratto, entro l'ultima mossa irreversibile
+    // e non prima dell'inizio della storia (la FEN puo' dare un halfmove clock > historyPly).
     uint64_t currentHash = GetHash();
-    if (historyPly < 4) return false;
-
-    for (int i = historyPly - 4; i >= historyPly - halfMoveClock; i -= 2) {
+    int oldest = std::max(0, historyPly - halfMoveClock);
+    for (int i = historyPly - 4; i >= oldest; i -= 2) {
         if (positionHistory[i] == currentHash) {
             return true;
         }

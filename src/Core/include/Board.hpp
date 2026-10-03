@@ -41,8 +41,9 @@ private:
     void UpdateOccupation() {
         totalOccupation = colorOccupation[0] | colorOccupation[1];
     }
-    void PushHistory(PieceType moved, PieceType captured) {
-        positionHistory[historyPly] = zobristHash;
+    // hashBefore = hash completo della posizione prima della mossa (usato da IsRepetition).
+    void PushHistory(PieceType moved, PieceType captured, uint64_t hashBefore) {
+        positionHistory[historyPly] = hashBefore;
         history[historyPly++] = {moved, captured, enPassantSquare, castlingRights, halfMoveClock};
     }
 

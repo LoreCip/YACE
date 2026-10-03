@@ -111,6 +111,18 @@ int main() {
         }
     }
 
+    // Ripetizione: Cg1-f3 Cg8-f6 Cf3-g1 Cf6-g8 riporta alla posizione iniziale
+    gameBoard.InitializeFromFEN(fenList[0]);
+    const Move knightDance[] = {createMove(6, 21, FlagMap::MOVE), createMove(62, 45, FlagMap::MOVE),
+                                createMove(21, 6, FlagMap::MOVE), createMove(45, 62, FlagMap::MOVE)};
+    bool repetitionOk = true;
+    for (int i = 0; i < 4; i++) {
+        repetitionOk &= !gameBoard.IsRepetition() && gameBoard.MakeMove(knightDance[i]);
+    }
+    repetitionOk &= gameBoard.IsRepetition();
+    std::cout << ">> RIPETIZIONE: " << (repetitionOk ? "PASSED" : "FAILED!") << "\n" << std::endl;
+    if (!repetitionOk) failedTestsCount++;
+
     std::cout << "--- RESOCONTO FINALE SUITE ---" << std::endl;
     if (failedTestsCount == 0) {
         std::cout << "TUTTI I TEST SONO PASSED CON SUCCESSO!" << std::endl;

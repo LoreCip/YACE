@@ -1,5 +1,6 @@
 #include "Evaluation.hpp"
 
+#include <fstream>
 #include <iostream>
 
 namespace Evaluation {
@@ -7,28 +8,7 @@ namespace Evaluation {
     int pieceValues[6]     = {100, 500, 300, 300, 900, 0};
     int pstTables[6][64]   = {{0}};
 
-    void LoadFromFile(const std::string& configFile) {
-        std::ifstream file(configFile);
-        if (!file.is_open()) {
-            std::cerr << "error cannot open file " << configFile << "\n";
-            return;
-        }
-
-        if (!readArrayBlock(file, pieceValues, 6)) {
-            std::cerr << "error failed loading of pieceValues array\n";
-        }
-
-        for (int p = 0; p < 6; p++) {
-            if (!readArrayBlock(file, pstTables[p], 64)) {
-                std::cerr << "error failed loading of evaluation table " << p << "\n";
-            }
-        }
-
-        file.close();
-        std::cout << "info evaluation tables loaded\n";
-    }
-
-    bool readArrayBlock(std::ifstream& file, int* targetArray, int expectedSize) {
+    static bool readArrayBlock(std::ifstream& file, int* targetArray, int expectedSize) {
         std::string line;
         std::string blockName = "";
 
@@ -66,5 +46,26 @@ namespace Evaluation {
         std::getline(file, dummy);
 
         return true;
+    }
+
+    void LoadFromFile(const std::string& configFile) {
+        std::ifstream file(configFile);
+        if (!file.is_open()) {
+            std::cerr << "error cannot open file " << configFile << "\n";
+            return;
+        }
+
+        if (!readArrayBlock(file, pieceValues, 6)) {
+            std::cerr << "error failed loading of pieceValues array\n";
+        }
+
+        for (int p = 0; p < 6; p++) {
+            if (!readArrayBlock(file, pstTables[p], 64)) {
+                std::cerr << "error failed loading of evaluation table " << p << "\n";
+            }
+        }
+
+        file.close();
+        std::cout << "info evaluation tables loaded\n";
     }
 }

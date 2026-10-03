@@ -5,6 +5,7 @@
 
 #include "Board.hpp"
 #include "ClassicalEvaluator.hpp"
+#include "Evaluation.hpp"
 #include "LookupTables.hpp"
 #include "MoveGenerator.hpp"
 #include "NnueEvaluator.hpp"
@@ -115,7 +116,8 @@ int main(int argc, char **argv) {
 
   auto board = std::make_unique<Board>();
   UCI::Initialize();
-  LookupTables::init(options.evalsPath);
+  Evaluation::LoadFromFile(options.evalsPath);
+  LookupTables::init();
   board->InitializeBoard();
 
   // Caricata UNA volta e condivisa (root + tutti i thread di ricerca) invece di essere

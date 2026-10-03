@@ -26,7 +26,7 @@ namespace MoveGen {
         while (bitboard != 0ULL) {
             int from = __builtin_ctzll(bitboard);
             // Calcola gli attacchi validi escludendo le case occupate da alleati
-            uint64_t attacks = LookupTables::knightAttacks[from] & (~allies);
+            uint64_t attacks = AttackTables::knightAttacks[from] & (~allies);
             
             while (attacks != 0ULL) {
                 int to = __builtin_ctzll(attacks);
@@ -47,7 +47,7 @@ namespace MoveGen {
         int from = __builtin_ctzll(bitboard);
         
         // Normal moves
-        uint64_t attacks = LookupTables::kingAttacks[from] & (~allies);
+        uint64_t attacks = AttackTables::kingAttacks[from] & (~allies);
         while (attacks != 0ULL) {
             int to = __builtin_ctzll(attacks);
             int flag = (setBit(0ULL, to) & enemies) ? FlagMap::CAPTURE : FlagMap::MOVE;
@@ -70,11 +70,11 @@ namespace MoveGen {
 
         if (!const_cast<Board&>(board).IsSquareAttacked(from, !us)) {
             if (us == Color::WHITE) {
-                if (castlingRights & CastlingRights::WK) canCastle(LookupTables::maskWK, 5, 6, 6);
-                if (castlingRights & CastlingRights::WQ) canCastle(LookupTables::maskWQ, 3, 2, 2);
+                if (castlingRights & CastlingRights::WK) canCastle(AttackTables::maskWK, 5, 6, 6);
+                if (castlingRights & CastlingRights::WQ) canCastle(AttackTables::maskWQ, 3, 2, 2);
             } else {
-                if (castlingRights & CastlingRights::BK) canCastle(LookupTables::maskBK, 61, 62, 62);
-                if (castlingRights & CastlingRights::BQ) canCastle(LookupTables::maskBQ, 59, 58, 58);
+                if (castlingRights & CastlingRights::BK) canCastle(AttackTables::maskBK, 61, 62, 62);
+                if (castlingRights & CastlingRights::BQ) canCastle(AttackTables::maskBQ, 59, 58, 58);
             }
         }
     }
@@ -90,12 +90,12 @@ namespace MoveGen {
             uint64_t attacks = 0ULL;
 
             if (piece == PieceType::BISHOP) {
-                attacks = LookupTables::GetBishopAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetBishopAttacks(from, totalOcc);
             } else if (piece == PieceType::ROOK) {
-                attacks = LookupTables::GetRookAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetRookAttacks(from, totalOcc);
             } else if (piece == PieceType::QUEEN) {
-                attacks = LookupTables::GetRookAttacks(from, totalOcc) | 
-                          LookupTables::GetBishopAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetRookAttacks(from, totalOcc) | 
+                          MagicBitboards::GetBishopAttacks(from, totalOcc);
             }
 
             attacks &= (~allies);
@@ -145,7 +145,7 @@ namespace MoveGen {
             }
 
             // Catture normali
-            uint64_t targets = LookupTables::pawnAttacks[ColorInt(us)][from] & enemyOccupation;
+            uint64_t targets = AttackTables::pawnAttacks[ColorInt(us)][from] & enemyOccupation;
             while (targets != 0ULL) {
                 int toCapture = __builtin_ctzll(targets);
                 if (toCapture >= promoRankStart && toCapture <= promoRankEnd) {
@@ -163,7 +163,7 @@ namespace MoveGen {
             int epSquare = board.GetEnPassantSquare();
             if (epSquare != 64) {
                 uint64_t epBB = 1ULL << epSquare;
-                if (LookupTables::pawnAttacks[ColorInt(us)][from] & epBB) {
+                if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
                     moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
                 }
             }
@@ -191,7 +191,7 @@ namespace MoveGen {
         while (bitboard != 0ULL) {
             int from = __builtin_ctzll(bitboard);
             // Ottimizzazione matematica: filtriamo subito solo le case nemiche via AND bitwise
-            uint64_t attacks = LookupTables::knightAttacks[from] & enemies;
+            uint64_t attacks = AttackTables::knightAttacks[from] & enemies;
             
             while (attacks != 0ULL) {
                 int to = __builtin_ctzll(attacks);
@@ -207,7 +207,7 @@ namespace MoveGen {
         if (bitboard == 0ULL) return;
         int from = __builtin_ctzll(bitboard);
         
-        uint64_t attacks = LookupTables::kingAttacks[from] & enemies;
+        uint64_t attacks = AttackTables::kingAttacks[from] & enemies;
         while (attacks != 0ULL) {
             int to = __builtin_ctzll(attacks);
             moveList.push(createMove(from, to, FlagMap::CAPTURE));
@@ -224,12 +224,12 @@ namespace MoveGen {
             uint64_t attacks = 0ULL;
 
             if (piece == PieceType::BISHOP) {
-                attacks = LookupTables::GetBishopAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetBishopAttacks(from, totalOcc);
             } else if (piece == PieceType::ROOK) {
-                attacks = LookupTables::GetRookAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetRookAttacks(from, totalOcc);
             } else if (piece == PieceType::QUEEN) {
-                attacks = LookupTables::GetRookAttacks(from, totalOcc) | 
-                          LookupTables::GetBishopAttacks(from, totalOcc);
+                attacks = MagicBitboards::GetRookAttacks(from, totalOcc) | 
+                          MagicBitboards::GetBishopAttacks(from, totalOcc);
             }
 
             attacks &= enemies;
@@ -261,7 +261,7 @@ namespace MoveGen {
                 }
             }
 
-            uint64_t targets = LookupTables::pawnAttacks[ColorInt(us)][from] & enemies;
+            uint64_t targets = AttackTables::pawnAttacks[ColorInt(us)][from] & enemies;
             while (targets != 0ULL) {
                 int toCapture = __builtin_ctzll(targets);
                 if (toCapture >= promoRankStart && toCapture <= promoRankEnd) {
@@ -275,7 +275,7 @@ namespace MoveGen {
             int epSquare = board.GetEnPassantSquare();
             if (epSquare != 64) {
                 uint64_t epBB = 1ULL << epSquare;
-                if (LookupTables::pawnAttacks[ColorInt(us)][from] & epBB) {
+                if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
                     moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
                 }
             }

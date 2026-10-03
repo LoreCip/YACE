@@ -42,7 +42,7 @@ private:
         int p = PieceInt(piece);
         sides[color][p] = clearBit(sides[color][p], square);
         colorOccupation[color] = clearBit(colorOccupation[color], square);
-        zobristHash ^= LookupTables::pieceKeys[color][p][square];
+        zobristHash ^= Zobrist::pieceKeys[color][p][square];
     }
     inline void RemovePiece(Color color, PieceType piece, int square) {
         RemovePiece(ColorInt(color), piece, square);
@@ -116,7 +116,7 @@ public:
         int p = PieceInt(piece);
         sides[color][p] = setBit(sides[color][p], square);
         colorOccupation[color] = setBit(colorOccupation[color], square);
-        zobristHash ^= LookupTables::pieceKeys[color][p][square];
+        zobristHash ^= Zobrist::pieceKeys[color][p][square];
     }
     inline void AddPiece(Color color, PieceType piece, int square) {
         AddPiece(ColorInt(color), piece, square);

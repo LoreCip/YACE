@@ -1,5 +1,6 @@
 #include "SearchWorker.hpp"
 #include "MoveGenerator.hpp"
+#include "Evaluation.hpp"
 #include "LookupTables.hpp"
 #include <algorithm>
 #include <chrono>
@@ -353,7 +354,7 @@ int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
         PieceType attacker = board.GetPieceOnSquare(from);
         PieceType victim = (flags == FlagMap::ENPASS) ? PieceType::PAWN : board.GetPieceOnSquare(to);
         if (attacker != PieceType::NONE && victim != PieceType::NONE) {
-            score = 1000000 + (LookupTables::pieceValues[PieceInt(victim)] * 10) - LookupTables::pieceValues[PieceInt(attacker)];
+            score = 1000000 + (Evaluation::pieceValues[PieceInt(victim)] * 10) - Evaluation::pieceValues[PieceInt(attacker)];
         }
     } 
     // 2. Promozioni Silenziose
@@ -399,11 +400,11 @@ bool SearchWorker::SEE(Move move, int threshold) {
 
     int gain[32]; // Massimo 32 catture possibili su una singola casa
     int d = 0;
-    gain[0] = (capturedPiece != PieceType::NONE) ? LookupTables::pieceValues[PieceInt(capturedPiece)] : 0;
+    gain[0] = (capturedPiece != PieceType::NONE) ? Evaluation::pieceValues[PieceInt(capturedPiece)] : 0;
 
     // Bonus in caso di promozione (la nuova regina - il pedone perso)
     if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {
-        gain[0] += LookupTables::pieceValues[PieceInt(PieceType::QUEEN)] - LookupTables::pieceValues[PieceInt(PieceType::PAWN)];
+        gain[0] += Evaluation::pieceValues[PieceInt(PieceType::QUEEN)] - Evaluation::pieceValues[PieceInt(PieceType::PAWN)];
     }
 
     // Setup della scacchiera "virtuale" per simulare le catture a raggi X
@@ -423,7 +424,7 @@ bool SearchWorker::SEE(Move move, int threshold) {
     while (true) {
         d++;
         // Il guadagno dal punto di vista di chi cattura = (Pezzo usato dall'avversario) - (Guadagno avversario)
-        gain[d] = LookupTables::pieceValues[PieceInt(attackerPiece)] - gain[d - 1];
+        gain[d] = Evaluation::pieceValues[PieceInt(attackerPiece)] - gain[d - 1];
 
         // Troviamo il prossimo pezzo più debole che può ricatturare
         uint64_t nextAttackerBB = GetLeastValuableAttacker(to, nextColor, occupancy, attackerPiece);
@@ -456,7 +457,7 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
     uint64_t pawns = board.GetBitBoard(color, PieceType::PAWN) & occupancy;
     if (pawns) {
         // Usiamo l'array precalcolato dal punto di vista dell'avversario
-        if ((attackers = LookupTables::pawnAttacks[enemyIdx][sq] & pawns)) {
+        if ((attackers = AttackTables::pawnAttacks[enemyIdx][sq] & pawns)) {
             outPiece = PieceType::PAWN;
             return attackers & -attackers; 
         }
@@ -464,14 +465,14 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
 
     // 2. Cavalli
     uint64_t knights = board.GetBitBoard(color, PieceType::KNIGHT) & occupancy;
-    if ((attackers = LookupTables::knightAttacks[sq] & knights)) {
+    if ((attackers = AttackTables::knightAttacks[sq] & knights)) {
         outPiece = PieceType::KNIGHT;
         return attackers & -attackers;
     }
 
     // 3. Alfieri
     uint64_t bishops = board.GetBitBoard(color, PieceType::BISHOP) & occupancy;
-    uint64_t bishopAttacks = LookupTables::GetBishopAttacks(sq, occupancy);
+    uint64_t bishopAttacks = MagicBitboards::GetBishopAttacks(sq, occupancy);
     if ((attackers = bishopAttacks & bishops)) {
         outPiece = PieceType::BISHOP;
         return attackers & -attackers;
@@ -479,7 +480,7 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
 
     // 4. Torri
     uint64_t rooks = board.GetBitBoard(color, PieceType::ROOK) & occupancy;
-    uint64_t rookAttacks = LookupTables::GetRookAttacks(sq, occupancy);
+    uint64_t rookAttacks = MagicBitboards::GetRookAttacks(sq, occupancy);
     if ((attackers = rookAttacks & rooks)) {
         outPiece = PieceType::ROOK;
         return attackers & -attackers;
@@ -494,7 +495,7 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
 
     // 6. Re
     uint64_t kings = board.GetBitBoard(color, PieceType::KING) & occupancy;
-    if ((attackers = LookupTables::kingAttacks[sq] & kings)) {
+    if ((attackers = AttackTables::kingAttacks[sq] & kings)) {
         outPiece = PieceType::KING;
         return attackers & -attackers;
     }

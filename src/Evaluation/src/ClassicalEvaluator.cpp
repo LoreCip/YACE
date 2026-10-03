@@ -1,5 +1,5 @@
 #include "ClassicalEvaluator.hpp"
-#include "LookupTables.hpp"
+#include "Evaluation.hpp"
 #include "Types.hpp"
 
 int ClassicalEvaluator::Evaluate(const Board& board) {
@@ -11,12 +11,12 @@ int ClassicalEvaluator::Evaluate(const Board& board) {
 
             uint64_t bitboard = board.GetBitBoard(color, piece);
             
-            scores[color] += __builtin_popcountll(bitboard) * LookupTables::pieceValues[PieceInt(piece)];
+            scores[color] += __builtin_popcountll(bitboard) * Evaluation::pieceValues[PieceInt(piece)];
             
             while (bitboard) {
                 int sq = __builtin_ctzll(bitboard);
                 int pstSquare = (color == static_cast<int>(Color::BLACK)) ? (sq ^ 56) : sq; 
-                scores[color] += LookupTables::pstTables[PieceInt(piece)][pstSquare];
+                scores[color] += Evaluation::pstTables[PieceInt(piece)][pstSquare];
                 
                 bitboard &= bitboard - 1;
             }

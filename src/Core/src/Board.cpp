@@ -55,7 +55,7 @@
         totalOccupation = colorOccupation[0] | colorOccupation[1];
         freeCells = ~totalOccupation;
 
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
         
     }
 
@@ -105,7 +105,7 @@
         // 3. Update Zobrist Key
         sideToMove = (activeColor == "w") ? Color::WHITE : Color::BLACK;
         if (sideToMove == Color::BLACK) {
-            zobristHash ^= LookupTables::sideKey;
+            zobristHash ^= Zobrist::sideKey;
         }
 
         // Castling
@@ -117,14 +117,14 @@
                 if (c == 'q') castlingRights |= CastlingRights::BQ;
             }
         }
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
 
         // En Passant
         if (enPassant != "-") {
             int epFile = enPassant[0] - 'a';
             int epRank = enPassant[1] - '1';
             enPassantSquare = epRank * 8 + epFile;
-            zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+            zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
         }
 
         if (!halfMove.empty()) halfMoveClock = std::stoi(halfMove);
@@ -146,9 +146,9 @@
         if (pieceType == PieceType::NONE) return false;
 
         // --- 1. Zobrist Hash: Turn, En Passant & Castling ---
-        zobristHash ^= LookupTables::sideKey;
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
-        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        zobristHash ^= Zobrist::sideKey;
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
+        if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
 
         // --- 2. Captures & En Passant ---
         bool captured = false;
@@ -174,9 +174,9 @@
                 RemovePiece(them, capturedPieceType, to);
             } else {
                 // Ripristina l'hash prima di ritornare (poiché l'abbiamo modificato al punto 1)
-                zobristHash ^= LookupTables::sideKey;
-                zobristHash ^= LookupTables::castlingKeys[castlingRights];
-                if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+                zobristHash ^= Zobrist::sideKey;
+                zobristHash ^= Zobrist::castlingKeys[castlingRights];
+                if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
                 return false; 
             }
         }
@@ -193,11 +193,11 @@
         // --- 4. Update State ---
         halfMoveClock = (pieceType == PieceType::PAWN || captured) ? 0 : halfMoveClock + 1;
         enPassantSquare = (pieceType == PieceType::PAWN && std::abs(from - to) == 16) ? (from + to) / 2 : 64;
-        castlingRights &= (LookupTables::castlingMasks[from] & LookupTables::castlingMasks[to]);
+        castlingRights &= (AttackTables::castlingMasks[from] & AttackTables::castlingMasks[to]);
 
         // --- 5. Zobrist Hash ---
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
-        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
+        if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
 
         // --- 6. Move Pieces ---
         PieceType promoPiece = getMovePromotionPiece(flags);
@@ -239,20 +239,20 @@
     bool Board::IsSquareAttacked(int square, Color attackingColor) const {
         Color us = !attackingColor;
         
-        uint64_t pawnTriggers = LookupTables::pawnAttacks[ColorInt(us)][square];
+        uint64_t pawnTriggers = AttackTables::pawnAttacks[ColorInt(us)][square];
         if (pawnTriggers & GetBitBoard(attackingColor, PieceType::PAWN)) return true;
 
-        uint64_t knightTriggers = LookupTables::knightAttacks[square];
+        uint64_t knightTriggers = AttackTables::knightAttacks[square];
         if (knightTriggers & GetBitBoard(attackingColor, PieceType::KNIGHT)) return true;
 
-        uint64_t kingTriggers = LookupTables::kingAttacks[square];
+        uint64_t kingTriggers = AttackTables::kingAttacks[square];
         if (kingTriggers & GetBitBoard(attackingColor, PieceType::KING)) return true;
 
-        uint64_t bishopTriggers = LookupTables::GetBishopAttacks(square, totalOccupation);
+        uint64_t bishopTriggers = MagicBitboards::GetBishopAttacks(square, totalOccupation);
         uint64_t diagonalThreats = GetBitBoard(attackingColor, PieceType::BISHOP) | GetBitBoard(attackingColor, PieceType::QUEEN);
         if (bishopTriggers & diagonalThreats) return true;
 
-        uint64_t rookTriggers = LookupTables::GetRookAttacks(square, totalOccupation);
+        uint64_t rookTriggers = MagicBitboards::GetRookAttacks(square, totalOccupation);
         uint64_t orthogonalThreats = GetBitBoard(attackingColor, PieceType::ROOK) | GetBitBoard(attackingColor, PieceType::QUEEN);
         if (rookTriggers & orthogonalThreats) return true;
 
@@ -274,9 +274,9 @@
         UndoState lastState = history[historyPly];
         
         // 3. Update Zobrist Key (Remove current state)
-        zobristHash ^= LookupTables::sideKey;
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
-        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        zobristHash ^= Zobrist::sideKey;
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
+        if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
 
         // 4. Restore Variables
         enPassantSquare = lastState.enPassantSquare;
@@ -284,8 +284,8 @@
         halfMoveClock = lastState.halfMoveClock;
 
         // 5. Update Zobrist Key (Add restored state)
-        zobristHash ^= LookupTables::castlingKeys[castlingRights];
-        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
+        if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
 
         // --- 6. Restore Pieces ---
         PieceType promoPiece = getMovePromotionPiece(flags);
@@ -326,8 +326,8 @@
         history[historyPly].halfMoveClock = halfMoveClock;
         historyPly++;
 
-        zobristHash ^= LookupTables::sideKey;
-        if (enPassantSquare != 64) zobristHash ^= LookupTables::enPassantKeys[enPassantSquare];
+        zobristHash ^= Zobrist::sideKey;
+        if (enPassantSquare != 64) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
         
         enPassantSquare = 64;
         sideToMove = !sideToMove;
@@ -430,7 +430,7 @@
             uint64_t myPawns = GetBitBoard(us, PieceType::PAWN);
             
             Color opponentColor = !us;
-            uint64_t attackers = LookupTables::pawnAttacks[ColorInt(opponentColor)][enPassantSquare] & myPawns;
+            uint64_t attackers = AttackTables::pawnAttacks[ColorInt(opponentColor)][enPassantSquare] & myPawns;
 
             if (attackers != 0ULL) {
                 char epFile = 'a' + (enPassantSquare % 8);

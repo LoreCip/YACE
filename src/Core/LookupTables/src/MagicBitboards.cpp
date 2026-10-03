@@ -5,6 +5,7 @@
 
 namespace MagicBitboards {
 
+namespace {
     uint64_t RookMasks[64]          = {0};
     uint64_t BishopMasks[64]        = {0};
     uint64_t RookAttacks[64][4096]  = {{0}};
@@ -86,14 +87,15 @@ namespace MagicBitboards {
     }
 
     template <size_t N>
-    static inline uint64_t MagicLookup(int square, uint64_t occupancy,
-                                        const uint64_t* masks, const uint64_t* magics,
-                                        const uint64_t (*table)[N]) {
+    inline uint64_t MagicLookup(int square, uint64_t occupancy,
+                                const uint64_t* masks, const uint64_t* magics,
+                                const uint64_t (*table)[N]) {
         uint64_t blockers = occupancy & masks[square];
         int shift = 64 - __builtin_popcountll(masks[square]);
         uint64_t index = (blockers * magics[square]) >> shift;
         return table[square][index];
     }
+} // namespace
 
     uint64_t GetRookAttacks(int square, uint64_t occupancy) {
         return MagicLookup<4096>(square, occupancy, RookMasks, RookMagics, RookAttacks);

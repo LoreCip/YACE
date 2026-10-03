@@ -3,12 +3,12 @@
 Studio comparativo tra le predizioni della rete V3-6 (`run_v6/checkpoints/halfkp_epoch_18_final.pth`,
 lo stesso checkpoint da cui e' esportato `nnue_weights_v3-6.bin`) e le valutazioni di Stockfish
 (il target del dataset, `sigmoid(cp/400)` con `cp` dalle analisi Stockfish del dump Lichess —
-vedi `cleanDataset.py`). Misurato sul VERO split di validazione (`seed=42`, 2% del dataset,
+vedi `dataset/build_dataset.py`). Misurato sul VERO split di validazione (`seed=42`, 2% del dataset,
 1.824.972 posizioni mai viste in training — stesso metodo di `evaluate_holdout` in
-`trainingNNUE_HalfKP.py`).
+`training/train.py`).
 
-Script usati: `testingNNUE_HalfKP.py` (base), `analyzeHeldout.py`, `analyzeEndgame.py`,
-`inspectOnePiece.py` (tutti in questa cartella).
+Script usati: `evaluate_model.py` (base), `heldout_by_phase.py`, `endgame_by_material.py`,
+`one_piece_positions.py` (tutti in questa cartella).
 
 ## 1. Il sintomo iniziale
 
@@ -27,8 +27,8 @@ del documento scompone questo fenomeno per capire cosa manca esattamente.
 
 ## 2. Scomposizione per tipo di materiale — due problemi distinti
 
-Decodificando il tipo di pezzo direttamente dagli indici HalfKP (`analyzeEndgame.py`,
-`inspectOnePiece.py`) emergono **due cause completamente diverse**, non una sola:
+Decodificando il tipo di pezzo direttamente dagli indici HalfKP (`endgame_by_material.py`,
+`one_piece_positions.py`) emergono **due cause completamente diverse**, non una sola:
 
 ### 2a. K+pezzo-minore-solo vs K (Cavallo o Alfiere): vuoto di dati, non un problema di training
 
@@ -128,7 +128,7 @@ serve insegnare alla rete la magnitudine corretta:
    soli pedoni) con etichette ESATTE da tablebase Syzygy (WDL/DTZ), non dall'euristica di
    Stockfish — ground truth perfetta proprio dove serve di piu'.
 2. In alternativa/aggiunta, aumentare il peso delle posizioni sparse gia' esistenti in
-   `balanceDataset.py`: lo sfoltimento Lorentziano attuale assottiglia solo le posizioni vicine
+   `dataset/balance_dataset.py`: lo sfoltimento Lorentziano attuale assottiglia solo le posizioni vicine
    alla patta, non ha alcun termine che compensi la sotto-rappresentazione delle posizioni con
    pochi pezzi.
 3. Retraining completo sul dataset aumentato/ribilanciato, poi ripetere questa stessa analisi

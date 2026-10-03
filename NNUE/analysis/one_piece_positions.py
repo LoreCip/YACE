@@ -5,38 +5,28 @@ o K+Torre vs K quasi sempre vinti, K+pezzo minore da solo spesso patta) eppure l
 misurata e' 8.98%, molto peggio del caso. Decodifica square/colore/tipo per capire cosa succede
 davvero.
 """
-import torch
+import sys
+from pathlib import Path
+
 import numpy as np
+import torch
 
-from NNUE import HalfKP_NNUE_QAT
-from testingNNUE_HalfKP import prob_to_cp_tensor
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, PAD_IDX, PIECE_NAMES, RUNS_DIR, decode_feature, load_dataset, validation_split
+from model import load_model, prob_to_cp, to_tensors
 
-WEIGHTS = "./run_v6/checkpoints/halfkp_epoch_18_final.pth"
-BIN_DATASET = "../data/clean_db_halfkp_balanced.bin"
-VAL_FRACTION = 0.02
-PAD_VAL = 40960
-PIECE_NAMES = ["Pedone", "Cavallo", "Alfiere", "Torre", "Donna"]
+WEIGHTS = RUNS_DIR / "run_v6/checkpoints/halfkp_epoch_18_final.pth"  # = nnue_weights_v3-6.bin
+BIN_DATASET = DATA_DIR / "clean_db_halfkp_balanced.bin"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = HalfKP_NNUE_QAT().to(device)
-checkpoint = torch.load(WEIGHTS, map_location=device, weights_only=False)
-state_dict = checkpoint.get("model_state_dict", checkpoint)
-clean_state_dict = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-model.load_state_dict(clean_state_dict)
-model.eval()
-
-struttura_dati = np.dtype([('us', np.uint16, 32), ('them', np.uint16, 32), ('target', np.float32)])
-dataset = np.memmap(BIN_DATASET, dtype=struttura_dati, mode='r')
-num_positions = len(dataset)
-
-rng = np.random.default_rng(42)
-num_val = int(num_positions * VAL_FRACTION)
-val_indices = np.sort(rng.choice(num_positions, num_val, replace=False))
+model = load_model(WEIGHTS, device)
+dataset = load_dataset(BIN_DATASET)
+val_indices = np.sort(validation_split(len(dataset)))
 
 raw = dataset[val_indices]
 us = raw['us']
 them = raw['them']
-active_us = (us != PAD_VAL)
+active_us = (us != PAD_IDX)
 total_us = active_us.sum(axis=1)
 
 mask = (total_us == 1)
@@ -48,21 +38,10 @@ them_sel = them[sel_idx]
 target_sel = raw['target'][sel_idx]
 
 with torch.no_grad():
-    us_t = torch.from_numpy(us_sel.astype(np.int64)).to(device)
-    them_t = torch.from_numpy(them_sel.astype(np.int64)).to(device)
+    us_t, them_t, _ = to_tensors(raw[sel_idx], device)
     pred_prob = model(us_t, them_t).squeeze()
-    pred_cp = prob_to_cp_tensor(pred_prob).cpu().numpy()
-target_cp = np.array([np.log(max(1e-6, min(1-1e-6, t)) / (1 - max(1e-6, min(1-1e-6, t)))) * 400.0 for t in target_sel])
-
-def decode_index(idx):
-    """idx = square + (pIdx + kingSq*10)*64 ; pIdx = nnuePt*2 + relColor"""
-    square = idx % 64
-    rest = idx // 64
-    p_idx = rest % 10
-    king_sq = rest // 10
-    nnue_pt = p_idx // 2
-    rel_color = p_idx % 2
-    return square, nnue_pt, rel_color, king_sq
+    pred_cp = prob_to_cp(pred_prob).cpu().numpy()
+target_cp = prob_to_cp(torch.from_numpy(target_sel)).numpy()
 
 def sq_name(sq):
     return "abcdefgh"[sq % 8] + str(sq // 8 + 1)
@@ -71,9 +50,9 @@ wrong_sign = 0
 print(f"{'us_piece':<20}{'us_relcolor':<12}{'pred_cp':>9}{'target_cp':>10}{'segno_ok':>10}")
 for i in range(min(30, len(sel_idx))):
     row_us = us_sel[i]
-    active = row_us[row_us != PAD_VAL]
+    active = row_us[row_us != PAD_IDX]
     idx_val = int(active[0])
-    square, nnue_pt, rel_color, king_sq = decode_index(idx_val)
+    square, nnue_pt, rel_color, king_sq = decode_feature(idx_val)
 
     p, t = pred_cp[i], target_cp[i]
     ok = (np.sign(p) == np.sign(t))
@@ -90,8 +69,8 @@ print("\n--- Sign accuracy per (tipo di pezzo, colore relativo a chi muove) ---"
 pt_arr = np.zeros(len(sel_idx), dtype=int)
 color_arr = np.zeros(len(sel_idx), dtype=int)
 for i in range(len(sel_idx)):
-    active = us_sel[i][us_sel[i] != PAD_VAL]
-    _, nnue_pt, rel_color, _ = decode_index(int(active[0]))
+    active = us_sel[i][us_sel[i] != PAD_IDX]
+    _, nnue_pt, rel_color, _ = decode_feature(int(active[0]))
     pt_arr[i] = nnue_pt
     color_arr[i] = rel_color
 

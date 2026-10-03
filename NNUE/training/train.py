@@ -1,37 +1,28 @@
-import os
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
+"""Training della rete HalfKP (QAT) sul dataset bilanciato; checkpoint in runs/<run>/checkpoints."""
+import sys
+from pathlib import Path
 
 import numpy as np
-
+import torch
+import torch.nn.functional as F
+import torch.optim as optim
 from tqdm import tqdm
 
-from NNUE import FakeQuantizeSTE, HalfKP_NNUE_QAT
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, DATASET_DTYPE, RUNS_DIR, VAL_FRACTION, validation_split
+from model import HalfKP_NNUE_QAT, logit, prob_to_cp, to_tensors
 
 torch.set_float32_matmul_precision('high')
-
-# Target di training = sigmoid(cp/400) (vedi NNUE/data/scripts/cleanDataset.py), quindi
-# l'inverso per ricavare il target in "logit-space" usa la stessa scala.
-CP_SCALE = 400.0
 
 # Peso della componente in logit-space nella loss combinata (il resto va alla componente
 # in probability-space/WDL). Il logit-space evita la saturazione del sigmoide per le
 # posizioni nettamente vinte/perse, dove la loss su probabilità pura ha gradiente quasi nullo.
 LOGIT_LOSS_WEIGHT = 0.5
 
-VAL_FRACTION = 0.02  # frazione del dataset riservata a validazione (mai vista in training)
-
-
-def targets_to_logit(targets, eps=1e-6):
-    t = torch.clamp(targets, eps, 1.0 - eps)
-    return torch.log(t / (1.0 - t))
 
 
 def blended_loss(pred_prob, pred_logit, targets):
-    target_logit = targets_to_logit(targets)
+    target_logit = logit(targets)
     loss_wdl = F.mse_loss(pred_prob, targets)
     loss_logit = F.mse_loss(pred_logit, target_logit)
     return (1.0 - LOGIT_LOSS_WEIGHT) * loss_wdl + LOGIT_LOSS_WEIGHT * loss_logit, loss_wdl, loss_logit
@@ -50,18 +41,14 @@ def evaluate_holdout(model, dataset, val_indices, device, batch_size=16384, max_
 
     for i in range(0, n, batch_size):
         batch_idx = idx[i:i + batch_size]
-        raw = dataset[batch_idx]
-
-        us = torch.from_numpy(raw['us'].astype(np.int64)).to(device)
-        them = torch.from_numpy(raw['them'].astype(np.int64)).to(device)
-        targets = torch.from_numpy(raw['target'].astype(np.float32)).to(device)
+        us, them, targets = to_tensors(dataset[batch_idx], device)
 
         pred_prob = model(us, them).squeeze(-1)
 
         mae_wdl_sum += torch.abs(pred_prob - targets).sum().item()
 
-        pred_cp = targets_to_logit(pred_prob) * CP_SCALE
-        real_cp = targets_to_logit(targets) * CP_SCALE
+        pred_cp = prob_to_cp(pred_prob)
+        real_cp = prob_to_cp(targets)
         mae_cp_sum += torch.abs(pred_cp - real_cp).sum().item()
 
         sign_correct += (torch.sign(pred_prob - 0.5) == torch.sign(targets - 0.5)).sum().item()
@@ -77,6 +64,7 @@ def evaluate_holdout(model, dataset, val_indices, device, batch_size=16384, max_
 
 def train_nnue(
         bin_path,
+        run_dir,
         num_epochs=15,
         batch_size=16384,
         learning_rate=0.001,
@@ -86,22 +74,16 @@ def train_nnue(
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Sto addestrando HalfKP su: {device}")
 
-    struttura_dati = np.dtype([
-        ('us', np.uint16, 32),
-        ('them', np.uint16, 32),
-        ('target', np.float32)
-    ])
-
     if max_rows is None:
         print(f"Caricamento del dataset in RAM da {bin_path}...")
-        dataset = np.fromfile(bin_path, dtype=struttura_dati)
+        dataset = np.fromfile(bin_path, dtype=DATASET_DTYPE)
     else:
         # Modalita' "quick probe": carica solo un sottoinsieme casuale di max_rows righe
         # (via memmap, senza leggere l'intero file) per confrontare rapidamente varianti
         # del dataset (es. diversi parametri di bilanciamento) con un training breve,
         # prima di impegnarsi in una run completa su tutto il file.
         print(f"[QUICK PROBE] Caricamento di un sottoinsieme casuale di {max_rows:,} righe da {bin_path}...")
-        mm = np.memmap(bin_path, dtype=struttura_dati, mode='r')
+        mm = np.memmap(bin_path, dtype=DATASET_DTYPE, mode='r')
         probe_rng = np.random.default_rng(123)
         probe_idx = probe_rng.choice(len(mm), min(max_rows, len(mm)), replace=False)
         probe_idx.sort()
@@ -110,17 +92,16 @@ def train_nnue(
 
     # --- SPLIT TRAIN/VALIDATION ---
     # Riserviamo un sottoinsieme casuale (seed fisso, riproducibile) come validation set, mai
-    # visto in training, cosi' le metriche riportate (qui e in testingNNUE_HalfKP.py) sono una
+    # visto in training, cosi' le metriche riportate (qui e in analysis/) sono una
     # vera misura di generalizzazione e non contaminate dal training stesso.
     # NOTA: uno split "in coda" (prime N righe train, ultime M righe val) e' stato provato prima
-    # ma scartato: il file non e' i.i.d. per posizione (cleanDataset.py/balanceDataset.py lo
+    # ma scartato: il file non e' i.i.d. per posizione (dataset/build_dataset.py e balance_dataset.py lo
     # processano preservando l'ordine originale dello stream Lichess), quindi la coda del file
     # e' una fetta con una distribuzione di target sistematicamente diversa (piu' stretta, target
     # piu' vicini a 0.5) dal resto — dava un sign-accuracy pessimistico e fuorviante (~54% invece
     # di ~63%) che sembrava un plateau/overfitting ma era solo un artefatto dello split.
-    num_val = int(num_positions * VAL_FRACTION)
-    rng = np.random.default_rng(42)
-    val_indices = rng.choice(num_positions, num_val, replace=False)
+    val_indices = validation_split(num_positions)
+    num_val = len(val_indices)
     val_mask = np.zeros(num_positions, dtype=bool)
     val_mask[val_indices] = True
     train_indices = np.nonzero(~val_mask)[0]
@@ -137,7 +118,7 @@ def train_nnue(
     start_epoch = 0
     checkpoint = None
 
-    if resume_from and os.path.exists(resume_from):
+    if resume_from and Path(resume_from).exists():
         checkpoint = torch.load(resume_from, map_location=device, weights_only=False)
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
@@ -166,7 +147,8 @@ def train_nnue(
     if device.type == 'cuda':
         model = torch.compile(model)
 
-    os.makedirs("checkpoints", exist_ok=True)
+    checkpoint_dir = Path(run_dir) / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     for epoch in range(start_epoch, num_epochs):
         model.train()
@@ -186,11 +168,7 @@ def train_nnue(
         for i in progress_bar:
             perm = shuffle_indices[i * batch_size : (i+1) * batch_size].numpy()
             batch_idx = train_indices[perm]
-            raw_batch = dataset[batch_idx]
-
-            us_indices = torch.from_numpy(raw_batch['us'].astype(np.int64)).to(device)
-            them_indices = torch.from_numpy(raw_batch['them'].astype(np.int64)).to(device)
-            targets = torch.from_numpy(raw_batch['target'].astype(np.float32)).to(device)
+            us_indices, them_indices, targets = to_tensors(dataset[batch_idx], device)
 
             optimizer.zero_grad(set_to_none=True)
 
@@ -230,13 +208,14 @@ def train_nnue(
             'scheduler_state_dict': scheduler.state_dict(),
             'loss': avg_epoch_loss,
             'val_metrics': val_metrics,
-        }, f"checkpoints/halfkp_epoch_{epoch+1}_final.pth")
+        }, checkpoint_dir / f"halfkp_epoch_{epoch+1}_final.pth")
 
         print(f" Checkpoint salvato.")
 
 if __name__ == "__main__":
     train_nnue(
-        bin_path="/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin",
+        bin_path=DATA_DIR / "clean_db_halfkp_balanced.bin",
+        run_dir=RUNS_DIR / "run_v7",
         num_epochs=40,
         batch_size=16384,
         learning_rate=0.001,

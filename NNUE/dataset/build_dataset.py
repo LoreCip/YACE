@@ -1,33 +1,30 @@
+"""Dump Lichess delle valutazioni (jsonl.zst) → dataset binario HalfKP (vedi halfkp.DATASET_DTYPE)."""
 import io
 import json
-import math
-import struct
 import multiprocessing
+import struct
+import sys
+from pathlib import Path
+
+import chess
 import zstandard as zstd
 from tqdm import tqdm
-import chess
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, cp_to_target, fen_to_features
 
 # ==========================================
 # CONFIGURAZIONE
 # ==========================================
 MIN_DEPTH = 15
-CP_LIM = 1000  
+CP_LIM = 1000
 NROWS = 388_458_657
 CHUNK_SIZE = 10000
 
-FULL_DATASET = "/home/lorenzo/Dati/LichessDatasets/lichess_db_eval.jsonl.zst"
-OUTPUT_BINARY = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp.bin"
+FULL_DATASET = DATA_DIR / "lichess_db_eval.jsonl.zst"
+OUTPUT_BINARY = DATA_DIR / "clean_db_halfkp.bin"
 
 SENTINEL = "END_OF_WORK"
-
-# Struttura Binaria HalfKP: 32 indici US (uint16) + 32 indici THEM (uint16) + 1 Target (float32)
-STRUCT_FORMAT = '<64Hf' 
-PAD_VAL = 40960 
-
-PIECE_MAP = {
-    'P': 0, 'N': 1, 'B': 2, 'R': 3, 'Q': 4,
-    'p': 5, 'n': 6, 'b': 7, 'r': 8, 'q': 9
-}
 
 # ==========================================
 # FILTRI DI PRE-ELABORAZIONE
@@ -86,78 +83,19 @@ def is_valid_position(data: dict, board: chess.Board) -> bool:
 # TRASFORMAZIONE IN HALFKP BINARIO
 # ==========================================
 def fen_to_halfkp_bytes(fen: str, cp: int) -> bytes:
-    PAD_VAL = 40960 
-    parts = fen.split(' ')
-    board_str = parts[0]
-    is_white_turn = (parts[1] == 'w')
-    
-    wk_sq, bk_sq = -1, -1
-    rank, file = 7, 0
-    pieces = []
-    
-    for char in board_str:
-        if char == '/':
-            rank -= 1
-            file = 0
-        elif char.isdigit():
-            file += int(char)
-        else:
-            sq = rank * 8 + file
-            if char == 'K': wk_sq = sq
-            elif char == 'k': bk_sq = sq
-            else: pieces.append((char, sq))
-            file += 1
-            
-    if wk_sq == -1 or bk_sq == -1 or len(pieces) > 30:
+    features = fen_to_features(fen)
+    if features is None:
         return b''
-        
-    white_perspectives = []
-    black_perspectives = []
-    
-    # Helper speculare a Constants.hpp
-    def get_p_idx(char, perspective_is_white):
-        is_piece_white = char.isupper()
-        pt_char = char.lower()
-        # 0=Pawn, 1=Knight, 2=Bishop, 3=Rook, 4=Queen
-        nnue_pt = {'p': 0, 'n': 1, 'b': 2, 'r': 3, 'q': 4}[pt_char]
-        relative_color = 0 if (is_piece_white == perspective_is_white) else 1
-        return nnue_pt * 2 + relative_color
+    us, them = features
 
-    for char, sq in pieces:
-        # --- PROSPETTIVA BIANCO ---
-        p_idx_w = get_p_idx(char, perspective_is_white=True)
-        w_idx = sq + p_idx_w * 64 + wk_sq * 640
-        white_perspectives.append(w_idx)
-        
-        # --- PROSPETTIVA NERO ---
-        p_idx_b = get_p_idx(char, perspective_is_white=False)
-        flipped_sq = sq ^ 56
-        flipped_bk_sq = bk_sq ^ 56
-        b_idx = flipped_sq + p_idx_b * 64 + flipped_bk_sq * 640
-        black_perspectives.append(b_idx)
-        
-    if is_white_turn:
-        us_indices = white_perspectives
-        them_indices = black_perspectives
-    else:
-        us_indices = black_perspectives
-        them_indices = white_perspectives
-            
-    while len(us_indices) < 32: us_indices.append(PAD_VAL)
-    while len(them_indices) < 32: them_indices.append(PAD_VAL)
-    
     # Il cp del dump Lichess è relativo al BIANCO, ma le feature HalfKP (us/them) sono
     # relative a chi deve muovere. Senza questo flip il target sarebbe invertito per ogni
     # posizione con il nero di turno (~metà del dataset) — bug confermato empiricamente:
     # correlazione quasi nulla (0.04) tra il materiale lato-di-mossa e il target originale.
-    if not is_white_turn:
+    if fen.split(' ')[1] != 'w':
         cp = -cp
 
-    # Sigmoide per il target CP (Standard per training NNUE), ora relativo a chi deve muovere
-    target = 1.0 / (1.0 + math.exp(-cp / 400.0))
-    
-    valori = us_indices + them_indices + [target]
-    return struct.pack('<64Hf', *valori)
+    return struct.pack('<64Hf', *us, *them, cp_to_target(cp))
 
 # ==========================================
 # PIPELINE MULTIPROCESSING

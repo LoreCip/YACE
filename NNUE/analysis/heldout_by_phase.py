@@ -1,41 +1,34 @@
 """
 Analisi approfondita del modello V3-6 sul VERO split di validazione (mai visto in training,
-stesso seed/metodo di trainingNNUE_HalfKP.py) — confronto con le valutazioni di Stockfish
+stesso seed/metodo di training/train.py) — confronto con le valutazioni di Stockfish
 (il target del dataset e' sigmoid(cp/400), dove cp viene dalle analisi Stockfish del dump
-Lichess, vedi cleanDataset.py). Stratifica l'errore per fase di gioco (materiale non-Re) e
+Lichess, vedi dataset/build_dataset.py). Stratifica l'errore per fase di gioco (materiale non-Re) e
 per quanto la posizione sia decisiva (|cp| del target), per capire DOVE la rete diverge di
 piu' dal giudizio di Stockfish, non solo di quanto in media.
 """
-import torch
+import sys
+from pathlib import Path
+
 import numpy as np
-import math
+import torch
 
-from NNUE import HalfKP_NNUE_QAT
-from testingNNUE_HalfKP import prob_to_cp_tensor
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, PAD_IDX, RUNS_DIR, load_dataset, validation_split
+from model import load_model, prob_to_cp, to_tensors
 
-WEIGHTS = "./run_v6/checkpoints/halfkp_epoch_18_final.pth"
-BIN_DATASET = "../data/clean_db_halfkp_balanced.bin"
-VAL_FRACTION = 0.02
-PAD_VAL = 40960
+WEIGHTS = RUNS_DIR / "run_v6/checkpoints/halfkp_epoch_18_final.pth"  # = nnue_weights_v3-6.bin
+BIN_DATASET = DATA_DIR / "clean_db_halfkp_balanced.bin"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Device: {device}")
 
-model = HalfKP_NNUE_QAT().to(device)
-checkpoint = torch.load(WEIGHTS, map_location=device, weights_only=False)
-state_dict = checkpoint.get("model_state_dict", checkpoint)
-clean_state_dict = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-model.load_state_dict(clean_state_dict)
-model.eval()
-
-struttura_dati = np.dtype([('us', np.uint16, 32), ('them', np.uint16, 32), ('target', np.float32)])
-dataset = np.memmap(BIN_DATASET, dtype=struttura_dati, mode='r')
+model = load_model(WEIGHTS, device)
+dataset = load_dataset(BIN_DATASET)
 num_positions = len(dataset)
 print(f"Dataset totale: {num_positions:,} posizioni.")
 
-rng = np.random.default_rng(42)
-num_val = int(num_positions * VAL_FRACTION)
-val_indices = rng.choice(num_positions, num_val, replace=False)
+val_indices = validation_split(num_positions)
+num_val = len(val_indices)
 print(f"Split di validazione (mai visto in training): {num_val:,} posizioni.")
 
 batch_size = 65536
@@ -49,18 +42,14 @@ with torch.no_grad():
         idx_sorted = np.sort(idx)  # letture sequenziali piu' veloci sul memmap
         raw = dataset[idx_sorted]
 
-        us = raw['us']
-        nonking = np.sum(us != PAD_VAL, axis=1)
-        all_nonking_pieces.append(nonking)
+        all_nonking_pieces.append(np.sum(raw['us'] != PAD_IDX, axis=1))
 
-        us_t = torch.from_numpy(us.astype(np.int64)).to(device)
-        them_t = torch.from_numpy(raw['them'].astype(np.int64)).to(device)
-        target_prob = torch.from_numpy(raw['target'].astype(np.float32)).to(device)
+        us_t, them_t, target_prob = to_tensors(raw, device)
 
         pred_prob = model(us_t, them_t).squeeze()
 
-        pred_cp = prob_to_cp_tensor(pred_prob)
-        target_cp = prob_to_cp_tensor(target_prob)
+        pred_cp = prob_to_cp(pred_prob)
+        target_cp = prob_to_cp(target_prob)
 
         all_pred_cp.append(pred_cp.cpu().numpy())
         all_target_cp.append(target_cp.cpu().numpy())
@@ -72,7 +61,7 @@ nonking_pieces = np.concatenate(all_nonking_pieces)
 err = pred_cp - target_cp
 abs_err = np.abs(err)
 # Nessuna scappatoia per i target esattamente 0.5 (cp=0, ~3.8% del dataset): stesso identico
-# criterio usato in trainingNNUE_HalfKP.py:evaluate_holdout (sign(pred-0.5)==sign(target-0.5)),
+# criterio usato in training/train.py:evaluate_holdout (sign(pred-0.5)==sign(target-0.5)),
 # equivalente a sign(pred_cp)==sign(target_cp) su float continui — un OR di "credito automatico"
 # per i pareggi esatti gonfiava artificialmente la sign accuracy di ~3.7 punti percentuali.
 sign_match = (np.sign(pred_cp) == np.sign(target_cp))

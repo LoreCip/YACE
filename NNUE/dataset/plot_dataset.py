@@ -1,7 +1,14 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+"""Statistiche e grafici di un dataset HalfKP (distribuzione dei target e dei pezzi)."""
 import os
+import sys
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, PAD_IDX, load_dataset
 
 def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
     if not os.path.exists(bin_path):
@@ -9,15 +16,7 @@ def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
         return
 
     print("--- 1. LETTURA DEL DATASET ---")
-    # Definiamo la struttura dati identica al tuo script di training
-    struttura_dati = np.dtype([
-        ('us', np.uint16, 32),    
-        ('them', np.uint16, 32),  
-        ('target', np.float32)   
-    ])
-    
-    # Mappatura in memoria
-    dataset = np.memmap(bin_path, dtype=struttura_dati, mode='r')
+    dataset = load_dataset(bin_path)
     num_positions = len(dataset)
     print(f"Posizioni totali nel file .bin: {num_positions:,}")
 
@@ -31,10 +30,9 @@ def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
     them_indices = sample['them']
 
     # --- 2. CALCOLO STATISTICHE SUI PEZZI ---
-    # Il padding_idx è 40960. Tutto ciò che è MINORE di 40960 è una feature attiva (un pezzo sulla scacchiera)
-    PADDING_VAL = 40960
-    pezzi_us = np.sum(us_indices < PADDING_VAL, axis=1)
-    pezzi_them = np.sum(them_indices < PADDING_VAL, axis=1)
+    # Ogni indice diverso dal padding e' un pezzo (non-re) sulla scacchiera
+    pezzi_us = np.sum(us_indices < PAD_IDX, axis=1)
+    pezzi_them = np.sum(them_indices < PAD_IDX, axis=1)
     totale_pezzi = pezzi_us
 
     print("\n--- 2. STATISTICHE DESCRITTIVE ---")
@@ -42,7 +40,7 @@ def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
     print(f"Pezzi Attivi Totali -> Min: {totale_pezzi.min()} | Max: {totale_pezzi.max()} | Media: {totale_pezzi.mean():.2f}")
 
     # --- 3. PLOTTING ---
-    print("\nGgenerazione dei grafici in corso...")
+    print("\nGenerazione dei grafici in corso...")
     sns.set_theme(style="whitegrid")
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     fig.suptitle(f"Analisi Dataset NNUE: {os.path.basename(bin_path)}", fontsize=18, fontweight='bold')
@@ -80,6 +78,5 @@ def analizza_dataset_nnue(bin_path, sample_size=1_000_000):
     plt.show()
 
 if __name__ == "__main__":
-    # PATH_FILE = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp.bin"
-    PATH_FILE = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin"
+    PATH_FILE = DATA_DIR / "clean_db_halfkp_balanced.bin"
     analizza_dataset_nnue(PATH_FILE)

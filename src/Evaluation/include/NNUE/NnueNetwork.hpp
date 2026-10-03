@@ -9,7 +9,7 @@
 #include <string>
 
 /*
-Formato del file pesi (scritto da NNUE/training/convertToWeights.py):
+Formato del file pesi (scritto da NNUE/training/export_weights.py):
 nessun header, little-endian, blocchi contigui in quest'ordine
     L0Bias  int16 [M]
     L0      int16 [NUM_FEATURES][M]   (256 neuroni contigui per feature)
@@ -35,14 +35,14 @@ public:
     static constexpr int SHIFT_L1 = 6;    // Bit-shift per de-quantizzare L1 (2^6 = 64)
     static constexpr int SHIFT_L2 = 6;    // Bit-shift per de-quantizzare L2 (2^6 = 64)
 
-    // Scala combinata reale dell'output L3 = SCALE_ACT * SCALE_W_OUT (127*127) in convertToWeights.py,
+    // Scala combinata reale dell'output L3 = SCALE_ACT * SCALE_W_OUT (127*127) in NNUE/training/export_weights.py,
     // NON 2^14 (16384): usare una divisione esatta, non uno shift, per evitare l'errore
     // sistematico del ~1.6% introdotto dall'approssimazione a potenza di 2.
     static constexpr int64_t OUTPUT_SCALE = 16129;
     // I "cp" del motore devono combaciare con la scala usata per generare il target di
-    // training: cleanDataset.py definisce target = sigmoid(cp / 400) (non /100!), quindi il
+    // training: NNUE/halfkp.py (cp_to_target) definisce target = sigmoid(cp / 400) (non /100!), quindi il
     // logit imparato dalla rete approssima cp/400, e va ri-scalato di conseguenza qui e in
-    // prob_to_cp()/prob_to_cp_tensor() in testingNNUE_HalfKP.py.
+    // prob_to_cp() in NNUE/model.py.
     static constexpr int64_t CP_SCALE = 400;
 
     // --- Pesi Quantizzati ---

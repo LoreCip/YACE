@@ -1,40 +1,42 @@
 """
-Scompone la debolezza negli 'finali avanzati' (<6 pezzi non-Re) trovata da analyzeHeldout.py
+Scompone la debolezza negli 'finali avanzati' (<6 pezzi non-Re) trovata da heldout_by_phase.py
 per TIPO di materiale (pedoni, torri, pezzi minori, donne) — per capire ESATTAMENTE cosa
 manca alla rete, non solo che il fenomeno esiste.
 
 Decodifica il tipo di pezzo direttamente dagli indici HalfKP in 'us' (stessa formula di
-MakeFeatureIndex in C++ / get_p_idx in testingNNUE_HalfKP.py):
+MakeFeatureIndex in C++ / halfkp.feature_index):
     idx = square + (pIdx + kingSq*10) * 64
     pIdx = nnuePt*2 + relColor      (nnuePt: 0=pedone,1=cavallo,2=alfiere,3=torre,4=donna)
 """
-import torch
+import sys
+from pathlib import Path
+
 import numpy as np
+import torch
 
-from NNUE import HalfKP_NNUE_QAT
-from testingNNUE_HalfKP import prob_to_cp_tensor
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, PAD_IDX, RUNS_DIR, decode_feature, load_dataset, validation_split
+from model import load_model, prob_to_cp, to_tensors
 
-WEIGHTS = "./run_v6/checkpoints/halfkp_epoch_18_final.pth"
-BIN_DATASET = "../data/clean_db_halfkp_balanced.bin"
-VAL_FRACTION = 0.02
-PAD_VAL = 40960
-PIECE_NAMES = ["Pedone", "Cavallo", "Alfiere", "Torre", "Donna"]
+WEIGHTS = RUNS_DIR / "run_v6/checkpoints/halfkp_epoch_18_final.pth"  # = nnue_weights_v3-6.bin
+BIN_DATASET = DATA_DIR / "clean_db_halfkp_balanced.bin"
+
+
+def piece_type_counts(us):
+    """[N, 5] numero di pezzi per tipo (pedone..donna, entrambi i colori) dagli indici 'us'."""
+    _, piece_type, _, _ = decode_feature(us.astype(np.int64))
+    piece_type = np.where(us != PAD_IDX, piece_type, -1)
+    return np.stack([np.sum(piece_type == pt, axis=1) for pt in range(5)], axis=1).astype(np.int32)
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = HalfKP_NNUE_QAT().to(device)
-checkpoint = torch.load(WEIGHTS, map_location=device, weights_only=False)
-state_dict = checkpoint.get("model_state_dict", checkpoint)
-clean_state_dict = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-model.load_state_dict(clean_state_dict)
-model.eval()
-
-struttura_dati = np.dtype([('us', np.uint16, 32), ('them', np.uint16, 32), ('target', np.float32)])
-dataset = np.memmap(BIN_DATASET, dtype=struttura_dati, mode='r')
+model = load_model(WEIGHTS, device)
+dataset = load_dataset(BIN_DATASET)
 num_positions = len(dataset)
 
-rng = np.random.default_rng(42)
-num_val = int(num_positions * VAL_FRACTION)
-val_indices = np.sort(rng.choice(num_positions, num_val, replace=False))
+rng = np.random.default_rng(42)  # condiviso con il campione di training piu' sotto
+val_indices = np.sort(validation_split(num_positions, rng))
+num_val = len(val_indices)
 
 batch_size = 65536
 all_pred_cp, all_target_cp = [], []
@@ -44,24 +46,13 @@ with torch.no_grad():
     for i in range(0, num_val, batch_size):
         idx = val_indices[i:i + batch_size]
         raw = dataset[idx]
-        us = raw['us']
+        all_piece_counts.append(piece_type_counts(raw['us']))
 
-        active = (us != PAD_VAL)
-        p_idx = (us // 64) % 10          # pIdx = nnuePt*2 + relColor
-        nnue_pt = np.where(active, p_idx // 2, -1)  # -1 per gli slot PAD
-
-        counts = np.zeros((len(us), 5), dtype=np.int32)
-        for pt in range(5):
-            counts[:, pt] = np.sum(nnue_pt == pt, axis=1)
-        all_piece_counts.append(counts)
-
-        us_t = torch.from_numpy(us.astype(np.int64)).to(device)
-        them_t = torch.from_numpy(raw['them'].astype(np.int64)).to(device)
-        target_prob = torch.from_numpy(raw['target'].astype(np.float32)).to(device)
+        us_t, them_t, target_prob = to_tensors(raw, device)
         pred_prob = model(us_t, them_t).squeeze()
 
-        all_pred_cp.append(prob_to_cp_tensor(pred_prob).cpu().numpy())
-        all_target_cp.append(prob_to_cp_tensor(target_prob).cpu().numpy())
+        all_pred_cp.append(prob_to_cp(pred_prob).cpu().numpy())
+        all_target_cp.append(prob_to_cp(target_prob).cpu().numpy())
 
 pred_cp = np.concatenate(all_pred_cp)
 target_cp = np.concatenate(all_target_cp)
@@ -111,14 +102,7 @@ sample_idx = np.sort(rng.choice(num_positions, 3_000_000, replace=False))
 big_pawn = big_minor = big_rook = big_queen = big_kk = 0
 for i in range(0, len(sample_idx), batch_size):
     idx = sample_idx[i:i + batch_size]
-    raw = dataset[idx]
-    us = raw['us']
-    active = (us != PAD_VAL)
-    p_idx = (us // 64) % 10
-    nnue_pt = np.where(active, p_idx // 2, -1)
-    counts = np.zeros((len(us), 5), dtype=np.int32)
-    for pt in range(5):
-        counts[:, pt] = np.sum(nnue_pt == pt, axis=1)
+    counts = piece_type_counts(dataset[idx]['us'])
     tot = counts.sum(axis=1)
     sp = tot < 6
     pawn_, knight_, bishop_, rook_, queen_ = (counts[:, k] for k in range(5))

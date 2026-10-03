@@ -1,7 +1,16 @@
-import torch
-import numpy as np
+"""Checkpoint di training (.pth) → pesi quantizzati per il motore C++ (formato in NnueNetwork.hpp).
 
-from NNUE import SCALE_ACT, SCALE_W_L1, SCALE_W_L2, SCALE_W_OUT
+Uso: python training/export_weights.py <checkpoint.pth> <pesi.bin>
+"""
+import sys
+from pathlib import Path
+
+import numpy as np
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import NUM_FEATURES
+from model import SCALE_ACT, SCALE_W_L1, SCALE_W_L2, SCALE_W_OUT
 
 def export_to_cpp_binary(pth_path, bin_path):
     print(f"Caricamento pesi da: {pth_path}")
@@ -20,7 +29,7 @@ def export_to_cpp_binary(pth_path, bin_path):
     # scala 255 fa sì che il clamp a 127 corrisponda a un valore vero di ~0.498 invece di
     # 1.0 (quello usato dal clipped_relu in training) — un troncamento indebito confermato
     # empiricamente su circa il 5% delle attivazioni dell'accumulatore.
-    l0_weight_float = clean_state_dict['accumulator.weight'][:40960, :].numpy()
+    l0_weight_float = clean_state_dict['accumulator.weight'][:NUM_FEATURES, :].numpy()
     l0_bias_float   = clean_state_dict['accumulator_bias'].numpy()
 
     L0      = np.clip(np.round(l0_weight_float * SCALE_ACT), -32768, 32767).astype(np.int16)
@@ -80,8 +89,6 @@ def export_to_cpp_binary(pth_path, bin_path):
         f.write(L3.tobytes())
 
 if __name__ == "__main__":
-    # Inserisci i tuoi percorsi
-    PTH_FILE = "./checkpoints/halfkp_epoch_35_final.pth"
-    BASE_PATH = "../../parameters/weights/"
-    BIN_FILE = BASE_PATH + "nnue_weights_v3.bin"
-    export_to_cpp_binary(PTH_FILE, BIN_FILE)
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    export_to_cpp_binary(sys.argv[1], sys.argv[2])

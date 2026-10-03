@@ -1,14 +1,15 @@
-import numpy as np
+"""Bilancia (sfoltisce patte e posizioni affollate) e rimescola il dataset HalfKP."""
 import os
 import shutil
+import sys
+from pathlib import Path
+
+import numpy as np
 from tqdm import tqdm
 
-STRUTTURA_DATI = np.dtype([
-    ('us', np.uint16, 32),
-    ('them', np.uint16, 32),
-    ('target', np.float32)
-])
-PADDING_VAL = 40960
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # moduli condivisi in NNUE/
+from halfkp import DATA_DIR, DATASET_DTYPE, PAD_IDX
+
 N_SHARDS = 64
 
 
@@ -17,7 +18,7 @@ def bilancia_dataset_nnue(input_path, output_path, chunk_size=5_000_000, shard_d
         print(f"Errore: Il file {input_path} non esiste.")
         return
 
-    bytes_per_row = STRUTTURA_DATI.itemsize
+    bytes_per_row = DATASET_DTYPE.itemsize
     file_size_bytes = os.path.getsize(input_path)
     total_positions = file_size_bytes // bytes_per_row
     num_chunks = int(np.ceil(total_positions / chunk_size))
@@ -51,7 +52,7 @@ def bilancia_dataset_nnue(input_path, output_path, chunk_size=5_000_000, shard_d
     posizioni_lette = 0
     posizioni_scritte = 0
 
-    dataset_in = np.memmap(input_path, dtype=STRUTTURA_DATI, mode='r')
+    dataset_in = np.memmap(input_path, dtype=DATASET_DTYPE, mode='r')
     shard_paths = [os.path.join(shard_dir, f"shard_{s:02d}.bin") for s in range(N_SHARDS)]
     shard_files = [open(p, 'ab') for p in shard_paths]
 
@@ -63,7 +64,7 @@ def bilancia_dataset_nnue(input_path, output_path, chunk_size=5_000_000, shard_d
             chunk = np.array(dataset_in[start_idx:end_idx])
 
             targets = chunk['target']
-            pezzi_attivi = np.sum(chunk['us'] < PADDING_VAL, axis=1)
+            pezzi_attivi = np.sum(chunk['us'] < PAD_IDX, axis=1)
 
             keep_probs = np.ones(len(chunk), dtype=np.float32)
 
@@ -121,7 +122,7 @@ def bilancia_dataset_nnue(input_path, output_path, chunk_size=5_000_000, shard_d
     righe_finali = 0
     with open(tmp_output_path, 'wb') as f_out:
         for shard_path in tqdm(shard_paths, desc="Passo 2/2: shuffle finale degli shard"):
-            shard_data = np.fromfile(shard_path, dtype=STRUTTURA_DATI)
+            shard_data = np.fromfile(shard_path, dtype=DATASET_DTYPE)
             if len(shard_data) == 0:
                 continue
             perm = np.random.permutation(len(shard_data))
@@ -155,7 +156,7 @@ def bilancia_dataset_nnue(input_path, output_path, chunk_size=5_000_000, shard_d
 
 
 if __name__ == "__main__":
-    INPUT_BIN = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp.bin"
-    OUTPUT_BIN = "/home/lorenzo/Scrivania/Projects/YACE/NNUE/data/clean_db_halfkp_balanced.bin"
+    INPUT_BIN = str(DATA_DIR / "clean_db_halfkp.bin")
+    OUTPUT_BIN = str(DATA_DIR / "clean_db_halfkp_balanced.bin")
 
     bilancia_dataset_nnue(INPUT_BIN, OUTPUT_BIN)

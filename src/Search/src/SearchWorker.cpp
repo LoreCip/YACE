@@ -300,7 +300,7 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
         if (board.MakeMove(move)) {
             evaluator->OnMakeMove(board, move);
 
-            int score = -QuiescenceSearch(-beta, -alpha, ply);
+            int score = -QuiescenceSearch(-beta, -alpha, ply + 1);
             
             evaluator->OnUnmakeMove();
             board.UnmakeMove(move);

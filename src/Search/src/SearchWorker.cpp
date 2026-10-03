@@ -271,12 +271,18 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
     }
     if (alpha < stand_pat) alpha = stand_pat;
 
-    /********** DELTA PRUNING ***************/
-    const int DELTA_MARGIN = 90000 + 2000; 
-    if (stand_pat + DELTA_MARGIN < alpha) {
+    // Delta pruning: se nemmeno catturare una donna (+ margine, + una promozione se c'e' un
+    // pedone in settima) porterebbe ad alpha, nessuna cattura salvera' questo nodo.
+    const int* values = Evaluation::pieceValues;
+    int delta = values[PieceInt(PieceType::QUEEN)] + 200;
+    Color us = board.GetSideToMove();
+    uint64_t seventhRank = (us == Color::WHITE) ? 0x00FF000000000000ULL : 0x000000000000FF00ULL;
+    if (board.GetBitBoard(us, PieceType::PAWN) & seventhRank) {
+        delta += values[PieceInt(PieceType::QUEEN)] - values[PieceInt(PieceType::PAWN)];
+    }
+    if (stand_pat + delta < alpha) {
         return alpha;
     }
-    /****************************************/
 
     MoveList moveList;
     MoveGen::GenerateCaptureMoves(board, moveList);

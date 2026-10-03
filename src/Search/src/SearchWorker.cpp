@@ -271,14 +271,16 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
     }
     if (alpha < stand_pat) alpha = stand_pat;
 
-    // Delta pruning: se nemmeno catturare una donna (+ margine, + una promozione se c'e' un
-    // pedone in settima) porterebbe ad alpha, nessuna cattura salvera' questo nodo.
+    // Delta pruning (nodo): se nemmeno catturare una donna (+ margine, + una promozione se c'e'
+    // un pedone in settima) porterebbe ad alpha, nessuna cattura salvera' questo nodo.
+    const int DELTA_MARGIN = 200;
     const int* values = Evaluation::pieceValues;
-    int delta = values[PieceInt(PieceType::QUEEN)] + 200;
+    int promotionGain = values[PieceInt(PieceType::QUEEN)] - values[PieceInt(PieceType::PAWN)];
+    int delta = values[PieceInt(PieceType::QUEEN)] + DELTA_MARGIN;
     Color us = board.GetSideToMove();
     uint64_t seventhRank = (us == Color::WHITE) ? 0x00FF000000000000ULL : 0x000000000000FF00ULL;
     if (board.GetBitBoard(us, PieceType::PAWN) & seventhRank) {
-        delta += values[PieceInt(PieceType::QUEEN)] - values[PieceInt(PieceType::PAWN)];
+        delta += promotionGain;
     }
     if (stand_pat + delta < alpha) {
         return alpha;
@@ -299,10 +301,17 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
         if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
         Move move = scoredMoves[i].move;
 
-        if (!SEE(move, 0)) {
-            continue; 
-        }
-                   
+        // Delta pruning (mossa): anche guadagnando tutta la vittima (+ promozione) + margine
+        // si resta sotto alpha → la cattura non puo' migliorare il nodo.
+        int flags = getMoveFlags(move);
+        int gain = 0;
+        if (isEnPassantFlag(flags)) gain = values[PieceInt(PieceType::PAWN)];
+        else if (isCaptureFlag(flags)) gain = values[PieceInt(board.GetPieceOnSquare(getMoveTo(move)))];
+        if (promotionPieceFromFlags(flags) != PieceType::NONE) gain += promotionGain;
+        if (stand_pat + gain + DELTA_MARGIN < alpha) continue;
+
+        if (!SEE(move, 0)) continue;
+
         if (board.MakeMove(move)) {
             evaluator->OnMakeMove(board, move);
 

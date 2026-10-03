@@ -1,4 +1,5 @@
 #include "Uci.hpp"
+#include "MoveGenerator.hpp"
 #include <iostream>
 #include <iomanip>
 #include <cstdint>
@@ -31,26 +32,22 @@ namespace UCI {
         std::cout << "id author LoreChip\n";
     }
 
-    void ReportSearchInfo(int depth, int selDepth, int score, 
-                          double timeMs, long long nodes, long long nps, 
-                          int hashFull, const std::string& pvMove,
-                          double moveOrdering, long long ttHits, long long qNodes) {
-        
+    static void ReportSearchInfo(int depth, int score, const SearchStats& stats, Move bestMove) {
         std::cout << "info "
                   << "depth " << depth << " "
-                  << "seldepth " << selDepth << " "
-                  << "score cp " << score << " " 
-                  << "time " << timeMs << " "
-                  << "nodes " << nodes << " "
-                  << "nps " << nps << " "
-                  << "hashfull " << hashFull << " " 
-                  << "pv " << pvMove 
+                  << "seldepth " << stats.selDepthReached << " "
+                  << "score cp " << score << " "
+                  << "time " << static_cast<long long>(stats.lastMoveTimeMs) << " "
+                  << "nodes " << stats.GetTotalNodes() << " "
+                  << "nps " << stats.GetNPS() << " "
+                  << "hashfull " << static_cast<int>(stats.hashFullness * 10) << " "
+                  << "pv " << MoveToString(bestMove)
                   << "\n";
-                  
+
         std::cout << "info string "
-                  << "MoveOrder: " << std::fixed << std::setprecision(1) << moveOrdering << "% | "
-                  << "TTHits: " << ttHits << " | "
-                  << "QNodes: " << qNodes
+                  << "MoveOrder: " << std::fixed << std::setprecision(1) << stats.GetMoveOrderingQuality() << "% | "
+                  << "TTHits: " << stats.ttHits << " | "
+                  << "QNodes: " << stats.qNodesEvaluated
                   << "\n" << std::flush;
     }
 
@@ -58,15 +55,8 @@ namespace UCI {
         std::cout << "info string " << message << "\n" << std::flush;
     }
 
-    void Loop(Board& board, GoCallback onGoCommand, PositionLoadedCallback onPositionLoaded, MoveMadeCallback onMoveMade) {
+    void Loop(Board& board, GoCallback onGoCommand, PositionLoadedCallback onPositionLoaded) {
         std::string token;
-        
-        LoggerCallback uciLogger = [](int depth, int selDepth, int score, 
-                                      long long timeMs, long long nodes, long long nps, 
-                                      int hashFull, const std::string& pvMove,
-                                      double moveOrdering, long long ttHits, long long qNodes) {
-            ReportSearchInfo(depth, selDepth, score, timeMs, nodes, nps, hashFull, pvMove, moveOrdering, ttHits, qNodes);
-        };
 
         while (std::cin >> token) {
             if (token == "quit") {
@@ -106,11 +96,8 @@ namespace UCI {
                 int targetDepth = (depth != -1) ? depth : 100;
 
                 if (onGoCommand) {
-                    Move best = onGoCommand(targetDepth, allocatedTimeMs, uciLogger);
-                    
-                    if (best != 0 && board.MakeMove(best)) {
-                        if (onMoveMade) onMoveMade(best);
-                    }
+                    Move best = onGoCommand(targetDepth, allocatedTimeMs, ReportSearchInfo);
+                    if (best != 0) board.MakeMove(best);
 
                     std::cout << "bestmove " << MoveToString(best) << "\n";
                     std::cout.flush();     
@@ -143,11 +130,10 @@ namespace UCI {
 
                     long long lastNodes = 0, lastTimeMs = 0;
                     int lastScore = 0;
-                    LoggerCallback capture = [&](int, int, int score, long long timeMs, long long nodes,
-                                                 long long, int, const std::string&, double, long long, long long) {
+                    InfoReporter capture = [&](int, int score, const SearchStats& stats, Move) {
                         lastScore = score;
-                        lastNodes = nodes;
-                        lastTimeMs = timeMs;
+                        lastNodes = stats.GetTotalNodes();
+                        lastTimeMs = static_cast<long long>(stats.lastMoveTimeMs);
                     };
                     Move best = onGoCommand ? onGoCommand(depth, 99999999.0, capture) : 0;
 
@@ -173,14 +159,10 @@ namespace UCI {
                 std::string actualMove;
                 std::cin >> actualMove;
                 Move parsedMove = StringToMove(board, actualMove);
-                if (parsedMove != 0) {
-                    if (board.MakeMove(parsedMove)) {
-                        if (onMoveMade) onMoveMade(parsedMove);
-                    } else {
-                        ReportDebugString("illegal move");
-                    }
-                } else {
-                    ReportDebugString("format not valid: " + actualMove);
+                if (parsedMove == 0) {
+                    ReportDebugString("move not valid: " + actualMove);
+                } else if (!board.MakeMove(parsedMove)) {
+                    ReportDebugString("illegal move");
                 }
             } else {
                 ReportDebugString("command not recognised, no action taken");
@@ -215,69 +197,11 @@ namespace UCI {
     }
 
     Move StringToMove(const Board& board, const std::string& moveStr) {
-        if (moveStr.length() < 4 || moveStr.length() > 5) return 0; 
-        if (moveStr[0] < 'a' || moveStr[0] > 'h' || moveStr[2] < 'a' || moveStr[2] > 'h') return 0;
-        if (moveStr[1] < '1' || moveStr[1] > '8' || moveStr[3] < '1' || moveStr[3] > '8') return 0;
-
-        int fromFile = moveStr[0] - 'a'; // 'a' -> 0, 'h' -> 7
-        int fromRank = moveStr[1] - '1'; // '1' -> 0, '8' -> 7
-        int toFile   = moveStr[2] - 'a';
-        int toRank   = moveStr[3] - '1';
-
-        int from = fromRank * 8 + fromFile;
-        int to   = toRank * 8 + toFile;
-
-        Color us = board.GetSideToMove();
-        Color them = !us;
-
-        PieceType movingPiece = PieceType::NONE;
-        for (const auto piece : Pieces::All) {
-            if (getBit(board.GetBitBoard(us, piece), from)) {
-                movingPiece = piece;
-                break;
-            }
+        MoveList moveList;
+        MoveGen::GenerateAllMoves(board, moveList);
+        for (int i = 0; i < moveList.count; i++) {
+            if (MoveToString(moveList.moves[i]) == moveStr) return moveList.moves[i];
         }
-
-        bool isCapture = getBit(board.GetColorOccupation(them), to);
-
-        int flag = FlagMap::MOVE;
-
-        if (movingPiece == PieceType::PAWN) {
-            if (std::abs(to - from) == 16) {
-                flag = FlagMap::DMOVE;
-            }
-            else if (fromFile != toFile && !isCapture) {
-                flag = FlagMap::ENPASS;
-            }
-            else if (moveStr.length() == 5) {
-                char promo = moveStr[4];
-                if (isCapture) {
-                    if (promo == 'q') flag = FlagMap::PRCAPQUEEN;
-                    else if (promo == 'r') flag = FlagMap::PRCAPROOK;
-                    else if (promo == 'b') flag = FlagMap::PRCAPBISHOP;
-                    else if (promo == 'n') flag = FlagMap::PRCAPKNIGHT;
-                } else {
-                    if (promo == 'q') flag = FlagMap::PRQUEEN;
-                    else if (promo == 'r') flag = FlagMap::PRROOK;
-                    else if (promo == 'b') flag = FlagMap::PRBISHOP;
-                    else if (promo == 'n') flag = FlagMap::PRKNIGHT;
-                }
-            } 
-            else if (isCapture) {
-                flag = FlagMap::CAPTURE;
-            }
-        } 
-        else if (movingPiece == PieceType::KING) {
-            if (std::abs(fromFile - toFile) == 2) {
-                flag = FlagMap::CASTLING;
-            } else if (isCapture) {
-                flag = FlagMap::CAPTURE;
-            }
-        }
-        else if (isCapture) {
-            flag = FlagMap::CAPTURE;
-        }
-
-        return createMove(from, to, flag);
+        return 0;
     }
 }

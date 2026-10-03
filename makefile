@@ -26,7 +26,7 @@ ENGINE_OBJS = $(ENGINE_SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
 
 all: $(TARGET_GAME) $(TARGET_FEN)
 
-$(TARGET_GAME): $(ENGINE_OBJS) $(OBJ_DIR)/App/main_game.o
+$(TARGET_GAME): $(ENGINE_OBJS) $(OBJ_DIR)/App/main_game.o $(OBJ_DIR)/App/Uci.o
 $(TARGET_FEN):  $(ENGINE_OBJS) $(OBJ_DIR)/App/main_fen.o
 
 # Solo il perft (main_fen) usa OpenMP
@@ -43,7 +43,7 @@ $(OBJ_DIR)/%.o: src/%.cpp
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
--include $(ENGINE_OBJS:.o=.d) $(OBJ_DIR)/App/main_game.d $(OBJ_DIR)/App/main_fen.d
+-include $(ENGINE_OBJS:.o=.d) $(OBJ_DIR)/App/main_game.d $(OBJ_DIR)/App/Uci.d $(OBJ_DIR)/App/main_fen.d
 
 clean:
 	rm -rf build

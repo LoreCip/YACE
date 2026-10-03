@@ -7,7 +7,6 @@
 #include "ClassicalEvaluator.hpp"
 #include "Evaluation.hpp"
 #include "LookupTables.hpp"
-#include "MoveGenerator.hpp"
 #include "NnueEvaluator.hpp"
 #include "SearchManager.hpp"
 #include "Uci.hpp"
@@ -60,19 +59,6 @@ bool ParseArgs(int argc, char **argv, EngineOptions &options) {
   return true;
 }
 
-// Builds and initializes the evaluator used for the main/root search thread.
-// `sharedNetwork` is null when evalType != "nnue"; otherwise it must already be loaded
-// (see main(): the network is loaded exactly once and shared with MakeEvaluatorFactory).
-std::unique_ptr<IEvaluator> CreateRootEvaluator(
-    const EngineOptions &options,
-    const std::shared_ptr<const NnueNetwork> &sharedNetwork) {
-  if (options.evalType != "nnue") {
-    UCI::ReportDebugString("Valutazione Classica (HCE).");
-    return std::make_unique<ClassicalEvaluator>();
-  }
-  return std::make_unique<NnueEvaluator>(sharedNetwork);
-}
-
 // Factory handed to SearchManager so each search thread gets its own evaluator
 // instance — but ALL instances share the same read-only NnueNetwork (`sharedNetwork`),
 // instead of each thread re-reading the ~21MB weights file from disk and holding its own
@@ -86,19 +72,6 @@ EvaluatorFactory MakeEvaluatorFactory(const EngineOptions &options,
       return std::make_unique<ClassicalEvaluator>();
     }
     return std::make_unique<NnueEvaluator>(sharedNetwork);
-  };
-}
-
-// Wraps the search's raw stats into the shape UCI::LoggerCallback expects.
-InfoReporter MakeUciInfoReporter(UCI::LoggerCallback uciLogger) {
-  return [uciLogger](int depth, int score, const SearchStats &stats,
-                     Move bestMove) {
-    std::string moveStr = UCI::MoveToString(bestMove);
-    uciLogger(depth, stats.selDepthReached, score, stats.lastMoveTimeMs,
-              stats.GetTotalNodes(), stats.GetNPS(),
-              static_cast<int>(stats.hashFullness * 10), moveStr,
-              stats.GetMoveOrderingQuality(), stats.ttHits,
-              stats.qNodesEvaluated);
   };
 }
 
@@ -120,7 +93,7 @@ int main(int argc, char **argv) {
   LookupTables::init();
   board->InitializeBoard();
 
-  // Caricata UNA volta e condivisa (root + tutti i thread di ricerca) invece di essere
+  // Caricata UNA volta e condivisa da tutti i thread di ricerca invece di essere
   // riletta da disco e duplicata per ogni thread a ogni `go` (vedi MakeEvaluatorFactory).
   std::shared_ptr<const NnueNetwork> sharedNetwork;
   if (options.evalType == "nnue") {
@@ -130,11 +103,9 @@ int main(int argc, char **argv) {
       return 1;
     }
     UCI::ReportDebugString("NNUE caricata con successo.");
+  } else {
+    UCI::ReportDebugString("Valutazione Classica (HCE).");
   }
-
-  std::unique_ptr<IEvaluator> rootEvaluator =
-      CreateRootEvaluator(options, sharedNetwork);
-  rootEvaluator->Reset(*board);
 
   UCI::ReportDebugString("Avvio motore con " +
                          std::to_string(options.numThreads) + " threads e " +
@@ -142,26 +113,16 @@ int main(int argc, char **argv) {
   SearchManager searchManager(options.ttSizeMb, options.numThreads,
                               MakeEvaluatorFactory(options, sharedNetwork));
 
-  // --- Callbacks UCI ---
-  // Reset dell'accumulatore NNUE E svuotamento della TT: necessario per il comando `bench`
-  // (misure riproducibili, indipendenti dall'ordine delle posizioni), innocuo per `fen` normale.
-  auto handlePositionLoaded = [&]() {
-    rootEvaluator->Reset(*board);
-    searchManager.ClearTT();
-  };
-
-  auto handleMoveMade = [&](Move move) {
-    rootEvaluator->OnMakeMove(*board, move);
-  };
+  // Svuotare la TT a ogni nuova posizione rende `bench` riproducibile (indipendente
+  // dall'ordine delle posizioni); innocuo per un `fen` normale.
+  auto handlePositionLoaded = [&]() { searchManager.ClearTT(); };
 
   auto handleGoCommand = [&](int targetDepth, double allocatedTimeMs,
-                             UCI::LoggerCallback uciLogger) -> Move {
-    InfoReporter engineReporter = MakeUciInfoReporter(uciLogger);
-    return searchManager.Search(*board, targetDepth, allocatedTimeMs,
-                                engineReporter);
+                             InfoReporter reporter) -> Move {
+    return searchManager.Search(*board, targetDepth, allocatedTimeMs, reporter);
   };
 
-  UCI::Loop(*board, handleGoCommand, handlePositionLoaded, handleMoveMade);
+  UCI::Loop(*board, handleGoCommand, handlePositionLoaded);
 
   return 0;
 }

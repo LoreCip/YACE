@@ -193,7 +193,7 @@ def run_statistical_analysis(weights_path, bin_path, num_samples=500_000, batch_
     plt.show()
 
 if __name__ == "__main__":
-    WEIGHTS = "./checkpoints/halfkp_epoch_38_final.pth" 
+    WEIGHTS = "./run_v6/checkpoints/halfkp_epoch_18_final.pth"  # modello V3-6 spedito (2338 Elo)
     BIN_DATASET = "../data/clean_db_halfkp_balanced.bin"
-    
-    run_statistical_analysis(WEIGHTS, BIN_DATASET, num_samples=15_000_000)
+
+    run_statistical_analysis(WEIGHTS, BIN_DATASET, num_samples=5_000_000)

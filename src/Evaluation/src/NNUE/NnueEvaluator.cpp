@@ -169,7 +169,7 @@ void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPie
     Color them = !us;
 
     bool isKingMove = (movedPiece == PieceType::KING);
-    PieceType promoPiece = getMovePromotionPiece(flags);
+    PieceType promoPiece = promotionPieceFromFlags(flags);
 
     int actualCaptureSq = to;
     if (flags == FlagMap::ENPASS) {

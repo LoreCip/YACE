@@ -41,23 +41,28 @@ enum FlagMap {
     PRCAPQUEEN   // Capture + Promotion to queen
 };
 
-inline PieceType getMovePromotionPiece(int flags) {
+// Le funzioni seguenti prendono i FLAG (getMoveFlags(move)), non la mossa intera.
+inline PieceType promotionPieceFromFlags(int flags) {
     switch (flags) {
         case FlagMap::PRKNIGHT: case FlagMap::PRCAPKNIGHT:
             return PieceType::KNIGHT;
         case FlagMap::PRBISHOP: case FlagMap::PRCAPBISHOP:
             return PieceType::BISHOP;
         case FlagMap::PRROOK: case FlagMap::PRCAPROOK:
-            return PieceType::ROOK;  
+            return PieceType::ROOK;
         case FlagMap::PRQUEEN: case FlagMap::PRCAPQUEEN:
-            return PieceType::QUEEN; 
+            return PieceType::QUEEN;
         default:
             return PieceType::NONE;   // Not a promotion Move
     }
 }
-inline PieceType getMovePromotionPiece(Move move) {
-    int flags = getMoveFlags(move);
-    return getMovePromotionPiece(flags);
+
+inline bool isEnPassantFlag(int flags) {
+    return flags == FlagMap::ENPASS;
+}
+
+inline bool isCaptureFlag(int flags) {
+    return flags == FlagMap::CAPTURE || flags >= FlagMap::PRCAPBISHOP;
 }
 
 // Arrocco: case di partenza/arrivo della torre, dato l'arrivo del re (g1/c1/g8/c8).
@@ -65,26 +70,6 @@ inline void castlingRookSquares(int kingTo, int& rookFrom, int& rookTo) {
     bool kingSide = (kingTo % 8 == 6);
     rookFrom = kingSide ? kingTo + 1 : kingTo - 2;
     rookTo   = kingSide ? kingTo - 1 : kingTo + 1;
-}
-
-inline bool isMovePromotion(Move move) {
-    return getMoveFlags(move) >= FlagMap::PRBISHOP;
-}
-
-inline bool isMoveEnPassant(int flags) {
-    return flags == FlagMap::ENPASS;
-}
-inline bool isMoveEnPassant(Move move) {
-    int flags = getMoveFlags(move);
-    return isMoveEnPassant(flags);
-}
-
-inline bool isMoveCapture(int flags) {
-    return flags == FlagMap::CAPTURE || flags >= FlagMap::PRCAPBISHOP;
-}
-inline bool isMoveCapture(Move move) {
-    int flags = getMoveFlags(move);
-    return isMoveCapture(flags);
 }
 
 #endif

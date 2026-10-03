@@ -48,13 +48,6 @@ uint64_t PerftParallel(Board& rootBoard, int depth) {
     return totalNodes;
 }
 
-bool assertUint64ArrayEqual(uint64_t* a, uint64_t* b, int len) {
-    for (int i = 0; i < len; i++) {
-        if (a[i] != b[i]) return false;
-    }
-    return true;
-}
-
 int main() {
     LookupTables::init();
     Board gameBoard;
@@ -85,25 +78,18 @@ int main() {
     int failedTestsCount = 0;
 
     for (size_t f = 0; f < fenList.size(); f++) {
-        std::string currentFen = fenList[f];
-        std::cout << "Testando FEN [" << f << "]: " << currentFen << std::endl;
+        std::cout << "Testando FEN [" << f << "]: " << fenList[f] << std::endl;
+        gameBoard.InitializeFromFEN(fenList[f]);
 
-        gameBoard.InitializeFromFEN(currentFen);
-
-        int maxDepths = truthTable[f].size();
-        std::vector<uint64_t> currentCounts(maxDepths, 0);
-        std::vector<uint64_t> expectedCounts(maxDepths, 0);
-
-        for (int i = 0; i < maxDepths; i++) {
-            int targetDepth = i + 1;
-            currentCounts[i] = PerftParallel(gameBoard, targetDepth);
-            expectedCounts[i] = truthTable[f][i];
-            
-            std::cout << "  > Depth " << targetDepth << " -> Risultato: " << currentCounts[i] 
-                      << " | Atteso: " << expectedCounts[i] << std::endl;
+        bool passed = true;
+        for (size_t d = 0; d < truthTable[f].size(); d++) {
+            uint64_t nodes = PerftParallel(gameBoard, d + 1);
+            passed &= (nodes == truthTable[f][d]);
+            std::cout << "  > Depth " << d + 1 << " -> Risultato: " << nodes
+                      << " | Atteso: " << truthTable[f][d] << std::endl;
         }
 
-        if (assertUint64ArrayEqual(currentCounts.data(), expectedCounts.data(), maxDepths)) {
+        if (passed) {
             std::cout << ">> STATO FEN [" << f << "]: PASSED\n" << std::endl;
         } else {
             std::cerr << ">> STATO FEN [" << f << "]: FAILED! Discrepanza nel conteggio dei nodi.\n" << std::endl;

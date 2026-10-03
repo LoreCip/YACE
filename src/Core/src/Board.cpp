@@ -84,10 +84,10 @@ bool Board::MakeMove(Move move) {
 
     // --- 2. Cattura ---
     PieceType capturedPieceType = PieceType::NONE;
-    if (isMoveEnPassant(flags)) {
+    if (isEnPassantFlag(flags)) {
         capturedPieceType = PieceType::PAWN;
         RemovePiece(them, PieceType::PAWN, EnPassantVictimSquare(to, us));
-    } else if (isMoveCapture(flags)) {
+    } else if (isCaptureFlag(flags)) {
         for (const auto piece : Pieces::All) {
             if (getBit(GetBitBoard(them, piece), to)) {
                 capturedPieceType = piece;
@@ -112,7 +112,7 @@ bool Board::MakeMove(Move move) {
     HashCastlingAndEnPassant();
 
     // --- 4. Pezzi ---
-    PieceType promoPiece = getMovePromotionPiece(flags);
+    PieceType promoPiece = promotionPieceFromFlags(flags);
     if (promoPiece != PieceType::NONE) {
         RemovePiece(us, pieceType, from);
         AddPiece(us, promoPiece, to);
@@ -187,7 +187,7 @@ void Board::UnmakeMove(Move move) {
     HashCastlingAndEnPassant();
 
     // Pezzi
-    PieceType promoPiece = getMovePromotionPiece(flags);
+    PieceType promoPiece = promotionPieceFromFlags(flags);
     if (promoPiece != PieceType::NONE) {
         RemovePiece(us, promoPiece, to);
         AddPiece(us, PieceType::PAWN, from);
@@ -196,7 +196,7 @@ void Board::UnmakeMove(Move move) {
     }
 
     if (lastState.capturedPiece != PieceType::NONE) {
-        int captureSquare = isMoveEnPassant(flags) ? EnPassantVictimSquare(to, us) : to;
+        int captureSquare = isEnPassantFlag(flags) ? EnPassantVictimSquare(to, us) : to;
         AddPiece(them, lastState.capturedPiece, captureSquare);
     }
 

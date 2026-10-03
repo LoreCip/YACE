@@ -176,22 +176,11 @@ namespace UCI {
         int from = getMoveFrom(move);
         int to = getMoveTo(move);
         
-        char fileFrom = 'a' + (from % 8);
-        char rankFrom = '1' + (from / 8);
-        char fileTo = 'a' + (to % 8);
-        char rankTo = '1' + (to / 8);
+        std::string moveStr = {char('a' + from % 8), char('1' + from / 8),
+                               char('a' + to % 8),   char('1' + to / 8)};
 
-        std::string moveStr = "";
-        moveStr += fileFrom; moveStr += rankFrom;
-        moveStr += fileTo; moveStr += rankTo;
-
-        if (isMovePromotion(move)) {
-            PieceType promo = getMovePromotionPiece(move);
-            if (promo == PieceType::QUEEN) moveStr += 'q';
-            else if (promo == PieceType::ROOK) moveStr += 'r';
-            else if (promo == PieceType::BISHOP) moveStr += 'b';
-            else if (promo == PieceType::KNIGHT) moveStr += 'n';
-        }
+        PieceType promo = promotionPieceFromFlags(getMoveFlags(move));
+        if (promo != PieceType::NONE) moveStr += PIECE_CHARS[PieceInt(promo)];
 
         return moveStr;
     }

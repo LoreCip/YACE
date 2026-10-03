@@ -13,9 +13,8 @@ inline uint64_t clearBit(uint64_t bitboard, int position){
     return bitboard & mask;
 }
 
-inline uint64_t getBit(uint64_t bitboard, int position){
-    uint64_t mask = (uint64_t)1 << position;
-    return (bitboard & mask) != 0;
+inline bool getBit(uint64_t bitboard, int position){
+    return (bitboard >> position) & 1;
 }
 
 #endif

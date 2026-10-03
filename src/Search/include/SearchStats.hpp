@@ -1,3 +1,6 @@
+#ifndef SEARCH_STATS_HPP
+#define SEARCH_STATS_HPP
+
 struct SearchStats {
     // Move
     long long nodesEvaluated = 0;
@@ -10,13 +13,6 @@ struct SearchStats {
     
     double lastMoveTimeMs = 0.0;
     double hashFullness = 0.0;
-
-    // Session
-    long long totalNodesSession = 0;
-    double totalTimeMs = 0.0;
-    double minTimeMs = 999999999.0;
-    double maxTimeMs = 0.0;
-    int movesPlayed = 0;
 
     void ResetForNewMove() {
         nodesEvaluated = 0;
@@ -44,3 +40,5 @@ struct SearchStats {
         return (static_cast<double>(firstMoveCutoffs) / betaCutoffs) * 100.0;
     }
 };
+
+#endif

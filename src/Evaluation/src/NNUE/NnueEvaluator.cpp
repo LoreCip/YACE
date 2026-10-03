@@ -12,27 +12,12 @@
 // NnueNetwork.cpp, che in più usa -mavx512dq -mavx512vl -mavx512vnni).
 // ============================================================================
 
-NnueEvaluator::NnueEvaluator() : currentPly(0) {
-    // Inizializzazione pulita
-    for (int i = 0; i < MAX_HISTORY_PLY; i++) {
-        nnueStack[i].computed[0] = false;
-        nnueStack[i].computed[1] = false;
-    }
-}
-
 NnueEvaluator::NnueEvaluator(std::shared_ptr<const NnueNetwork> sharedNetwork)
     : currentPly(0), networkOwner(std::move(sharedNetwork)), net(networkOwner.get()) {
     for (int i = 0; i < MAX_HISTORY_PLY; i++) {
         nnueStack[i].computed[0] = false;
         nnueStack[i].computed[1] = false;
     }
-}
-
-bool NnueEvaluator::Initialize(const std::string& weightsPath) {
-    // Shim di compatibilita': carica una rete privata (non condivisa) per questa sola istanza.
-    networkOwner = LoadNnueNetwork(weightsPath);
-    net = networkOwner.get();
-    return net != nullptr;
 }
 
 void NnueEvaluator::Reset(const Board& board) {
@@ -48,7 +33,7 @@ void NnueEvaluator::ValidateAccumulators(const Board& board) {
     for (int p = 0; p <= 1; p++) {
         if (!nnueStack[currentPly].computed[p]) continue;
 
-        int16_t saved[ACC_SIZE];
+        int16_t saved[M];
         std::memcpy(saved, nnueStack[currentPly].accumulator[p], sizeof(saved));
 
         RefreshAccumulator(board, p); // sovrascrive nnueStack[currentPly].accumulator[p]
@@ -107,7 +92,7 @@ void NnueEvaluator::OnMakeMove(const Board& board, Move move) {
     PieceType capturedPiece = static_cast<PieceType>(undo.capturedPiece);
     bool isKingMove = (movedPiece == PieceType::KING);
 
-    BuildDelta(board, move, movedPiece, capturedPiece, movedColor, nnueStack[currentPly].delta);
+    BuildDelta(board, move, movedPiece, capturedPiece, nnueStack[currentPly].delta);
 
     if (isKingMove && movedColor == ColorInt(Color::WHITE)) {
         RefreshAccumulator(board, ColorInt(Color::WHITE));
@@ -220,9 +205,7 @@ int NnueEvaluator::MakeFeatureIndex(int square, PieceType pieceType, int pieceCo
 }
 
 void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPiece, PieceType capturedPiece,
-                                int movedColor, AccDelta& delta) const {
-    (void)movedColor; // Il chiamante ha gia' deciso se rinfrescare quella prospettiva; qui non serve.
-
+                                AccDelta& delta) const {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
     int flags = getMoveFlags(move);

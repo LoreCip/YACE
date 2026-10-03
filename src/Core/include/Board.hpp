@@ -41,20 +41,12 @@ private:
     inline void RemovePiece(int color, PieceType piece, int square) {
         int p = PieceInt(piece);
         sides[color][p] = clearBit(sides[color][p], square);
-        // board[square].piece = PieceType::NONE;
-
         colorOccupation[color] = clearBit(colorOccupation[color], square);
         zobristHash ^= LookupTables::pieceKeys[color][p][square];
     }
     inline void RemovePiece(Color color, PieceType piece, int square) {
         RemovePiece(ColorInt(color), piece, square);
     }
-    inline void TogglePiece(Color color, PieceType piece, int square) {
-        zobristHash ^= LookupTables::pieceKeys[ColorInt(color)][PieceInt(piece)][square];
-    }
-
-    uint64_t RecomputeHash() const;
-    void VerifyHash();
 public:
     void InitializeBoard();
     void InitializeFromFEN(const std::string& fen);
@@ -120,9 +112,6 @@ public:
     }
 
     // --- SETTER ---
-    void SetBitBoard(Color color, PieceType piece, uint64_t bitboard) {
-        sides[ColorInt(color)][PieceInt(piece)] = bitboard;
-    }
     inline void AddPiece(int color, PieceType piece, int square) {        
         int p = PieceInt(piece);
         sides[color][p] = setBit(sides[color][p], square);

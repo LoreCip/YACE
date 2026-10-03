@@ -14,12 +14,9 @@ namespace LookupTables {
 
     // --- Maschere di colonna / caselle di arrocco (AttackTables) ---
     using AttackTables::notColumnA;
-    using AttackTables::notColumnB;
-    using AttackTables::notColumnG;
     using AttackTables::notColumnH;
     using AttackTables::notColumnADouble;
     using AttackTables::notColumnHDouble;
-    using AttackTables::nullEdge;
 
     using AttackTables::maskWK;
     using AttackTables::maskWQ;

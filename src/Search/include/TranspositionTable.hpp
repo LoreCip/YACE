@@ -18,7 +18,6 @@ private:
     size_t numEntries = 0;
     std::atomic<size_t> occupiedEntries{0};
     std::unique_ptr<TTEntry[]> table = nullptr;
-    bool active = true;
 
     const int MATE_SCORE = 990000;
 
@@ -44,9 +43,7 @@ private:
     }
 
 public:
-    TranspositionTable() : numEntries(0), table(nullptr) {}
-
-    TranspositionTable(size_t megaBytes) {
+    explicit TranspositionTable(size_t megaBytes) {
         Resize(megaBytes);
     }
 
@@ -72,10 +69,6 @@ public:
     bool Probe(uint64_t key, int depth, int alpha, int beta, int& score, Move& bestMove, int ply);
     void Record(uint64_t key, Move bestMove, int depth, int score, TTFlag flag, int ply);
     double GetFullnessPercentage();
-    Move GetStoredMove(uint64_t key);
-    
-    void SetTTActive(bool state) { active = state; }
-    size_t GetNumEntries() { return numEntries; }
 };
 
 #endif

@@ -9,12 +9,9 @@ namespace AttackTables {
 
     // Maschere di colonna, usate per evitare il wraparound quando si shiftano le bitboard
     extern const uint64_t notColumnA;
-    extern const uint64_t notColumnB;
-    extern const uint64_t notColumnG;
     extern const uint64_t notColumnH;
     extern const uint64_t notColumnADouble;
     extern const uint64_t notColumnHDouble;
-    extern const uint64_t nullEdge;
 
     // Caselle che devono essere libere per ciascun tipo di arrocco.
     extern const uint64_t maskWK;

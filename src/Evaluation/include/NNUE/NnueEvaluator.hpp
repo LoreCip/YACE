@@ -33,7 +33,7 @@ struct AccDelta {
 // lo stride era 1026B (non multiplo di 64), quindi solo il ply 0 era per caso ben allineato e i
 // successivi progressivamente disallineati.
 struct alignas(64) NnueState {
-    alignas(64) int16_t accumulator[2][ACC_SIZE];
+    alignas(64) int16_t accumulator[2][M];
     bool computed[2];
     AccDelta delta; // trasforma accumulator del ply precedente in quello di questo ply
 };
@@ -64,7 +64,7 @@ private:
     // solo passaggio (sostituisce IncrementalUpdate) — chiamata da OnMakeMove quando la board
     // e' ancora nello stato corretto. Non tocca gli accumulatori.
     void BuildDelta(const Board& board, Move move, PieceType movedPiece, PieceType capturedPiece,
-                     int movedColor, AccDelta& delta) const;
+                    AccDelta& delta) const;
     // Trasforma nnueStack[ply-1].accumulator[perspective] in nnueStack[ply].accumulator[
     // perspective] usando nnueStack[ply].delta — copia e aggiornamento fusi in un solo
     // passaggio (niente memcpy separato). `ply` e' esplicito (non sempre currentPly) perche'
@@ -83,17 +83,10 @@ private:
 #endif
 
 public:
-    NnueEvaluator();
-    // Costruttore preferito: condivide una rete gia' caricata (vedi LoadNnueNetwork in
-    // NnueNetwork.hpp) invece di caricarla di nuovo da disco per ogni istanza/thread.
+    // Condivide una rete gia' caricata (vedi LoadNnueNetwork in NnueNetwork.hpp) invece di
+    // caricarla di nuovo da disco per ogni istanza/thread.
     explicit NnueEvaluator(std::shared_ptr<const NnueNetwork> sharedNetwork);
-    ~NnueEvaluator() override = default;
 
-    // Shim di compatibilita': carica i pesi da disco in una rete privata di questa istanza
-    // (non condivisa). Preferire il costruttore con shared_ptr quando si creano piu' istanze
-    // per la stessa sessione di ricerca (thread multipli).
-    bool Initialize(const std::string& weightsPath);
-    
     // Inizializza lo stack per una nuova posizione/partita
     void Reset(const Board& board) override; 
 

@@ -83,9 +83,6 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
             callback(d, alpha, stats, bestMoveCurrentDepth);
         }
     }
-    
-    stats.movesPlayed++;
-    stats.totalNodesSession += (stats.nodesEvaluated + stats.qNodesEvaluated);
 }
 
 int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {

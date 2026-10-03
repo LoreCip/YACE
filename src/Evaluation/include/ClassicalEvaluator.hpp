@@ -6,9 +6,8 @@
 class ClassicalEvaluator : public IEvaluator {
 public:
     int Evaluate(const Board& board) override;
-    void Reset(const Board& board) override {}
-    
-    void OnMakeMove(const Board& board, Move move) override {}
+    void Reset(const Board&) override {}
+    void OnMakeMove(const Board&, Move) override {}
     void OnUnmakeMove() override {}
 };
 

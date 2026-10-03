@@ -26,10 +26,6 @@ public:
     SearchManager(size_t ttMegaBytes, int threads, EvaluatorFactory factory)
         : tt(ttMegaBytes), numThreads(threads), evalFactory(factory) {}
 
-    void SetThreads(int threads) { 
-        numThreads = threads > 0 ? threads : 1; 
-    }
-    
     void ClearTT() { tt.Clear(); }
 
     Move Search(const Board& rootBoard, int maxDepth, double allocatedTimeMs, InfoReporter callback);

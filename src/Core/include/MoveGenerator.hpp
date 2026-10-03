@@ -26,9 +26,6 @@ namespace MoveGen {
     void GenerateKingCaptures(const Board& board, MoveList& moveList, Color us, uint64_t enemies);
     void GenerateSlidingCaptures(const Board& board, MoveList& moveList, Color us, PieceType piece, uint64_t enemies);
     void GeneratePawnCapturesAndPromotions(const Board& board, MoveList& moveList, Color us, uint64_t enemies);
-
-    // Helper
-    uint64_t ComputeRay(int direction, uint64_t edge, int square, uint64_t totalOccupation);
 }
 
 #endif

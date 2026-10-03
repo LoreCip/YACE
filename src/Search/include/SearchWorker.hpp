@@ -16,7 +16,6 @@ class SearchWorker {
 private:
     static const int MAX_PLY = 64;
 
-    int threadId;
     bool isMainThread;
 
     Board board; 
@@ -40,11 +39,10 @@ private:
 public:
     Move bestRootMove = 0;
 
-    SearchWorker(int id, bool mainThread, const Board& rootBoard,
+    SearchWorker(bool mainThread, const Board& rootBoard,
                  TranspositionTable& globalTT, std::atomic<bool>& stopFlag,
                  std::unique_ptr<IEvaluator> eval)
-        : threadId(id),
-          isMainThread(mainThread),
+        : isMainThread(mainThread),
           board(rootBoard),
           tt(globalTT),
           globalTimeIsUp(stopFlag),

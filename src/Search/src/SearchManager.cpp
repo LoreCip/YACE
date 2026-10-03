@@ -7,7 +7,7 @@ Move SearchManager::Search(const Board& rootBoard, int maxDepth, double allocate
     for (int i = 0; i < numThreads; ++i) {
         bool isMainThread = (i == 0); 
         workers.push_back(std::make_unique<SearchWorker>(
-            i, isMainThread, rootBoard, tt, globalTimeIsUp, evalFactory()
+            isMainThread, rootBoard, tt, globalTimeIsUp, evalFactory()
         ));
     }
 

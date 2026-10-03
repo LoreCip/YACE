@@ -4,12 +4,9 @@
 namespace AttackTables {
 
     const uint64_t notColumnA       = 0xFEFEFEFEFEFEFEFEULL;
-    const uint64_t notColumnB       = 0xFDFDFDFDFDFDFDFDULL;
-    const uint64_t notColumnG       = 0xBFBFBFBFBFBFBFBFULL;
     const uint64_t notColumnH       = 0x7F7F7F7F7F7F7F7FULL;
     const uint64_t notColumnADouble = 0xFCFCFCFCFCFCFCFCULL;
     const uint64_t notColumnHDouble = 0x3F3F3F3F3F3F3F3FULL;
-    const uint64_t nullEdge         = 0xFFFFFFFFFFFFFFFFULL;
 
     const uint64_t maskWK = 0x60ULL;                 // Caselle f1, g1
     const uint64_t maskWQ = 0xEULL;                  // Caselle b1, c1, d1

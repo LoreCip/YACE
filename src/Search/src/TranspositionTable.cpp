@@ -1,7 +1,7 @@
 #include "TranspositionTable.hpp"
 
 bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int& score, Move& bestMove, int ply) {
-    if (!active || !table) return false;
+    if (!table) return false;
 
     size_t index = key & (numEntries - 1);
     TTEntry& entry = table[index];
@@ -40,7 +40,7 @@ bool TranspositionTable::Probe(uint64_t key, int depth, int alpha, int beta, int
 }
 
 void TranspositionTable::Record(uint64_t key, Move bestMove, int depth, int score, TTFlag flag, int ply) {
-    if (!active || !table) return;
+    if (!table) return;
     size_t index = key & (numEntries - 1);
     TTEntry& entry = table[index];
     
@@ -74,14 +74,3 @@ double TranspositionTable::GetFullnessPercentage() {
     return (static_cast<double>(occupiedEntries.load(std::memory_order_relaxed)) / numEntries) * 100.0;
 }
 
-Move TranspositionTable::GetStoredMove(uint64_t key) {
-    if (!table) return 0;
-    size_t index = key & (numEntries - 1);
-    uint64_t stored_data = table[index].data.load(std::memory_order_relaxed);
-    uint64_t stored_key = table[index].key.load(std::memory_order_relaxed);
-    
-    if ((stored_key ^ stored_data) == key) {
-        return static_cast<Move>(stored_data & 0xFFFFULL);
-    }
-    return 0;
-}

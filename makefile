@@ -1,133 +1,49 @@
 # ==============================================================================
-# YACE GLOBAL MAKEFILE (Unified Build System - Phase 2 Architecture)
+# YACE MAKEFILE
 # ==============================================================================
 
-# Nomi degli eseguibili finali (tutti posizionati nella cartella build globale)
 TARGET_GAME = build/main_game
 TARGET_FEN  = build/main_fen
 
-# Compilatore, inclusioni e flag unificati
-CXX      = g++
-INCLUDES = -Isrc/Core/include \
-		   -Isrc/Core/LookupTables/include \
-           -Isrc/Evaluation/include \
-           -Isrc/Evaluation/include/NNUE \
-           -Isrc/Search/include
-
-COMMON   = -Wall -Wextra -std=c++17 -O3 -flto -march=native -DNDEBUG \
-           -mavx512f -mavx512bw -mavx512dq -mavx512vl -mavx512vnni \
-           -mprefer-vector-width=512 $(INCLUDES)
-
+CXX       = g++
+INCLUDES  = -Isrc/Core/include \
+            -Isrc/Core/LookupTables/include \
+            -Isrc/Evaluation/include \
+            -Isrc/Evaluation/include/NNUE \
+            -Isrc/Search/include
 PGO_FLAGS =
-CXXFLAGS = $(COMMON) $(PGO_FLAGS)
-CXXFLAGS_FEN = $(COMMON) -fopenmp $(PGO_FLAGS)
-LDFLAGS  = $(PGO_FLAGS)
-LDFLAGS_FEN = -fopenmp $(PGO_FLAGS)
+CXXFLAGS  = -Wall -Wextra -std=c++17 -O3 -flto -march=native -DNDEBUG \
+            -mavx512f -mavx512bw -mavx512dq -mavx512vl -mavx512vnni \
+            -mprefer-vector-width=512 $(INCLUDES) $(PGO_FLAGS)
+LDFLAGS   = $(PGO_FLAGS)
 
-# Cartelle sorgenti radice
-APP_SRC_DIR       = src/App
-CORE_SRC_DIR      = src/Core/src
-LOOK_SRC_DIR      = src/Core/LookupTables/src
-EVAL_SRC_DIR      = src/Evaluation/src
-EVAL_NNUE_SRC_DIR = src/Evaluation/src/NNUE
-SEARCH_SRC_DIR    = src/Search/src
+# Oggetti del motore (tutto tranne i main), specchiati sotto build/objects
+OBJ_DIR     = build/objects
+ENGINE_SRCS = $(wildcard src/Core/src/*.cpp src/Core/LookupTables/src/*.cpp \
+                         src/Evaluation/src/*.cpp src/Evaluation/src/NNUE/*.cpp \
+                         src/Search/src/*.cpp)
+ENGINE_OBJS = $(ENGINE_SRCS:src/%.cpp=$(OBJ_DIR)/%.o)
 
-# Cartelle di build centralizzate
-OBJ_DIR           = build/objects
-OBJ_APP_DIR       = $(OBJ_DIR)/App
-OBJ_CORE_DIR      = $(OBJ_DIR)/Core
-OBJ_LOOK_DIR      = $(OBJ_CORE_DIR)/LookupTables
-OBJ_EVAL_DIR      = $(OBJ_DIR)/Evaluation
-OBJ_EVAL_NNUE_DIR = $(OBJ_DIR)/Evaluation/NNUE
-OBJ_SEARCH_DIR    = $(OBJ_DIR)/Search
+all: $(TARGET_GAME) $(TARGET_FEN)
 
-# ------------------------------------------------------------------------------
-# 1. SCANSIONE SORGENTI E MAPPARE I FILE OGGETTO
-# ------------------------------------------------------------------------------
+$(TARGET_GAME): $(ENGINE_OBJS) $(OBJ_DIR)/App/main_game.o
+$(TARGET_FEN):  $(ENGINE_OBJS) $(OBJ_DIR)/App/main_fen.o
 
-# Trova tutti i file sorgente (esclusi i main)
-CORE_SRCS      = $(wildcard $(CORE_SRC_DIR)/*.cpp)
-LOOK_SRCS      = $(wildcard $(LOOK_SRC_DIR)/*.cpp)
-EVAL_SRCS      = $(wildcard $(EVAL_SRC_DIR)/*.cpp)
-EVAL_NNUE_SRCS = $(wildcard $(EVAL_NNUE_SRC_DIR)/*.cpp)
-SEARCH_SRCS    = $(wildcard $(SEARCH_SRC_DIR)/*.cpp)
+# Solo il perft (main_fen) usa OpenMP
+$(TARGET_FEN) $(OBJ_DIR)/App/main_fen.o: private CXXFLAGS += -fopenmp
+$(TARGET_FEN): private LDFLAGS += -fopenmp
 
-# Crea i percorsi dei file oggetto corrispondenti
-CORE_OBJS      = $(CORE_SRCS:$(CORE_SRC_DIR)/%.cpp=$(OBJ_CORE_DIR)/%.o)
-LOOK_OBJS      = $(LOOK_SRCS:$(LOOK_SRC_DIR)/%.cpp=$(OBJ_LOOK_DIR)/%.o)
-EVAL_OBJS      = $(EVAL_SRCS:$(EVAL_SRC_DIR)/%.cpp=$(OBJ_EVAL_DIR)/%.o)
-EVAL_NNUE_OBJS = $(EVAL_NNUE_SRCS:$(EVAL_NNUE_SRC_DIR)/%.cpp=$(OBJ_EVAL_NNUE_DIR)/%.o)
-SEARCH_OBJS    = $(SEARCH_SRCS:$(SEARCH_SRC_DIR)/%.cpp=$(OBJ_SEARCH_DIR)/%.o)
-
-# Insieme globale di tutti gli oggetti Core/Libreria del motore
-ALL_CORE_OBJS  = $(CORE_OBJS) $(LOOK_OBJS) $(EVAL_OBJS) $(EVAL_NNUE_OBJS) $(SEARCH_OBJS)
-
-# Oggetti specifici per i punti di ingresso (I vari Main)
-OBJ_MAIN_GAME  = $(OBJ_APP_DIR)/main_game.o
-OBJ_MAIN_FEN   = $(OBJ_APP_DIR)/main_fen.o
-OBJ_MAIN_NNUE  = $(OBJ_APP_DIR)/main_nnue.o
-
-# ------------------------------------------------------------------------------
-# 2. REGOLE DI COMPILAZIONE TARGETS
-# ------------------------------------------------------------------------------
-
-# Regola di default: compila tutti e tre gli eseguibili
-all: $(TARGET_GAME) $(TARGET_FEN) $(TARGET_NNUE)
-
-# Build di main_game
-$(TARGET_GAME): $(ALL_CORE_OBJS) $(OBJ_MAIN_GAME)
+$(TARGET_GAME) $(TARGET_FEN):
 	@mkdir -p build
-	$(CXX) $(CXXFLAGS) $(ALL_CORE_OBJS) $(OBJ_MAIN_GAME) -o $(TARGET_GAME) $(LDFLAGS)
-	@echo "[SUCCESS] Build completata: $(TARGET_GAME)"
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDFLAGS)
+	@echo "[SUCCESS] Build completata: $@"
 
-# Build di main_fen
-$(TARGET_FEN): $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN)
-	@mkdir -p build
-	$(CXX) $(CXXFLAGS_FEN) $(ALL_CORE_OBJS) $(OBJ_MAIN_FEN) -o $(TARGET_FEN) $(LDFLAGS_FEN)
-	@echo "[SUCCESS] Build completata: $(TARGET_FEN)"
+# -MMD -MP: ricompila anche quando cambia un header
+$(OBJ_DIR)/%.o: src/%.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-# ------------------------------------------------------------------------------
-# 3. REGOLE GENERICHE PER LA COMPILAZIONE DEI FILE OGGETTO
-# ------------------------------------------------------------------------------
-
-# Compilazione App (I Main)
-$(OBJ_MAIN_FEN): $(APP_SRC_DIR)/main_fen.cpp
-	@mkdir -p $(OBJ_APP_DIR)
-	$(CXX) $(CXXFLAGS_FEN) -c $< -o $@
-
-$(OBJ_APP_DIR)/%.o: $(APP_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_APP_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compilazione Core
-$(OBJ_CORE_DIR)/%.o: $(CORE_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_CORE_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compilazione Lookup
-$(OBJ_LOOK_DIR)/%.o: $(LOOK_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_LOOK_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-
-# Compilazione Evaluation (Classica)
-$(OBJ_EVAL_DIR)/%.o: $(EVAL_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_EVAL_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compilazione Evaluation (NNUE)
-$(OBJ_EVAL_NNUE_DIR)/%.o: $(EVAL_NNUE_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_EVAL_NNUE_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Compilazione Search
-$(OBJ_SEARCH_DIR)/%.o: $(SEARCH_SRC_DIR)/%.cpp
-	@mkdir -p $(OBJ_SEARCH_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# ------------------------------------------------------------------------------
-# 4. UTILITY E PACCHETTI DI RELEASE
-# ------------------------------------------------------------------------------
+-include $(ENGINE_OBJS:.o=.d) $(OBJ_DIR)/App/main_game.d $(OBJ_DIR)/App/main_fen.d
 
 clean:
 	rm -rf build

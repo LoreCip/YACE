@@ -54,5 +54,7 @@ namespace CastlingRights {
 // Costants
 constexpr int NUM_COLORS = 2;
 constexpr int NUM_PIECES = 6;
+constexpr int NO_SQUARE = 64;                // "nessuna casa en passant"
+constexpr char PIECE_CHARS[] = "prnbqk";     // indicizzato da PieceType
 
 #endif

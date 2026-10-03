@@ -221,12 +221,7 @@ void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPie
     }
 
     int rookFrom = -1, rookTo = -1;
-    if (flags == FlagMap::CASTLING) {
-        if (to == 6)        { rookFrom = 7;  rookTo = 5;  }
-        else if (to == 2)   { rookFrom = 0;  rookTo = 3;  }
-        else if (to == 62)  { rookFrom = 63; rookTo = 61; }
-        else if (to == 58)  { rookFrom = 56; rookTo = 59; }
-    }
+    if (flags == FlagMap::CASTLING) castlingRookSquares(to, rookFrom, rookTo);
 
     for (int perspective = 0; perspective <= 1; perspective++) {
         uint64_t king_bb = board.GetBitBoard(perspective, PieceType::KING);

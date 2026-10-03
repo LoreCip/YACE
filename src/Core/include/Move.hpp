@@ -60,6 +60,13 @@ inline PieceType getMovePromotionPiece(Move move) {
     return getMovePromotionPiece(flags);
 }
 
+// Arrocco: case di partenza/arrivo della torre, dato l'arrivo del re (g1/c1/g8/c8).
+inline void castlingRookSquares(int kingTo, int& rookFrom, int& rookTo) {
+    bool kingSide = (kingTo % 8 == 6);
+    rookFrom = kingSide ? kingTo + 1 : kingTo - 2;
+    rookTo   = kingSide ? kingTo - 1 : kingTo + 1;
+}
+
 inline bool isMovePromotion(Move move) {
     return getMoveFlags(move) >= FlagMap::PRBISHOP;
 }

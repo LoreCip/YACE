@@ -161,7 +161,7 @@ namespace MoveGen {
 
             // En Passant
             int epSquare = board.GetEnPassantSquare();
-            if (epSquare != 64) {
+            if (epSquare != NO_SQUARE) {
                 uint64_t epBB = 1ULL << epSquare;
                 if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
                     moveList.push(createMove(from, epSquare, FlagMap::ENPASS));
@@ -273,7 +273,7 @@ namespace MoveGen {
             }
 
             int epSquare = board.GetEnPassantSquare();
-            if (epSquare != 64) {
+            if (epSquare != NO_SQUARE) {
                 uint64_t epBB = 1ULL << epSquare;
                 if (AttackTables::pawnAttacks[ColorInt(us)][from] & epBB) {
                     moveList.push(createMove(from, epSquare, FlagMap::ENPASS));

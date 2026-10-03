@@ -22,9 +22,8 @@ private:
     uint64_t sides[NUM_COLORS][NUM_PIECES] = {{(uint64_t)0}};
     uint64_t colorOccupation[NUM_COLORS] = {(uint64_t)0};
     uint64_t totalOccupation{(uint64_t)0};
-    uint64_t freeCells{(uint64_t)0};
     
-    uint8_t enPassantSquare{64};       
+    uint8_t enPassantSquare{NO_SQUARE};
     uint8_t castlingRights{15};        
     uint8_t halfMoveClock{0};          
     Color sideToMove;
@@ -33,6 +32,19 @@ private:
     UndoState history[1024]; 
     int historyPly = 0;
     uint64_t zobristHash = 0;
+
+    // XOR delle chiavi Zobrist di arrocco ed en passant correnti (le aggiunge o le toglie).
+    void HashCastlingAndEnPassant() {
+        zobristHash ^= Zobrist::castlingKeys[castlingRights];
+        if (enPassantSquare != NO_SQUARE) zobristHash ^= Zobrist::enPassantKeys[enPassantSquare];
+    }
+    void UpdateOccupation() {
+        totalOccupation = colorOccupation[0] | colorOccupation[1];
+    }
+    void PushHistory(PieceType moved, PieceType captured) {
+        positionHistory[historyPly] = zobristHash;
+        history[historyPly++] = {moved, captured, enPassantSquare, castlingRights, halfMoveClock};
+    }
 
     inline void MovePiece(Color color, PieceType piece, int from, int to) {
         RemovePiece(color, piece, from);
@@ -80,7 +92,7 @@ public:
         return totalOccupation;
     }
     uint64_t GetFreeCells() const {
-        return freeCells;
+        return ~totalOccupation;
     }
     uint8_t GetEnPassantSquare() const {
         return enPassantSquare;

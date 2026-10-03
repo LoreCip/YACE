@@ -326,8 +326,8 @@ int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
     int from = getMoveFrom(move);
     int to = getMoveTo(move);
 
-    // 1. Catture (MVV-LVA)
-    if (flags == FlagMap::CAPTURE || flags == FlagMap::PRCAPQUEEN || flags == FlagMap::ENPASS) {
+    // 1. Catture (MVV-LVA), comprese en passant e catture con promozione
+    if (isCaptureFlag(flags) || isEnPassantFlag(flags)) {
         PieceType attacker = board.GetPieceOnSquare(from);
         PieceType victim = (flags == FlagMap::ENPASS) ? PieceType::PAWN : board.GetPieceOnSquare(to);
         if (attacker != PieceType::NONE && victim != PieceType::NONE) {

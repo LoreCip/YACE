@@ -1,21 +1,14 @@
 import torch
-import struct
 import numpy as np
-import os
 
-def export_to_cpp_binary(pth_path, base_path, bin_path):
+from NNUE import SCALE_ACT, SCALE_W_L1, SCALE_W_L2, SCALE_W_OUT
+
+def export_to_cpp_binary(pth_path, bin_path):
     print(f"Caricamento pesi da: {pth_path}")
     
     checkpoint = torch.load(pth_path, map_location='cpu', weights_only=False)
     state_dict = checkpoint.get("model_state_dict", checkpoint)
     clean_state_dict = {k.replace('_orig_mod.', ''): v for k, v in state_dict.items()}
-
-    # --- SCALE (Devono combaciare con quelle usate nella classe QAT) ---
-    SCALE_W_ACC = 255.0
-    SCALE_ACT   = 127.0
-    SCALE_W_L1  = 64.0
-    SCALE_W_L2  = 64.0
-    SCALE_W_OUT = 127.0
 
     print("Estrazione e quantizzazione dei tensori...")
 
@@ -51,7 +44,7 @@ def export_to_cpp_binary(pth_path, base_path, bin_path):
     L2      = np.clip(np.round(l2_weight_float * SCALE_W_L2), -128, 127).astype(np.int8)
     L2Bias  = np.round(l2_bias_float * (SCALE_ACT * SCALE_W_L2)).astype(np.int32)
 
-    # 4. Layer Output (L3) - pesi int16_t, bias int32_t (CORRETTO: usa le variabili l3_)
+    # 4. Layer Output (L3) - pesi int16_t, bias int32_t
     l3_weight_float = clean_state_dict['output_layer.weight'].numpy().flatten()
     l3_bias_float   = clean_state_dict['output_layer.bias'].numpy()
     
@@ -91,4 +84,4 @@ if __name__ == "__main__":
     PTH_FILE = "./checkpoints/halfkp_epoch_35_final.pth"
     BASE_PATH = "../../parameters/weights/"
     BIN_FILE = BASE_PATH + "nnue_weights_v3.bin"
-    export_to_cpp_binary(PTH_FILE, BASE_PATH, BIN_FILE)
+    export_to_cpp_binary(PTH_FILE, BIN_FILE)

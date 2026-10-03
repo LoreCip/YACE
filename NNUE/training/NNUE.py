@@ -1,7 +1,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
+
+# Scale di quantizzazione: le stesse usate da convertToWeights.py per l'export verso il C++.
+SCALE_W_ACC = 255.0  # Pesi accumulatore (int16) durante il training
+SCALE_ACT   = 127.0  # Attivazioni ClippedReLU (int8)
+SCALE_W_L1  = 64.0   # Pesi Layer 1 (int8)
+SCALE_W_L2  = 64.0   # Pesi Layer 2 (int8)
+SCALE_W_OUT = 127.0  # Pesi Layer Output (int16)
 
 # 1. Definizione dello Straight-Through Estimator (STE)
 class FakeQuantizeSTE(torch.autograd.Function):
@@ -27,26 +33,16 @@ class HalfKP_NNUE_QAT(nn.Module):
         self.accumulator_bias = nn.Parameter(torch.zeros(acc_size)) 
         
         self.layer1 = nn.Linear(acc_size * 2, layer_1)
-        self.output_layer = nn.Linear(layer_1, layer_2)
-
         self.layer2 = nn.Linear(layer_1, layer_2)
         self.output_layer = nn.Linear(layer_2, 1)
-
-        # --- SCALE DI QUANTIZZAZIONE ---
-        # Questi valori determinano le precisioni intere che userai in C++.
-        self.SCALE_W_ACC = 255.0  # Pesi accumulatore (int16)
-        self.SCALE_ACT   = 127.0  # Attivazioni ClippedReLU (int8)
-        self.SCALE_W_L1  = 64.0   # Pesi Layer 1 (int8)
-        self.SCALE_W_L2  = 64.0   # Pesi Layer 2 (int8)
-        self.SCALE_W_OUT = 127.0  # Pesi Layer Output (int16)
 
     def clipped_relu(self, x):
         return torch.clamp(x, 0.0, 1.0)
 
     def forward(self, us_indices, them_indices, return_logits=False):
         # -- FAKE QUANTIZATION: ACCUMULATORE (Pesi in int16: -32768 a 32767) --
-        acc_w_q = fake_quant(self.accumulator.weight, self.SCALE_W_ACC, -32768, 32767)
-        acc_b_q = fake_quant(self.accumulator_bias, self.SCALE_W_ACC, -32768, 32767)
+        acc_w_q = fake_quant(self.accumulator.weight, SCALE_W_ACC, -32768, 32767)
+        acc_b_q = fake_quant(self.accumulator_bias, SCALE_W_ACC, -32768, 32767)
         
         acc_us = F.embedding(us_indices, acc_w_q, padding_idx=40960).sum(dim=1) + acc_b_q
         acc_them = F.embedding(them_indices, acc_w_q, padding_idx=40960).sum(dim=1) + acc_b_q
@@ -54,27 +50,27 @@ class HalfKP_NNUE_QAT(nn.Module):
         acc_us = self.clipped_relu(acc_us)
         acc_them = self.clipped_relu(acc_them)        
         x = torch.cat([acc_us, acc_them], dim=1)
-        x = fake_quant(x, self.SCALE_ACT, 0, 127)
+        x = fake_quant(x, SCALE_ACT, 0, 127)
         
         # -- FAKE QUANTIZATION: LAYER 1 (Pesi in int8: -128 a 127) --
-        l1_w_q = fake_quant(self.layer1.weight, self.SCALE_W_L1, -128, 127)
-        l1_b_q = fake_quant(self.layer1.bias, self.SCALE_W_ACC * self.SCALE_W_L1, -32768, 32767)
+        l1_w_q = fake_quant(self.layer1.weight, SCALE_W_L1, -128, 127)
+        l1_b_q = fake_quant(self.layer1.bias, SCALE_W_ACC * SCALE_W_L1, -32768, 32767)
         
         x = F.linear(x, l1_w_q, l1_b_q)
         x = self.clipped_relu(x)
-        x = fake_quant(x, self.SCALE_ACT, 0, 127)
+        x = fake_quant(x, SCALE_ACT, 0, 127)
         
         # -- FAKE QUANTIZATION LAYER 2 (Pesi in int8: -128 a 127) --
-        l2_w_q = fake_quant(self.layer2.weight, self.SCALE_W_L2, -128, 127)
-        l2_b_q = fake_quant(self.layer2.bias, self.SCALE_ACT * self.SCALE_W_L2, -32768, 32767)
+        l2_w_q = fake_quant(self.layer2.weight, SCALE_W_L2, -128, 127)
+        l2_b_q = fake_quant(self.layer2.bias, SCALE_ACT * SCALE_W_L2, -32768, 32767)
         
         x = F.linear(x, l2_w_q, l2_b_q)
         x = self.clipped_relu(x)
-        x = fake_quant(x, self.SCALE_ACT, 0, 127)
+        x = fake_quant(x, SCALE_ACT, 0, 127)
         
         # -- FAKE QUANTIZATION: LAYER OUTPUT --
-        out_w_q = fake_quant(self.output_layer.weight, self.SCALE_W_OUT, -32768, 32767)
-        out_b_q = fake_quant(self.output_layer.bias, self.SCALE_ACT * self.SCALE_W_OUT, -32768, 32767)
+        out_w_q = fake_quant(self.output_layer.weight, SCALE_W_OUT, -32768, 32767)
+        out_b_q = fake_quant(self.output_layer.bias, SCALE_ACT * SCALE_W_OUT, -32768, 32767)
         
         x = F.linear(x, out_w_q, out_b_q)
 

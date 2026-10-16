@@ -63,16 +63,17 @@ bool ParseArgs(int argc, char **argv, EngineOptions &options) {
 // instance — but ALL instances share the same read-only NnueNetwork (`sharedNetwork`),
 // instead of each thread re-reading the ~21MB weights file from disk and holding its own
 // private copy on every `go` command.
-EvaluatorFactory MakeEvaluatorFactory(const EngineOptions &options,
-                                      std::shared_ptr<const NnueNetwork> sharedNetwork) {
-  bool useNnue = (options.evalType == "nnue");
+EvaluatorFactory MakeEvaluatorFactory(bool useNnue, 
+                                      std::shared_ptr<const NnueNetwork> nnueNetwork) {
+    return [useNnue, nnueNetwork = std::move(nnueNetwork)]()
+               -> std::unique_ptr<IEvaluator>
+    {
+        if (useNnue) {
+            return std::make_unique<NnueEvaluator>(nnueNetwork);
+        }
 
-  return [useNnue, sharedNetwork]() -> std::unique_ptr<IEvaluator> {
-    if (!useNnue) {
-      return std::make_unique<ClassicalEvaluator>();
-    }
-    return std::make_unique<NnueEvaluator>(sharedNetwork);
-  };
+        return std::make_unique<ClassicalEvaluator>();
+    };
 }
 
 } // namespace
@@ -95,10 +96,13 @@ int main(int argc, char **argv) {
 
   // Caricata UNA volta e condivisa da tutti i thread di ricerca invece di essere
   // riletta da disco e duplicata per ogni thread a ogni `go` (vedi MakeEvaluatorFactory).
-  std::shared_ptr<const NnueNetwork> sharedNetwork;
-  if (options.evalType == "nnue") {
-    sharedNetwork = LoadNnueNetwork(options.weightsPath);
-    if (!sharedNetwork) {
+  // std::shared_ptr<const NnueNetwork> nnueNetwork;
+  const bool useNnue = options.evalType == "nnue";
+
+  std::shared_ptr<const NnueNetwork> nnueNetwork;
+  if (useNnue) {
+    nnueNetwork = LoadNnueNetwork(options.weightsPath);
+    if (!nnueNetwork) {
       UCI::ReportDebugString("NNUE non trovata.");
       return 1;
     }
@@ -111,7 +115,7 @@ int main(int argc, char **argv) {
                          std::to_string(options.numThreads) + " threads e " +
                          std::to_string(options.ttSizeMb) + "MB di TT.");
   SearchManager searchManager(options.ttSizeMb, options.numThreads,
-                              MakeEvaluatorFactory(options, sharedNetwork));
+                              MakeEvaluatorFactory(useNnue, nnueNetwork));
 
   // Svuotare la TT a ogni nuova posizione rende `bench` riproducibile (indipendente
   // dall'ordine delle posizioni); innocuo per un `fen` normale.

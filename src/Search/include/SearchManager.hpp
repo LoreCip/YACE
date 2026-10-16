@@ -6,25 +6,23 @@
 #include <memory>
 #include <atomic>
 #include <chrono>
-#include <functional> 
 
 #include "Board.hpp"
 #include "TranspositionTable.hpp"
 #include "SearchWorker.hpp"
-#include "IEvaluator.hpp"
-
-using EvaluatorFactory = std::function<std::unique_ptr<IEvaluator>()>;
+#include "NnueNetwork.hpp"
 
 class SearchManager {
 private:
     TranspositionTable tt;
     std::atomic<bool> globalTimeIsUp{false};
     int numThreads;
-    EvaluatorFactory evalFactory;
+    // Condivisa in sola lettura da tutti i thread; nullptr = valutazione classica (HCE).
+    std::shared_ptr<const NnueNetwork> network;
 
 public:
-    SearchManager(size_t ttMegaBytes, int threads, EvaluatorFactory factory)
-        : tt(ttMegaBytes), numThreads(threads), evalFactory(factory) {}
+    SearchManager(size_t ttMegaBytes, int threads, std::shared_ptr<const NnueNetwork> network)
+        : tt(ttMegaBytes), numThreads(threads), network(std::move(network)) {}
 
     void ClearTT() { tt.Clear(); }
 

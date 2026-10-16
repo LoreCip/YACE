@@ -20,7 +20,7 @@ class TranspositionTable {
 private:
     size_t numEntries = 0;
     std::atomic<size_t> occupiedEntries{0};
-    std::unique_ptr<TTEntry[]> table = nullptr;
+    std::unique_ptr<TTEntry[]> table;
 
     /*
     0-15 (16 bit): bestMove (Move -> uint16_t
@@ -28,7 +28,7 @@ private:
     24-31 (8 bit): flag
     32-63 (32 bit): score
     */
-    inline uint64_t PackData(Move bestMove, int depth, int score, TTFlag flag) const {
+    uint64_t PackData(Move bestMove, int depth, int score, TTFlag flag) const {
         uint64_t m = static_cast<uint64_t>(bestMove) & 0xFFFFULL;
         uint64_t d = static_cast<uint64_t>(static_cast<int8_t>(depth)) & 0xFFULL;
         uint64_t f = static_cast<uint64_t>(static_cast<uint8_t>(flag)) & 0xFFULL;
@@ -36,7 +36,7 @@ private:
         return m | (d << 16) | (f << 24) | (s << 32);
     }
 
-    inline void UnpackData(uint64_t data, Move& bestMove, int& depth, int& score, TTFlag& flag) const {
+    void UnpackData(uint64_t data, Move& bestMove, int& depth, int& score, TTFlag& flag) const {
         bestMove = static_cast<Move>(data & 0xFFFFULL);
         depth = static_cast<int>(static_cast<int8_t>((data >> 16) & 0xFFULL));
         flag = static_cast<TTFlag>((data >> 24) & 0xFFULL);
@@ -45,10 +45,6 @@ private:
 
 public:
     explicit TranspositionTable(size_t megaBytes) {
-        Resize(megaBytes);
-    }
-
-    void Resize(size_t megaBytes) {
         size_t targetEntries = (megaBytes * 1024 * 1024) / sizeof(TTEntry);
         numEntries = 1;
         while ((numEntries * 2) <= targetEntries) {
@@ -59,7 +55,6 @@ public:
     }
 
     void Clear() {
-        if (!table) return;
         for (size_t i = 0; i < numEntries; ++i) {
             table[i].key.store(0, std::memory_order_relaxed);
             table[i].data.store(0, std::memory_order_relaxed);

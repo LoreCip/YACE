@@ -6,12 +6,12 @@
 #include <cstdint>
 
 std::shared_ptr<const NnueNetwork> LoadNnueNetwork(const std::string& path) {
-    std::shared_ptr<NnueNetwork> net(new NnueNetwork());
+    std::shared_ptr<NnueNetwork> net(new NnueNetwork()); // `new` rispetta alignas(64)
     if (!net->InitializeFromFile(path)) return nullptr;
     return net;
 }
 
-bool NnueNetwork::InitializeFromFile(std::string path) {
+bool NnueNetwork::InitializeFromFile(const std::string& path) {
     std::ifstream file(path, std::ios::binary);
     if (!file.is_open()) return false;
 
@@ -26,18 +26,10 @@ bool NnueNetwork::InitializeFromFile(std::string path) {
     
     char check;
     file.read(&check, 1);
-    if (!file.eof()) {
-        return false;
-    }
-
-    file.close();
-    return true;
+    return file.eof();
 }
 
-// ---------------------------------------------------------------------------
-// Somma orizzontale di 8 int32 in un __m256i -> singolo int32 (usata solo
-// nella coda a 256 bit di DenseLayerLinear quando cols%64 è tra 32 e 63).
-// ---------------------------------------------------------------------------
+// Somma degli 8 int32 di v (coda a 256 bit di DenseLayerLinear).
 static inline int32_t hsum_epi32_256(__m256i v) {
     __m128i lo = _mm256_castsi256_si128(v);
     __m128i hi = _mm256_extracti128_si256(v, 1);
@@ -49,20 +41,8 @@ static inline int32_t hsum_epi32_256(__m256i v) {
     return _mm_cvtsi128_si32(lo);
 }
 
-// ---------------------------------------------------------------------------
-// Riduce QUATTRO accumulatori __m512i (uno per riga di output) a 4 int32 in un
-// solo __m128i, sommando il bias — sequenza standard "affine_transform" stile
-// Stockfish. _mm512_reduce_add_epi32 e' una catena seriale di ~7 istruzioni con
-// ~14 cicli di dipendenza; chiamata 4 volte (una per accumulatore) significa 4
-// catene seriali indipendenti ma comunque ~28 istruzioni totali. Questo albero
-// usa 11 istruzioni e nessuna catena seriale lunga: gli unpack sono "in-lane"
-// (interlacciano solo dentro ciascuna corsia da 128 bit), quindi le 4 somme
-// parziali restano separate per corsia fino alle due fold finali cross-lane.
-// L'addizione tra interi e' esatta e associativa: qualunque albero di somma da'
-// lo stesso risultato int32 (nessun overflow possibile: i parziali di L1 sono
-// limitati da 512*127*127 ≈ 8.3M, tre ordini di grandezza sotto il limite
-// di int32) — output bit-identico rispetto a 4x _mm512_reduce_add_epi32.
-// ---------------------------------------------------------------------------
+// Riduce 4 accumulatori a 4 int32 (+ bias) con 11 istruzioni invece delle ~28 di
+// 4x _mm512_reduce_add_epi32. Somme intere senza overflow: risultato identico.
 static inline __m128i haddx4_epi32(__m512i s0, __m512i s1, __m512i s2, __m512i s3, __m128i bias) {
     __m512i s01a = _mm512_unpacklo_epi32(s0, s1);
     __m512i s01b = _mm512_unpackhi_epi32(s0, s1);
@@ -85,12 +65,7 @@ static inline __m128i haddx4_epi32(__m512i s0, __m512i s1, __m512i s2, __m512i s
     return _mm_add_epi32(_mm_add_epi32(lo128, hi128), bias);
 }
 
-// ---------------------------------------------------------------------------
-// Clipped ReLU: int16_t -> int8_t, clamp [0, QA_BOUND]
-// _mm512_cvtepi16_epi8 fa il narrow con saturazione IN ORDINE, senza bisogno
-// di permute per rimettere a posto le corsie (a differenza di packs_epi16/AVX2).
-// 32 elementi per iterazione con un solo registro/load invece di due.
-// ---------------------------------------------------------------------------
+// Clipped ReLU int16 → int8 in [0, QA_BOUND], 32 valori per iterazione.
 void NnueNetwork::ActivationFunction(const int16_t* in, int8_t* out, int len) const {
     assert((reinterpret_cast<uintptr_t>(in) & 63) == 0);
     assert((reinterpret_cast<uintptr_t>(out) & 31) == 0);
@@ -110,11 +85,7 @@ void NnueNetwork::ActivationFunction(const int16_t* in, int8_t* out, int len) co
     }
 }
 
-// ---------------------------------------------------------------------------
-// Clipped ReLU: int32_t -> int8_t, clamp [0, QA_BOUND]
-// _mm512_cvtepi32_epi8: stesso discorso, narrow diretto senza permute.
-// 16 elementi per iterazione (un solo registro __m512i di int32).
-// ---------------------------------------------------------------------------
+// Clipped ReLU int32 → int8 in [0, QA_BOUND], 16 valori per iterazione.
 void NnueNetwork::ActivationFunction(const int32_t* in, int8_t* out, int len) const {
     const __m512i zero  = _mm512_setzero_si512();
     const __m512i bound = _mm512_set1_epi32(QA_BOUND);
@@ -131,16 +102,10 @@ void NnueNetwork::ActivationFunction(const int32_t* in, int8_t* out, int len) co
     }
 }
 
-// ---------------------------------------------------------------------------
-// Layer denso: output[i] = (bias[i] + sum_j input[j]*weights[i*cols+j]) >> shift
-// VPDPBUSD (AVX512VNNI): moltiplica-somma-accumula u8 x s8 -> i32 in UNA
-// istruzione fusa, 64 byte per volta. Niente stadio intermedio a 16 bit
-// (più sicuro anche dal punto di vista della saturazione rispetto a
-// maddubs+madd), niente add esplicito (l'accumulo è già incluso).
-// 4 righe di output per volta per tenere occupate più catene indipendenti (rows % 4 == 0).
-// ---------------------------------------------------------------------------
+// output[i] = (bias[i] + Σ_j input[j] * weights[i*cols + j]) >> shift
+// VNNI (u8 × s8 → i32, 64 byte per istruzione), 4 righe per volta per catene indipendenti.
 void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, const int32_t* bias, int32_t* output, int rows, int cols, int shift) const {
-    assert(rows % 4 == 0); // sempre K = 32 righe: niente coda per righe rimanenti
+    assert(rows % 4 == 0); // sempre K = 32 righe
     for (int i = 0; i < rows; i += 4) {
         __m512i acc0 = _mm512_setzero_si512();
         __m512i acc1 = _mm512_setzero_si512();
@@ -175,7 +140,7 @@ void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, c
         int32_t s2 = _mm512_reduce_add_epi32(acc2) + bias[i + 2];
         int32_t s3 = _mm512_reduce_add_epi32(acc3) + bias[i + 3];
 
-        // coda a 32 byte con VNNI a 256 bit (AVX512VL) se resta spazio prima dello scalare
+        // coda a 32 byte, poi scalare
         for (; j + 32 <= cols; j += 32) {
             __m256i in_vec = _mm256_loadu_si256(reinterpret_cast<const __m256i*>(input + j));
             s0 += hsum_epi32_256(_mm256_dpbusd_epi32(_mm256_setzero_si256(), in_vec, _mm256_loadu_si256(reinterpret_cast<const __m256i*>(w0 + j))));
@@ -183,7 +148,6 @@ void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, c
             s2 += hsum_epi32_256(_mm256_dpbusd_epi32(_mm256_setzero_si256(), in_vec, _mm256_loadu_si256(reinterpret_cast<const __m256i*>(w2 + j))));
             s3 += hsum_epi32_256(_mm256_dpbusd_epi32(_mm256_setzero_si256(), in_vec, _mm256_loadu_si256(reinterpret_cast<const __m256i*>(w3 + j))));
         }
-        // coda scalare finale (cols non multiplo di 32)
         for (; j < cols; j++) {
             s0 += input[j] * w0[j]; s1 += input[j] * w1[j];
             s2 += input[j] * w2[j]; s3 += input[j] * w3[j];
@@ -194,11 +158,7 @@ void NnueNetwork::DenseLayerLinear(const int8_t* input, const int8_t* weights, c
     }
 }
 
-// ---------------------------------------------------------------------------
-// Prodotto scalare finale: input int8_t (0..127) x weights int16_t
-// K=32 sta esattamente in un solo registro __m512i (32 int16): un solo
-// giro di estensione + madd + riduzione, niente loop.
-// ---------------------------------------------------------------------------
+// Ultimo layer: prodotto scalare (K = 32 int16, un registro) riscalato in centipawn.
 int32_t NnueNetwork::OutputLayerDotProduct(const int8_t* input, const int16_t* weights, int32_t bias, int len) const {
     __m512i acc = _mm512_setzero_si512();
 
@@ -227,17 +187,17 @@ int NnueNetwork::EvaluateNnue(const int16_t* smt, const int16_t* nsmt) const {
     ActivationFunction(smt, inputBuffer, M);
     ActivationFunction(nsmt, inputBuffer + M, M);
     
-    // Passaggio L1
+    // L1
     int32_t tempHidden[K];
     DenseLayerLinear(inputBuffer, &L1[0][0], L1Bias, tempHidden, K, 2 * M, SHIFT_L1);
     ActivationFunction(tempHidden, outputBuffer, K);
 
-    // Passaggio L2
+    // L2
     int32_t tempHidden2[K];
     int8_t outputBuffer2[K];
     DenseLayerLinear(outputBuffer, &L2[0][0], L2Bias, tempHidden2, K, K, SHIFT_L2);
     ActivationFunction(tempHidden2, outputBuffer2, K);
     
-    // Output (L3)
+    // L3
     return OutputLayerDotProduct(outputBuffer2, L3, L3Bias, K);
 }

@@ -7,8 +7,6 @@ int ClassicalEvaluator::Evaluate(const Board& board) {
 
     for (int color = 0; color < 2; color++) {
         for (const auto piece : Pieces::All) {
-            if (piece == PieceType::NONE) continue;
-
             uint64_t bitboard = board.GetBitBoard(color, piece);
             
             scores[color] += __builtin_popcountll(bitboard) * Evaluation::pieceValues[PieceInt(piece)];

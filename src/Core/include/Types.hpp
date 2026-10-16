@@ -13,10 +13,6 @@ inline constexpr int ColorInt(Color c) { return static_cast<int>(c);}
 inline Color operator!(Color c) {
     return c == Color::WHITE ? Color::BLACK : Color::WHITE;
 }
-inline bool operator==(int lhs, Color rhs) { return lhs == ColorInt(rhs); }
-inline bool operator==(Color lhs, int rhs) { return ColorInt(lhs) == rhs; }
-inline bool operator!=(int lhs, Color rhs) { return !(lhs == rhs); }
-inline bool operator!=(Color lhs, int rhs) { return !(lhs == rhs); }
 
 enum class PieceType : uint8_t {
     PAWN = 0,

@@ -7,10 +7,7 @@
 #include <cstring>
 #include <cstdint>
 
-// ============================================================================
-// Richiede compilazione con -mavx512f -mavx512bw (stesso requisito di
-// NnueNetwork.cpp, che in più usa -mavx512dq -mavx512vl -mavx512vnni).
-// ============================================================================
+// Richiede AVX-512 (-mavx512f -mavx512bw).
 
 NnueEvaluator::NnueEvaluator(std::shared_ptr<const NnueNetwork> sharedNetwork)
     : networkOwner(std::move(sharedNetwork)), net(networkOwner.get()) {}
@@ -31,9 +28,7 @@ void NnueEvaluator::ValidateAccumulators(const Board& board) {
 
         bool match = (std::memcmp(saved, nnueStack[currentPly].accumulator[p], sizeof(saved)) == 0);
 
-        // Ripristina l'accumulatore incrementale originale: la validazione deve essere pura
-        // osservazione, la ricerca continua a usare esattamente cio' che avrebbe usato senza
-        // NNUE_VALIDATE.
+        // Ripristina l'originale: la validazione non deve cambiare la ricerca.
         std::memcpy(nnueStack[currentPly].accumulator[p], saved, sizeof(saved));
 
         assert(match && "NNUE_VALIDATE: accumulatore incrementale diverge dal refresh completo");
@@ -81,12 +76,7 @@ void NnueEvaluator::OnUnmakeMove() {
     if (currentPly < 0) currentPly = 0;
 }
 
-// ---------------------------------------------------------------------------
-// Somma vettoriale fusa: acc[0..M) = base[0..M) + sum_f cols[f][0..M)
-// Un solo passaggio di lettura/scrittura su acc invece di uno per feature.
-// M=256 è multiplo esatto di 16 (int16 per registro AVX2), ma la coda
-// scalare resta per sicurezza/robustezza se M dovesse cambiare.
-// ---------------------------------------------------------------------------
+// acc = base + Σ_f cols[f], in un solo passaggio su acc invece di uno per feature.
 static inline void AccumulateColumnsInto(int16_t* acc, const int16_t* base, const int16_t* const* cols, int count) {
     assert((reinterpret_cast<uintptr_t>(acc) & 63) == 0);
     assert((reinterpret_cast<uintptr_t>(base) & 63) == 0);
@@ -117,7 +107,7 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
     
     int kingSq = __builtin_ctzll(kingBb);
 
-    // Passo 1: raccogli tutte le feature attive (max teorico 30 pezzi non-re, vedi MAX_ACTIVE_FEATURES)
+    // Colonne di L0 delle feature attive (pezzi non re)
     const int16_t* activeCols[MAX_ACTIVE_FEATURES];
     int activeCount = 0;
 
@@ -130,7 +120,7 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
 
             while (bb != 0) {
                 int pieceSq = __builtin_ctzll(bb);
-                bb &= bb - 1; // Rimuove il LSB
+                bb &= bb - 1;
                 
                 int fIdx = MakeFeatureIndex(pieceSq, pt, color, kingSq, perspective);
                 if (activeCount < MAX_ACTIVE_FEATURES) {
@@ -140,7 +130,6 @@ void NnueEvaluator::RefreshAccumulator(const Board& board, int perspective) {
         }
     }
 
-    // Passo 2: un solo passaggio vettoriale bias + tutte le colonne
     AccumulateColumnsInto(acc, net->L0Bias, activeCols, activeCount);
 }
 
@@ -173,7 +162,7 @@ void NnueEvaluator::BuildDelta(const Board& board, Move move, PieceType movedPie
 
     int actualCaptureSq = to;
     if (flags == FlagMap::ENPASS) {
-        actualCaptureSq = (us == ColorInt(Color::WHITE)) ? to - 8 : to + 8;
+        actualCaptureSq = (us == Color::WHITE) ? to - 8 : to + 8;
     }
 
     int rookFrom = -1, rookTo = -1;

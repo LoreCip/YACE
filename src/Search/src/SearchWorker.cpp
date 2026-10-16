@@ -7,7 +7,7 @@
 #include <cstring>
 
 void SearchWorker::Search(int maxDepth, InfoReporter callback) {
-    stats.ResetForNewMove();
+    stats = {};
     ClearHistory();
     bestRootMove = 0;
 
@@ -28,11 +28,10 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
     }
     if (bestMove == 0) return;
 
-    // --- 2. ROOT SEARCH WITH ITERATIVE DEEPENING ---
+    // Iterative deepening
     for (int d = 1; d <= maxDepth; d++) {
         if (globalTimeIsUp.load(std::memory_order_relaxed)) break;
 
-        stats.maxDepthReached = d;
         int alpha = -INFINITE_SCORE;
         int beta  = INFINITE_SCORE;
         Move bestMoveCurrentDepth = bestMove;
@@ -48,7 +47,7 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
             Move move = scoredMoves[i].move; 
             
             if (board.MakeMove(move)) {
-                evaluator->OnMakeMove(board, move); // L'evaluator DEVE essere privato del thread
+                evaluator->OnMakeMove(board, move);
 
                 int score = -AlphaBeta(d - 1, -beta, -alpha, 1);
                 
@@ -72,7 +71,7 @@ void SearchWorker::Search(int maxDepth, InfoReporter callback) {
         auto now = std::chrono::high_resolution_clock::now();
         stats.lastMoveTimeMs = std::chrono::duration<double, std::milli>(now - startTime).count();
 
-        if (isMainThread && callback) {
+        if (callback) {
             stats.hashFullness = tt.GetFullnessPercentage();
             callback(d, alpha, stats, bestMoveCurrentDepth);
         }
@@ -89,7 +88,7 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
     
     if (depth <= 0) return QuiescenceSearch(alpha, beta, ply);
 
-    // --- 1. TRANSPOSITION TABLE PROBE ---
+    // Transposition table
     uint64_t hashKey = board.GetHash();
     Move ttMove = 0;
     int ttScore = 0;
@@ -101,7 +100,7 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
     int originalAlpha = alpha;
     Move bestMoveInThisPosition = 0;
     
-    // Pre-calcolo dello stato di Scacco (usato da NMP, LMR e test finale)
+    // Scacco: usato da NMP, LMR e matto/stallo
     Color us = board.GetSideToMove();
     uint64_t myKingBB = board.GetBitBoard(us, PieceType::KING);
     bool inCheck = false;
@@ -109,19 +108,19 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
         inCheck = board.IsSquareAttacked(__builtin_ctzll(myKingBB), !us);
     }
 
-    // --- 2. NULL MOVE PRUNING (NMP) ---
+    // Null move pruning
     bool isNullMoveAllowed = (board.GetHistoryPly() > 0 && 
                               board.GetHistory(board.GetHistoryPly() - 1).movedPiece != PieceType::NONE);
     
     if (!inCheck && depth >= 3 && ply > 0 && isNullMoveAllowed) {
-        // Verifica materiale (Anti-Zugzwang)
+        // Solo con pezzi oltre ai pedoni (zugzwang)
         uint64_t nonPawnMaterial = board.GetColorOccupation(us) 
                                  ^ board.GetBitBoard(us, PieceType::KING) 
                                  ^ board.GetBitBoard(us, PieceType::PAWN);
         
         if (nonPawnMaterial != 0ULL) {
             board.MakeNullMove();
-            int R = 2; // Taglio di 2 profondità
+            int R = 2;
             int nullScore = -AlphaBeta(depth - 1 - R, -beta, -beta + 1, ply + 1);
             board.UnmakeNullMove();
             
@@ -130,7 +129,6 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
         }
     }
 
-    // --- 3. GENERAZIONE ED ORDINAMENTO MOSSE ---
     MoveList moveList;
     MoveGen::GenerateAllMoves(board, moveList); 
     int nMoves = moveList.count;
@@ -139,10 +137,9 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
     ScoredMove scoredMoves[256];
     ScoreMoves(moveList, ttMove, ply, scoredMoves);
 
-    // --- 4. CICLO PRINCIPALE DELLE MOSSE (PVS + LMR) ---
+    // PVS + LMR
     for (int i = 0; i < nMoves; i++) {
-        // Selection sort su richiesta: un taglio beta arriva spesso nelle prime mosse.
-        // Scritto qui e non in un helper: come funzione separata misurava ~1.5% di nps in meno.
+        // Selection sort lazy (il cutoff arriva presto); inline: come helper costava ~1.5% di nps.
         int bestIndex = i;
         for (int j = i + 1; j < nMoves; j++) {
             if (scoredMoves[j].score > scoredMoves[bestIndex].score) bestIndex = j;
@@ -159,10 +156,10 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
             int currentScore;
             
             if (legalMovesCount == 1) {
-                // A. Principal Variation: Prima mossa testata a finestra completa
+                // Prima mossa: finestra piena
                 currentScore = -AlphaBeta(depth - 1, -beta, -alpha, ply + 1);
             } else {
-                // B. Late Move Reductions (LMR)
+                // LMR: mosse silenziose tardive a profondita' ridotta
                 bool canReduce = isQuiet && !inCheck && depth >= 3 && legalMovesCount >= 4;
                 bool needsFullSearch = true;
 
@@ -170,16 +167,14 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
                     int R = (legalMovesCount > 6 && depth > 3) ? 2 : 1; 
                     currentScore = -AlphaBeta(depth - 1 - R, -alpha - 1, -alpha, ply + 1);
                     if (currentScore <= alpha) {
-                        needsFullSearch = false; // LMR convalidata, salta il resto
+                        needsFullSearch = false;
                     }
                 }
 
-                // C. Principal Variation Search (PVS)
+                // PVS: finestra nulla, finestra piena solo se la mossa sorprende
                 if (needsFullSearch) {
-                    // Zero-Window Search a profondità piena
                     currentScore = -AlphaBeta(depth - 1, -alpha - 1, -alpha, ply + 1);
                     
-                    // Re-Search (Finestra Completa) se la mossa ha superato le aspettative
                     if (currentScore > alpha && currentScore < beta) {
                         currentScore = -AlphaBeta(depth - 1, -beta, -alpha, ply + 1);
                     }
@@ -189,7 +184,7 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
             evaluator->OnUnmakeMove();
             board.UnmakeMove(move);
             
-            // --- 5. BETA CUTOFF (Fail-High) ---
+            // Beta cutoff
             if (currentScore >= beta) {
                 stats.betaCutoffs++;
                 if (legalMovesCount == 1) stats.firstMoveCutoffs++;
@@ -202,7 +197,7 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
                             killerMoves[ply][0] = move;               
                         }
                     }
-                    // History Heuristic (Bonus e Normalizzazione)
+                    // History: bonus depth², tabella dimezzata oltre 10000
                     int from = getMoveFrom(move);
                     int to = getMoveTo(move);
                     historyTable[ColorInt(us)][from][to] += (depth * depth);
@@ -222,12 +217,11 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
                 return beta; 
             }
             
-            // --- 6. AGGIORNAMENTO ALPHA (PV Node) e PENALITÀ HISTORY ---
             if (currentScore > alpha) {
                 alpha = currentScore; 
                 bestMoveInThisPosition = move;
             } else {
-                // Penalizza le mosse silenziose esplorate che hanno fallito in basso
+                // Malus history alle mosse silenziose fallite in basso
                 if (isQuiet) {
                     int from = getMoveFrom(move);
                     int to = getMoveTo(move);
@@ -238,18 +232,17 @@ int SearchWorker::AlphaBeta(int depth, int alpha, int beta, int ply) {
         }
     }
     
-    // --- 7. VERIFICA MATTO / STALLO ---
+    // Nessuna mossa legale: matto o stallo
     if (legalMovesCount == 0) {
         if (inCheck) {
             return -(INFINITE_SCORE - ply); // matto: piu' vicino = peggiore
         } else {
-            return 0; // Stallo
+            return 0;
         }
     }
 
-    // --- 8. SALVATAGGIO TRANSPOSITION TABLE ---
     if (bestMoveInThisPosition == 0) {
-        bestMoveInThisPosition = ttMove; // Evita di corrompere la TT
+        bestMoveInThisPosition = ttMove; // fail-low: conserva la mossa della TT
     }
     
     TTFlag flag = (alpha <= originalAlpha) ? ALPHA : EXACT;
@@ -271,8 +264,7 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
     }
     if (alpha < stand_pat) alpha = stand_pat;
 
-    // Delta pruning (nodo): se nemmeno catturare una donna (+ margine, + una promozione se c'e'
-    // un pedone in settima) porterebbe ad alpha, nessuna cattura salvera' questo nodo.
+    // Delta pruning (nodo): nemmeno prendere una donna (+ promozione, + margine) raggiunge alpha.
     const int DELTA_MARGIN = 200;
     const int* values = Evaluation::pieceValues;
     int promotionGain = values[PieceInt(PieceType::QUEEN)] - values[PieceInt(PieceType::PAWN)];
@@ -301,8 +293,7 @@ int SearchWorker::QuiescenceSearch(int alpha, int beta, int ply) {
         if (bestIndex != i) std::swap(scoredMoves[i], scoredMoves[bestIndex]);
         Move move = scoredMoves[i].move;
 
-        // Delta pruning (mossa): anche guadagnando tutta la vittima (+ promozione) + margine
-        // si resta sotto alpha → la cattura non puo' migliorare il nodo.
+        // Delta pruning (mossa): la vittima (+ promozione, + margine) non raggiunge alpha.
         int flags = getMoveFlags(move);
         int gain = 0;
         if (isEnPassantFlag(flags)) gain = values[PieceInt(PieceType::PAWN)];
@@ -334,7 +325,7 @@ void SearchWorker::ScoreMoves(const MoveList& moveList, Move ttMove, int ply, Sc
 }
 
 int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
-    if (move == ttMove) return 2000000; // Massima priorità alla mossa della TT
+    if (move == ttMove) return 2000000;
 
     int score = 0;
     int flags = getMoveFlags(move);
@@ -370,7 +361,7 @@ int SearchWorker::ScoreMove(Move move, Move ttMove, int ply) {
         else {
             int us = ColorInt(board.GetSideToMove());
             score = historyTable[us][from][to];
-            if (score > 20000) score = 20000; // Limite superiore per la History
+            if (score > 20000) score = 20000;
         }
     }
 
@@ -385,58 +376,52 @@ bool SearchWorker::SEE(Move move, int threshold) {
     PieceType movingPiece = board.GetPieceOnSquare(from);
     PieceType capturedPiece = board.GetPieceOnSquare(to);
 
-    // Gestione En Passant
     if (flags == FlagMap::ENPASS) {
         capturedPiece = PieceType::PAWN;
     }
 
-    int gain[32]; // Massimo 32 catture possibili su una singola casa
+    int gain[32]; // al piu' 32 catture su una casa
     int d = 0;
     gain[0] = (capturedPiece != PieceType::NONE) ? Evaluation::pieceValues[PieceInt(capturedPiece)] : 0;
 
-    // Bonus in caso di promozione (la nuova regina - il pedone perso)
+    // Promozione: donna al posto del pedone
     if (flags == FlagMap::PRQUEEN || flags == FlagMap::PRCAPQUEEN) {
         gain[0] += Evaluation::pieceValues[PieceInt(PieceType::QUEEN)] - Evaluation::pieceValues[PieceInt(PieceType::PAWN)];
     }
 
-    // Setup della scacchiera "virtuale" per simulare le catture a raggi X
+    // Occupazione simulata: togliere gli attaccanti scopre i pezzi a raggi X
     uint64_t occupancy = board.GetColorOccupation(Color::WHITE) | board.GetColorOccupation(Color::BLACK);
-    occupancy ^= (1ULL << from); // Rimuoviamo il pezzo che ha fatto la prima cattura
+    occupancy ^= (1ULL << from);
     
     if (flags == FlagMap::ENPASS) {
-        // Rimuove il pedone mangiato via en-passant (calcola la riga corretta in base al colore)
+        // pedone catturato en passant
         int epOffset = (board.GetSideToMove() == Color::WHITE) ? -8 : 8; 
         occupancy ^= (1ULL << (to + epOffset));
     }
 
-    Color nextColor = !board.GetSideToMove(); // Tocca a chi subisce la prima mossa
+    Color nextColor = !board.GetSideToMove(); // ricattura l'avversario
     PieceType attackerPiece = movingPiece;
 
-    // Loop per trovare tutti gli attaccanti successivi (LVA)
+    // Ricatture alternate, sempre col pezzo meno pregiato
     while (true) {
         d++;
-        // Il guadagno dal punto di vista di chi cattura = (Pezzo usato dall'avversario) - (Guadagno avversario)
         gain[d] = Evaluation::pieceValues[PieceInt(attackerPiece)] - gain[d - 1];
 
-        // Troviamo il prossimo pezzo più debole che può ricatturare
         uint64_t nextAttackerBB = GetLeastValuableAttacker(to, nextColor, occupancy, attackerPiece);
 
         if (nextAttackerBB == 0ULL) {
-            break; // Nessun altro attaccante, la sequenza è finita
+            break;
         }
 
-        // Rimuoviamo il nuovo attaccante per svelare eventuali Alfieri o Torri dietro di lui
         occupancy ^= nextAttackerBB;
-        nextColor = !nextColor; // Cambio turno
+        nextColor = !nextColor;
     }
 
-    // Valutazione Minimax all'indietro:
-    // Nessun giocatore farà una cattura se il guadagno risultante è peggiore del non farla (0).
+    // Minimax all'indietro: ognuno puo' smettere di ricatturare se non conviene.
     while (--d > 0) {
         gain[d - 1] = -std::max(-gain[d - 1], gain[d]);
     }
 
-    // La sequenza iniziale è vantaggiosa o uguale alla soglia?
     return gain[0] >= threshold;
 }
 
@@ -446,7 +431,7 @@ uint64_t SearchWorker::GetLeastValuableAttacker(int sq, Color color, uint64_t oc
     // 1. Pedoni
     uint64_t pawns = board.GetBitBoard(color, PieceType::PAWN) & occupancy;
     if (pawns) {
-        // Usiamo l'array precalcolato dal punto di vista dell'avversario
+        // pedoni che attaccano sq = attacchi di un pedone avversario da sq
         if ((attackers = AttackTables::pawnAttacks[ColorInt(!color)][sq] & pawns)) {
             outPiece = PieceType::PAWN;
             return attackers & -attackers; 

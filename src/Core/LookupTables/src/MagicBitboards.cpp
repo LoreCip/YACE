@@ -19,9 +19,7 @@ namespace {
     };
 
 
-    /*****************************************************************************************/
-    /*                 BUILD MAGIC BITBOARDS                                                 */
-    /*****************************************************************************************/
+    // Costruzione delle tabelle
 
     uint64_t ComputeRay(int direction, int square, uint64_t totalOccupation) {
         uint64_t attacks = 0ULL;
@@ -124,7 +122,6 @@ namespace {
                 attacks |= ComputeRay(8, square, blockers);
                 attacks |= ComputeRay(-8, square, blockers);
 
-                // NOTA: Usiamo (64 - rookBits)
                 uint64_t magicIndex = (blockers * RookMagics[square]) >> (64 - rookBits);
                 RookAttacks[square][magicIndex] = attacks;
             }

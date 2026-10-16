@@ -4,10 +4,9 @@
 #include <thread>
 
 #include "Board.hpp"
-#include "ClassicalEvaluator.hpp"
 #include "Evaluation.hpp"
 #include "LookupTables.hpp"
-#include "NnueEvaluator.hpp"
+#include "NnueNetwork.hpp"
 #include "SearchManager.hpp"
 #include "Uci.hpp"
 
@@ -34,8 +33,7 @@ void PrintUsage(const char *programName) {
                "[-c threads]\n";
 }
 
-// Returns false if execution should stop immediately (e.g. -h/--help was
-// requested).
+// false = esci subito (-h/--help).
 bool ParseArgs(int argc, char **argv, EngineOptions &options) {
   for (int i = 1; i < argc; ++i) {
     std::string arg = argv[i];
@@ -59,23 +57,6 @@ bool ParseArgs(int argc, char **argv, EngineOptions &options) {
   return true;
 }
 
-// Factory handed to SearchManager so each search thread gets its own evaluator
-// instance — but ALL instances share the same read-only NnueNetwork (`sharedNetwork`),
-// instead of each thread re-reading the ~21MB weights file from disk and holding its own
-// private copy on every `go` command.
-EvaluatorFactory MakeEvaluatorFactory(bool useNnue, 
-                                      std::shared_ptr<const NnueNetwork> nnueNetwork) {
-    return [useNnue, nnueNetwork = std::move(nnueNetwork)]()
-               -> std::unique_ptr<IEvaluator>
-    {
-        if (useNnue) {
-            return std::make_unique<NnueEvaluator>(nnueNetwork);
-        }
-
-        return std::make_unique<ClassicalEvaluator>();
-    };
-}
-
 } // namespace
 
 int main(int argc, char **argv) {
@@ -88,19 +69,15 @@ int main(int argc, char **argv) {
 
   std::cout << std::unitbuf;
 
-  auto board = std::make_unique<Board>();
+  Board board;
   UCI::Initialize();
   Evaluation::LoadFromFile(options.evalsPath);
   LookupTables::init();
-  board->InitializeBoard();
+  board.InitializeBoard();
 
-  // Caricata UNA volta e condivisa da tutti i thread di ricerca invece di essere
-  // riletta da disco e duplicata per ogni thread a ogni `go` (vedi MakeEvaluatorFactory).
-  // std::shared_ptr<const NnueNetwork> nnueNetwork;
-  const bool useNnue = options.evalType == "nnue";
-
+  // Caricata una volta e condivisa da tutti i thread; nullptr = HCE.
   std::shared_ptr<const NnueNetwork> nnueNetwork;
-  if (useNnue) {
+  if (options.evalType == "nnue") {
     nnueNetwork = LoadNnueNetwork(options.weightsPath);
     if (!nnueNetwork) {
       UCI::ReportDebugString("NNUE non trovata.");
@@ -114,19 +91,9 @@ int main(int argc, char **argv) {
   UCI::ReportDebugString("Avvio motore con " +
                          std::to_string(options.numThreads) + " threads e " +
                          std::to_string(options.ttSizeMb) + "MB di TT.");
-  SearchManager searchManager(options.ttSizeMb, options.numThreads,
-                              MakeEvaluatorFactory(useNnue, nnueNetwork));
+  SearchManager searchManager(options.ttSizeMb, options.numThreads, nnueNetwork);
 
-  // Svuotare la TT a ogni nuova posizione rende `bench` riproducibile (indipendente
-  // dall'ordine delle posizioni); innocuo per un `fen` normale.
-  auto handlePositionLoaded = [&]() { searchManager.ClearTT(); };
-
-  auto handleGoCommand = [&](int targetDepth, double allocatedTimeMs,
-                             InfoReporter reporter) -> Move {
-    return searchManager.Search(*board, targetDepth, allocatedTimeMs, reporter);
-  };
-
-  UCI::Loop(*board, handleGoCommand, handlePositionLoaded);
+  UCI::Loop(board, searchManager);
 
   return 0;
 }

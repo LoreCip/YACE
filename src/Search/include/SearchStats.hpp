@@ -8,22 +8,10 @@ struct SearchStats {
     long long betaCutoffs = 0;
     long long firstMoveCutoffs = 0;
     long long ttHits = 0;          
-    int maxDepthReached = 0;       
     int selDepthReached = 0;       
     
     double lastMoveTimeMs = 0.0;
     double hashFullness = 0.0;
-
-    void ResetForNewMove() {
-        nodesEvaluated = 0;
-        qNodesEvaluated = 0;
-        betaCutoffs = 0;
-        firstMoveCutoffs = 0;
-        ttHits = 0;
-        maxDepthReached = 0;
-        selDepthReached = 0;
-        lastMoveTimeMs = 0.0;
-    }
 
     // --- Helpers ---
     long long GetTotalNodes() const { 

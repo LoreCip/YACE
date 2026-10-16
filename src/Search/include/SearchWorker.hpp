@@ -22,9 +22,7 @@ class SearchWorker {
 private:
     static const int MAX_PLY = 64;
 
-    bool isMainThread;
-
-    Board board; 
+    Board board;
     SearchStats stats;
     int historyTable[2][64][64] = {{{0}}};
     Move killerMoves[MAX_PLY][2] = {{0}};
@@ -46,17 +44,16 @@ private:
 public:
     Move bestRootMove = 0;
 
-    SearchWorker(bool mainThread, const Board& rootBoard,
-                 TranspositionTable& globalTT, std::atomic<bool>& stopFlag,
-                 std::unique_ptr<IEvaluator> eval)
-        : isMainThread(mainThread),
-          board(rootBoard),
+    SearchWorker(const Board& rootBoard, TranspositionTable& globalTT,
+                 std::atomic<bool>& stopFlag, std::unique_ptr<IEvaluator> eval)
+        : board(rootBoard),
           tt(globalTT),
           globalTimeIsUp(stopFlag),
           evaluator(std::move(eval)) {
-        if (evaluator) evaluator->Reset(board);
+        evaluator->Reset(board);
     }
 
+    // Solo il thread principale riceve `callback` (gli helper passano nullptr).
     void Search(int maxDepth, InfoReporter callback = nullptr);
     const SearchStats& GetStats() const { return stats; }
 };

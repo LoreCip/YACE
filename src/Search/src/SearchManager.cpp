@@ -1,13 +1,17 @@
 #include "SearchManager.hpp"
+#include "ClassicalEvaluator.hpp"
+#include "NnueEvaluator.hpp"
 
 Move SearchManager::Search(const Board& rootBoard, int maxDepth, double allocatedTimeMs, InfoReporter callback) {
     globalTimeIsUp.store(false, std::memory_order_relaxed);
 
     std::vector<std::unique_ptr<SearchWorker>> workers;
     for (int i = 0; i < numThreads; ++i) {
-        bool isMainThread = (i == 0); 
+        std::unique_ptr<IEvaluator> evaluator;
+        if (network) evaluator = std::make_unique<NnueEvaluator>(network);
+        else         evaluator = std::make_unique<ClassicalEvaluator>();
         workers.push_back(std::make_unique<SearchWorker>(
-            isMainThread, rootBoard, tt, globalTimeIsUp, evalFactory()
+            rootBoard, tt, globalTimeIsUp, std::move(evaluator)
         ));
     }
 
@@ -26,9 +30,7 @@ Move SearchManager::Search(const Board& rootBoard, int maxDepth, double allocate
             aggStats.ttHits += w->GetStats().ttHits;
         }
 
-        if (callback) {
-            callback(depth, score, aggStats, bestMove);
-        }
+        callback(depth, score, aggStats, bestMove);
     };
 
     std::thread timerThread([&]() {

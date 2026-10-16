@@ -64,28 +64,29 @@ bool ParseArgs(int argc, char **argv, EngineOptions &options) {
 // (see main(): the network is loaded exactly once and shared with MakeEvaluatorFactory).
 std::unique_ptr<IEvaluator> CreateRootEvaluator(
     const EngineOptions &options,
-    const std::shared_ptr<const NnueNetwork> &sharedNetwork) {
-  if (options.evalType != "nnue") {
-    UCI::ReportDebugString("Valutazione Classica (HCE).");
-    return std::make_unique<ClassicalEvaluator>();
+    const std::shared_ptr<const NnueNetwork> &nnueNetwork) {
+  if (options.evalType == "nnue") {
+    return std::make_unique<NnueEvaluator>(nnueNetwork);
   }
-  return std::make_unique<NnueEvaluator>(sharedNetwork);
+  UCI::ReportDebugString("Valutazione Classica (HCE).");
+  return std::make_unique<ClassicalEvaluator>();
 }
 
 // Factory handed to SearchManager so each search thread gets its own evaluator
 // instance — but ALL instances share the same read-only NnueNetwork (`sharedNetwork`),
 // instead of each thread re-reading the ~21MB weights file from disk and holding its own
 // private copy on every `go` command.
-EvaluatorFactory MakeEvaluatorFactory(const EngineOptions &options,
-                                      std::shared_ptr<const NnueNetwork> sharedNetwork) {
-  bool useNnue = (options.evalType == "nnue");
+EvaluatorFactory MakeEvaluatorFactory(bool useNnue, 
+                                      std::shared_ptr<const NnueNetwork> nnueNetwork) {
+    return [useNnue, nnueNetwork = std::move(nnueNetwork)]()
+               -> std::unique_ptr<IEvaluator>
+    {
+        if (useNnue) {
+            return std::make_unique<NnueEvaluator>(nnueNetwork);
+        }
 
-  return [useNnue, sharedNetwork]() -> std::unique_ptr<IEvaluator> {
-    if (!useNnue) {
-      return std::make_unique<ClassicalEvaluator>();
-    }
-    return std::make_unique<NnueEvaluator>(sharedNetwork);
-  };
+        return std::make_unique<ClassicalEvaluator>();
+    };
 }
 
 // Wraps the search's raw stats into the shape UCI::LoggerCallback expects.
@@ -120,26 +121,32 @@ int main(int argc, char **argv) {
 
   // Caricata UNA volta e condivisa (root + tutti i thread di ricerca) invece di essere
   // riletta da disco e duplicata per ogni thread a ogni `go` (vedi MakeEvaluatorFactory).
-  std::shared_ptr<const NnueNetwork> sharedNetwork;
-  if (options.evalType == "nnue") {
-    sharedNetwork = LoadNnueNetwork(options.weightsPath);
-    if (!sharedNetwork) {
+  // std::shared_ptr<const NnueNetwork> nnueNetwork;
+  const bool useNnue = options.evalType == "nnue";
+
+  std::shared_ptr<const NnueNetwork> nnueNetwork;
+  if (useNnue) {
+    nnueNetwork = LoadNnueNetwork(options.weightsPath);
+    if (!nnueNetwork) {
       UCI::ReportDebugString("NNUE non trovata.");
       return 1;
     }
     UCI::ReportDebugString("NNUE caricata con successo.");
   }
-
-  std::unique_ptr<IEvaluator> rootEvaluator =
-      CreateRootEvaluator(options, sharedNetwork);
+  
+  auto rootEvaluator = CreateRootEvaluator(options, nnueNetwork);
   rootEvaluator->Reset(*board);
-
+  
   UCI::ReportDebugString("Avvio motore con " +
                          std::to_string(options.numThreads) + " threads e " +
                          std::to_string(options.ttSizeMb) + "MB di TT.");
-  SearchManager searchManager(options.ttSizeMb, options.numThreads,
-                              MakeEvaluatorFactory(options, sharedNetwork));
-
+  
+  auto evaluatorFactory = MakeEvaluatorFactory(useNnue, nnueNetwork);
+  SearchManager searchManager(
+    options.ttSizeMb,
+    options.numThreads,
+    std::move(evaluatorFactory));
+  
   // --- Callbacks UCI ---
   // Reset dell'accumulatore NNUE E svuotamento della TT: necessario per il comando `bench`
   // (misure riproducibili, indipendenti dall'ordine delle posizioni), innocuo per `fen` normale.
